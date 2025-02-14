@@ -29,7 +29,6 @@ services:
 
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: qdrant
     ports:
       - "6333:6333"
     volumes:
@@ -64,14 +63,19 @@ services:
     build:
       context: ./embeddings
       dockerfile: Dockerfile
-    container_name: embeddings
+    depends_on:
+      - qdrant
+    restart: no
+
+  qdrant-api:
+    build:
+      context: ./qdrant-api
+      dockerfile: Dockerfile
     depends_on:
       - qdrant
     ports:
       - "8000:8000"
-    volumes:
-      - embeddings-data:/app/data
-    restart: no
+    restart: always
 
 volumes:
   postgres-data:
