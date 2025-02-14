@@ -1,0 +1,7 @@
+qdrant-client==1.1.4
+sentence-transformers==2.2.2
+numpy==1.23.5
+huggingface_hub==0.14.1
+pydantic==1.10.21
+fastapi==0.70.0
+uvicorn==0.15.0
