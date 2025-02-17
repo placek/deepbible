@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter
+import sqlite3
 import os
 
 class SearchRequest(BaseModel):
@@ -10,18 +11,22 @@ class SearchRequest(BaseModel):
     limit: int = 50
 
 class DeepBibleAPI:
-    def __init__(self, model_name=None, collection_name=None, qdrant_url=None, batch_size=None, device=None):
+    def __init__(self, model_name=None, collection_name=None, qdrant_url=None, batch_size=None, device=None, target_dir=None):
         self.collection_name = collection_name
         self.batch_size = batch_size
+        self.target_dir = target_dir
 
         self.client = QdrantClient(url=qdrant_url)
         self.model = SentenceTransformer(model_name, device=device)
         self.app = FastAPI()
         self.setup_routes()
 
+    def sqlite_path(self, db):
+        return os.path.join(self.target_dir, f"{db}.SQLite3")
+
     def setup_routes(self):
         @self.app.get("/full/")
-        def full(request: SearchRequest):
+        async def full(request: SearchRequest):
             query_embedding = self.model.encode([request.query])[0]
             search_results = self.client.search(
                 collection_name=self.collection_name,
@@ -32,7 +37,7 @@ class DeepBibleAPI:
             return {"query": request.query, "results": results}
 
         @self.app.get("/textus/")
-        def textus(request: SearchRequest):
+        async def textus(request: SearchRequest):
             query_embedding = self.model.encode([request.query])[0]
             search_results = self.client.search(
                 collection_name=self.collection_name,
@@ -46,7 +51,7 @@ class DeepBibleAPI:
             return {"query": request.query, "results": results}
 
         @self.app.get("/commentary/")
-        def commentary(request: SearchRequest):
+        async def commentary(request: SearchRequest):
             query_embedding = self.model.encode([request.query])[0]
             search_results = self.client.search(
                 collection_name=self.collection_name,
@@ -59,6 +64,22 @@ class DeepBibleAPI:
             results = [ {**res.payload, "score": res.score} for res in search_results ]
             return {"query": request.query, "results": results}
 
+        @self.app.get("/verses")
+        async def verses(textus: str, address: str = None):
+            conn = sqlite3.connect(self.sqlite_path(textus.upper()))
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute(f"""
+              SELECT b.short_name || ' ' || v.chapter || '.' || v.verse AS address, v.text AS text
+              FROM verses v
+              JOIN books b ON v.book_number = b.book_number
+              WHERE address = '{address}'
+              ORDER BY b.book_number, v.chapter, v.verse;
+              """)
+            verse = dict(cursor.fetchone())
+            conn.close()
+            return verse
+
     def run(self):
         return self.app
 
@@ -69,9 +90,11 @@ databases = os.getenv("DEEPBIBLE_DATABASES", "PAU,NA28,VULG").split(",")
 bible_databases_url = os.getenv("DEEPBIBLE_DATABASES_URL", "https://raw.githubusercontent.com/placek/bible-databases/master")
 batch_size = int(os.getenv("DEEPBIBLE_BATCH_SIZE", 500))
 device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
+target_dir = os.getenv("DEEPBIBLE_TARGET_DIR", "/bibles")
 
 app = DeepBibleAPI(model_name=model_name,
                    collection_name=collection_name,
                    qdrant_url=qdrant_url,
                    batch_size=batch_size,
-                   device=device).run()
+                   device=device,
+                   target_dir=target_dir).run()

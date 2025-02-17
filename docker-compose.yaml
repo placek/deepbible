@@ -79,12 +79,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - DEEPBIBLE_TARGET_DIR=/bibles
     depends_on:
       - qdrant
     volumes:
       - .:/app
       - models-data:/models
-    command: "uvicorn scripts.api:app --reload --host 0.0.0.0 --port 8000"
+      - bibles-data:/bibles
+    command: "uvicorn scripts.api:app --log-level debug --reload --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
     restart: always
