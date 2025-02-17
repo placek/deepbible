@@ -9,7 +9,7 @@ class SearchRequest(BaseModel):
     query: str
     limit: int = 50
 
-class BibleSearchAPI:
+class DeepBibleAPI:
     def __init__(self, model_name=None, collection_name=None, qdrant_url=None, batch_size=None, device=None):
         self.collection_name = collection_name
         self.batch_size = batch_size
@@ -70,8 +70,8 @@ bible_databases_url = os.getenv("DEEPBIBLE_DATABASES_URL", "https://raw.githubus
 batch_size = int(os.getenv("DEEPBIBLE_BATCH_SIZE", 500))
 device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
 
-app = BibleSearchAPI(model_name=model_name,
-                     collection_name=collection_name,
-                     qdrant_url=qdrant_url,
-                     batch_size=batch_size,
-                     device=device).run()
+app = DeepBibleAPI(model_name=model_name,
+                   collection_name=collection_name,
+                   qdrant_url=qdrant_url,
+                   batch_size=batch_size,
+                   device=device).run()
