@@ -7,7 +7,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
 class BibleEmbeddingProcessor:
-    def __init__(self, collection_name=None, qdrant_url=None, databases=None, bible_databases_url=None, batch_size=None, device=None):
+    def __init__(self, model_name=None, collection_name=None, qdrant_url=None, databases=None, bible_databases_url=None, batch_size=None, device=None):
         self.collection_name = collection_name
         self.qdrant_url = qdrant_url
         self.databases = databases
@@ -19,7 +19,7 @@ class BibleEmbeddingProcessor:
         self.vector_size = 768
         os.makedirs(self.data_dir, exist_ok=True)
         self.client = QdrantClient(url=self.qdrant_url)
-        self.model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2", device=self.device)
+        self.model = SentenceTransformer(model_name, device=self.device)
 
     # Create collection in Qdrant
     def recreate_collection(self):
@@ -105,6 +105,7 @@ class BibleEmbeddingProcessor:
             self.upsert_to_qdrant(db)
         print("Done! Embeddings have been inserted into Qdrant.")
 
+model_name = os.getenv("DEEPBIBLE_MODEL", "sentence-transformers/all-mpnet-base-v2")
 collection_name = os.getenv("DEEPBIBLE_COLLECTION", "bible_collection")
 qdrant_url = os.getenv("DEEPBIBLE_QDRANT_URL", "http://qdrant:6333")
 databases = os.getenv("DEEPBIBLE_DATABASES", "PAU,NA28,VULG").split(",")
@@ -112,7 +113,8 @@ bible_databases_url = os.getenv("DEEPBIBLE_DATABASES_URL", "https://raw.githubus
 batch_size = int(os.getenv("DEEPBIBLE_BATCH_SIZE", 500))
 device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
 
-BibleEmbeddingProcessor(collection_name=collection_name,
+BibleEmbeddingProcessor(model_name=model_name,
+                        collection_name=collection_name,
                         qdrant_url=qdrant_url,
                         databases=databases,
                         bible_databases_url=bible_databases_url,
