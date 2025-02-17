@@ -1,59 +1,28 @@
 import sqlite3
 import os
-import requests
-import zipfile
+import sys
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-class BibleEmbeddingProcessor:
-    def __init__(self, model_name=None, collection_name=None, qdrant_url=None, databases=None, bible_databases_url=None, batch_size=None, device=None):
+class DeepBibleEmbeddingProcessor:
+    def __init__(self, model_name=None, collection_name=None, qdrant_url=None, database=None, target_dir=None, batch_size=None, device=None):
         self.collection_name = collection_name
-        self.qdrant_url = qdrant_url
-        self.databases = databases
-        self.bible_databases_url = bible_databases_url
+        self.database = database
         self.batch_size = batch_size
-        self.device = device
+        self.target_dir = target_dir
+        self.client = QdrantClient(url=qdrant_url)
+        self.model = SentenceTransformer(model_name, device=device)
 
-        self.data_dir = "/tmp/data"
-        self.vector_size = 768
-        os.makedirs(self.data_dir, exist_ok=True)
-        self.client = QdrantClient(url=self.qdrant_url)
-        self.model = SentenceTransformer(model_name, device=self.device)
-
-    # Create collection in Qdrant
-    def recreate_collection(self):
-        print(f"Creating/recreating collection '{self.collection_name}' with vector size {self.vector_size}...")
-        self.client.recreate_collection(
-            collection_name=self.collection_name,
-            vectors_config=models.VectorParams(size=self.vector_size, distance="Cosine")
-        )
-
-    # Download Bible database
-    def download_database(self, db):
-        print(f"Downloading {db}...")
-        url = f"{self.bible_databases_url}/{db}.zip"
-        response = requests.get(url)
-        zip_path = os.path.join(self.data_dir, f"{db}.zip")
-        with open(zip_path, "wb") as f:
-            f.write(response.content)
-        return zip_path
-
-    # Extract Bible database
-    def extract_database(self, db):
-        zip_path = self.download_database(db)
-        print(f"Extracting {zip_path}...")
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(self.data_dir)
-        os.remove(zip_path)
-        return os.path.join(self.data_dir, os.path.splitext(os.path.basename(zip_path))[0] + ".SQLite3")
+    def sqlite_path(self):
+        return os.path.join(self.target_dir, f"{self.database}.SQLite3")
 
     # Create an SQLite query to fetch verses from database
-    def fetch_verses_sql(self, db):
+    def fetch_verses_sql(self):
         return f"""
-        SELECT b.book_number || ':' || v.chapter || ':' || v.verse AS address,
+        SELECT b.short_name || ' ' || v.chapter || '.' || v.verse AS address,
                'textus' AS type,
-               '{db.lower()}' AS sub_type,
+               '{self.database.lower()}' AS sub_type,
                v.text AS text
         FROM verses v
         JOIN books b ON v.book_number = b.book_number
@@ -61,28 +30,28 @@ class BibleEmbeddingProcessor:
         """
 
     # Fetch verses from database
-    def fetch_verses(self, db):
-        conn = sqlite3.connect(self.extract_database(db))
+    def fetch_verses(self):
+        conn = sqlite3.connect(self.sqlite_path())
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        print("Fetching verses from {db}...")
-        cursor.execute(self.fetch_verses_sql(db))
+        print(f"Fetching verses from {self.database}...")
+        cursor.execute(self.fetch_verses_sql())
         verses = [dict(row) for row in cursor.fetchall()]
         print(f"- loaded {len(verses)} merged verses from SQLite.")
         conn.close()
         return verses
 
     # Generate embeddings for verses
-    def generate_embeddings(self, db):
-        verses = self.fetch_verses(db)
+    def generate_embeddings(self):
+        verses = self.fetch_verses()
         print("Generating embeddings...")
         texts = [v["text"] for v in verses]  # Use first source as main text
-        embeddings = self.model.encode(texts).tolist()
+        embeddings = self.model.encode(texts, show_progress_bar=True).tolist()
         return [verses, embeddings]
 
     # Upsert embeddings to Qdrant
-    def upsert_to_qdrant(self, db):
-        verses, vectors = self.generate_embeddings(db)
+    def upsert_to_qdrant(self):
+        verses, vectors = self.generate_embeddings()
         print("Upserting data into Qdrant...")
         ids = list(range(len(vectors)))
         payloads = [{"address": verses[i]["address"], "type": verses[i]["type"], "sub_type": verses[i]["sub_type"]} for i in range(len(verses))]
@@ -100,22 +69,24 @@ class BibleEmbeddingProcessor:
 
     # Run the processor
     def run(self):
-        self.recreate_collection()
-        for db in self.databases:
-            self.upsert_to_qdrant(db)
+        self.upsert_to_qdrant()
         print("Done! Embeddings have been inserted into Qdrant.")
 
-model_name = os.getenv("DEEPBIBLE_MODEL", "sentence-transformers/all-mpnet-base-v2")
-collection_name = os.getenv("DEEPBIBLE_COLLECTION", "bible_collection")
-qdrant_url = os.getenv("DEEPBIBLE_QDRANT_URL", "http://qdrant:6333")
-databases = os.getenv("DEEPBIBLE_DATABASES", "PAU,NA28,VULG").split(",")
-bible_databases_url = os.getenv("DEEPBIBLE_DATABASES_URL", "https://raw.githubusercontent.com/placek/bible-databases/master")
-batch_size = int(os.getenv("DEEPBIBLE_BATCH_SIZE", 500))
-device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
 
-BibleEmbeddingProcessor(model_name=model_name,
-                        collection_name=collection_name,
-                        qdrant_url=qdrant_url,
-                        databases=databases,
-                        bible_databases_url=bible_databases_url,
-                        batch_size=batch_size, device=device).run()
+if __name__ == "__main__":
+    model_name = os.getenv("DEEPBIBLE_MODEL", "sentence-transformers/all-mpnet-base-v2")
+    collection_name = os.getenv("DEEPBIBLE_COLLECTION", "bible_collection")
+    qdrant_url = os.getenv("DEEPBIBLE_QDRANT_URL", "http://qdrant:6333")
+    databases = os.getenv("DEEPBIBLE_DATABASES", "PAU,NA28,VULG").split(",")
+    batch_size = int(os.getenv("DEEPBIBLE_BATCH_SIZE", 500))
+    device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
+    target_dir = os.getenv("DEEPBIBLE_TARGET_DIR", "/bibles")
+
+    db = sys.argv[1]
+    DeepBibleEmbeddingProcessor(model_name=model_name,
+                                collection_name=collection_name,
+                                qdrant_url=qdrant_url,
+                                database=db,
+                                target_dir=target_dir,
+                                batch_size=batch_size,
+                                device=device).run()

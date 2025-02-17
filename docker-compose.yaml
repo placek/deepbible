@@ -65,15 +65,17 @@ services:
       dockerfile: Dockerfile
     environment:
       - DEEPBIBLE_DATABASES=PAU #,NA28,VULG,BT'03,BG'1881,NBG'12,UBG'18,BJW,SNP,BL,EIB,EKU,POZ
+      - DEEPBIBLE_TARGET_DIR=/bibles
     volumes:
       - .:/app
       - models-data:/models
+      - bibles-data:/bibles
     command: "true"
     depends_on:
       - qdrant
     restart: no
 
-  qdrant-api:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -82,7 +84,7 @@ services:
     volumes:
       - .:/app
       - models-data:/models
-#     command: "uvicorn qdrant_api.main:app"
+    command: "uvicorn scripts.api:app --reload --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
     restart: always
@@ -94,3 +96,4 @@ volumes:
   redis-data:
   qdrant-data:
   models-data:
+  bibles-data:
