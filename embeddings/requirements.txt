@@ -1,4 +1,0 @@
-qdrant-client==1.1.4
-sentence-transformers==2.2.2
-numpy==1.23.5
-huggingface_hub==0.14.1

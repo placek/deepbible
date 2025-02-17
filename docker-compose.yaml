@@ -59,20 +59,30 @@ services:
       - redis
       - qdrant
 
-  embeddings:
+  scripts:
     build:
-      context: ./embeddings
+      context: .
       dockerfile: Dockerfile
+    environment:
+      - DEEPBIBLE_DATABASES=PAU #,NA28,VULG,BT'03,BG'1881,NBG'12,UBG'18,BJW,SNP,BL,EIB,EKU,POZ
+    volumes:
+      - .:/app
+      - models-data:/models
+    command: "true"
     depends_on:
       - qdrant
     restart: no
 
   qdrant-api:
     build:
-      context: ./qdrant-api
+      context: .
       dockerfile: Dockerfile
     depends_on:
       - qdrant
+    volumes:
+      - .:/app
+      - models-data:/models
+#     command: "uvicorn qdrant_api.main:app"
     ports:
       - "8000:8000"
     restart: always
@@ -83,4 +93,4 @@ volumes:
   ollama-data:
   redis-data:
   qdrant-data:
-  embeddings-data:
+  models-data:
