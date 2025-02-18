@@ -20,9 +20,9 @@ class DeepBibleEmbeddingProcessor:
     # Create an SQLite query to fetch verses from database
     def fetch_verses_sql(self):
         return f"""
-        SELECT b.short_name || ' ' || v.chapter || '.' || v.verse AS address,
-               'textus' AS type,
-               '{self.database.lower()}' AS sub_type,
+        SELECT b.short_name || ' ' || v.chapter || '.' || v.verse AS reference,
+               'textus' AS category,
+               '{self.database.lower()}' AS source,
                v.text AS text
         FROM verses v
         JOIN books b ON v.book_number = b.book_number
@@ -52,10 +52,8 @@ class DeepBibleEmbeddingProcessor:
     # Upsert embeddings to Qdrant
     def upsert_to_qdrant(self):
         verses, vectors = self.generate_embeddings()
-        print("Upserting data into Qdrant...")
         ids = list(range(len(vectors)))
-        payloads = [{"address": verses[i]["address"], "type": verses[i]["type"], "sub_type": verses[i]["sub_type"]} for i in range(len(verses))]
-
+        print("Upserting data into Qdrant...")
         for i in range(0, len(ids), self.batch_size):
             print(f"Upserting batch {i} - {i + self.batch_size}...")
             self.client.upsert(
@@ -63,7 +61,7 @@ class DeepBibleEmbeddingProcessor:
                 points=models.Batch(
                     ids=ids[i:i + self.batch_size],
                     vectors=vectors[i:i + self.batch_size],
-                    payloads=payloads[i:i + self.batch_size]
+                    payloads=verses[i:i + self.batch_size]
                 )
             )
 
