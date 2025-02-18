@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter
-import sqlite3
 import os
 
 class SearchRequest(BaseModel):
     query: str
-    limit: int = 50
+    limit: int = 100
+    category: str = "textus"
 
 class VerseRequest(BaseModel):
     textus: str
@@ -29,60 +29,17 @@ class DeepBibleAPI:
         return os.path.join(self.target_dir, f"{db}.SQLite3")
 
     def setup_routes(self):
-        @self.app.get("/full")
-        async def full(request: SearchRequest):
-            query_embedding = self.model.encode([request.query])[0]
-            search_results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_embedding,
-                limit=request.limit
-            )
-            results = [ {**res.payload, "score": res.score} for res in search_results ]
-            return {"query": request.query, "results": results}
-
-        @self.app.get("/textus")
-        async def textus(request: SearchRequest):
+        @self.app.post("/search")
+        async def search(request: SearchRequest):
             query_embedding = self.model.encode([request.query])[0]
             search_results = self.client.search(
                 collection_name=self.collection_name,
                 query_vector=query_embedding,
                 limit=request.limit,
-                query_filter=Filter(
-                    must=[{"key": "type", "match": {"value": "textus"}}]
-                )
+                filters=[Filter(field="category", values=[request.category])]
             )
             results = [ {**res.payload, "score": res.score} for res in search_results ]
             return {"query": request.query, "results": results}
-
-        @self.app.get("/commentary")
-        async def commentary(request: SearchRequest):
-            query_embedding = self.model.encode([request.query])[0]
-            search_results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_embedding,
-                limit=request.limit,
-                query_filter=Filter(
-                    must=[{"key": "type", "match": {"value": "commentary"}}]
-                )
-            )
-            results = [ {**res.payload, "score": res.score} for res in search_results ]
-            return {"query": request.query, "results": results}
-
-        @self.app.get("/verses")
-        async def verses(request: VerseRequest):
-            conn = sqlite3.connect(self.sqlite_path(request.textus.upper()))
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            cursor.execute(f"""
-              SELECT b.short_name || ' ' || v.chapter || '.' || v.verse AS address, v.text AS text
-              FROM verses v
-              JOIN books b ON v.book_number = b.book_number
-              WHERE address = '{request.address}'
-              ORDER BY b.book_number, v.chapter, v.verse;
-              """)
-            verse = dict(cursor.fetchone())
-            conn.close()
-            return verse
 
     def run(self):
         return self.app

@@ -1,64 +1,4 @@
 services:
-  postgres:
-    image: postgres:17-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: piTTHjN53P7HjM170zeK
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - '7788:6379'
-    volumes:
-      - redis-data:/data
-
-  ollama:
-    image: ollama/ollama
-    restart: always
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-    volumes:
-      - qdrant-data:/qdrant/storage
-    restart: unless-stopped
-
-  n8n:
-    image: n8nio/n8n
-    restart: always
-    volumes:
-      - n8n-data:/home/node/.n8n
-    environment:
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_DATABASE: postgres
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_USER: postgres
-      DB_POSTGRESDB_SCHEMA: public
-      DB_POSTGRESDB_PASSWORD: piTTHjN53P7HjM170zeK
-      GENERIC_TIMEZONE: "Europe/Warsaw"
-      TZ: "Europe/Warsaw"
-      WEBHOOK_URL: "https://auto.placki.cloud/"
-    ports:
-      - "5678:5678"
-    depends_on:
-      - postgres
-      - ollama
-      - redis
-      - qdrant
-
   scripts:
     build:
       context: .
@@ -70,8 +10,6 @@ services:
       - models-data:/models
       - bibles-data:/bibles
     command: "true"
-    depends_on:
-      - qdrant
     restart: no
 
   api:
@@ -80,8 +18,6 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    depends_on:
-      - qdrant
     volumes:
       - .:/app
       - models-data:/models
@@ -92,10 +28,5 @@ services:
     restart: always
 
 volumes:
-  postgres-data:
-  n8n-data:
-  ollama-data:
-  redis-data:
-  qdrant-data:
   models-data:
   bibles-data:

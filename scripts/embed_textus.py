@@ -1,14 +1,15 @@
 import sqlite3
 import os
-import sys
+import uuid
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
+from tqdm import tqdm
 
 class DeepBibleEmbeddingProcessor:
     def __init__(self, model_name=None, collection_name=None, qdrant_url=None, database=None, target_dir=None, batch_size=None, device=None):
         self.collection_name = collection_name
-        self.database = database
+        self.database = database.replace("'", "_")
         self.batch_size = batch_size
         self.target_dir = target_dir
         self.client = QdrantClient(url=qdrant_url)
@@ -49,19 +50,24 @@ class DeepBibleEmbeddingProcessor:
         embeddings = self.model.encode(texts, show_progress_bar=True).tolist()
         return [verses, embeddings]
 
-    # Upsert embeddings to Qdrant
+    # Upsert embeddings into Qdrant
     def upsert_to_qdrant(self):
         verses, vectors = self.generate_embeddings()
-        ids = list(range(len(vectors)))
+        ids = [str(uuid.uuid4()) for _ in range(len(vectors))]  # Unique IDs
+
         print("Upserting data into Qdrant...")
-        for i in range(0, len(ids), self.batch_size):
-            print(f"Upserting batch {i} - {i + self.batch_size}...")
+
+        for i in tqdm(range(0, len(ids), self.batch_size), desc="Upserting batches"):
+            batch_ids = ids[i:i + self.batch_size]
+            batch_vectors = vectors[i:i + self.batch_size]
+            batch_payloads = verses[i:i + self.batch_size]
+
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=models.Batch(
-                    ids=ids[i:i + self.batch_size],
-                    vectors=vectors[i:i + self.batch_size],
-                    payloads=verses[i:i + self.batch_size]
+                    ids=batch_ids,
+                    vectors=batch_vectors,
+                    payloads=batch_payloads
                 )
             )
 
@@ -80,11 +86,11 @@ if __name__ == "__main__":
     device = os.getenv("DEEPBIBLE_DEVICE", "cpu")
     target_dir = os.getenv("DEEPBIBLE_TARGET_DIR", "/bibles")
 
-    db = sys.argv[1]
-    DeepBibleEmbeddingProcessor(model_name=model_name,
-                                collection_name=collection_name,
-                                qdrant_url=qdrant_url,
-                                database=db,
-                                target_dir=target_dir,
-                                batch_size=batch_size,
-                                device=device).run()
+    for db in databases:
+        DeepBibleEmbeddingProcessor(model_name=model_name,
+                                    collection_name=collection_name,
+                                    qdrant_url=qdrant_url,
+                                    database=db,
+                                    target_dir=target_dir,
+                                    batch_size=batch_size,
+                                    device=device).run()

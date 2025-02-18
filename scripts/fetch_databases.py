@@ -14,10 +14,10 @@ class DeepBibleDatabaseFetcher:
             self.extract()
 
     def zip_path(self):
-        return os.path.join(self.target_dir, f"{self.database}.zip")
+        return os.path.join(self.target_dir, f"{self.database}.zip").replace("'", "_")
 
     def sqlite_path(self):
-        return os.path.join(self.target_dir, f"{self.database}.SQLite3")
+        return os.path.join(self.target_dir, f"{self.database}.SQLite3").replace("'", "_")
 
     def url(self):
         return f"{self.bible_databases_url}/{self.database}.zip"
@@ -33,6 +33,7 @@ class DeepBibleDatabaseFetcher:
         print(f"Extracting {self.database}...")
         with zipfile.ZipFile(self.zip_path(), "r") as zip_ref:
             zip_ref.extractall(self.target_dir)
+        os.rename(os.path.join(self.target_dir, f"{self.database}.SQLite3"), self.sqlite_path())
 
 
 if __name__ == "__main__":
