@@ -63,9 +63,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DEEPBIBLE_DATABASES=PAU #,NA28,VULG,BT'03,BG'1881,NBG'12,UBG'18,BJW,SNP,BL,EIB,EKU,POZ
-      - DEEPBIBLE_TARGET_DIR=/bibles
+    env_file:
+      - .env
     volumes:
       - .:/app
       - models-data:/models
@@ -79,8 +78,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DEEPBIBLE_TARGET_DIR=/bibles
+    env_file:
+      - .env
     depends_on:
       - qdrant
     volumes:
