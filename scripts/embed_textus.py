@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from tqdm import tqdm
+import re
 
 class DeepBibleEmbeddingProcessor:
     def __init__(self, model_name=None, collection_name=None, qdrant_url=None, database=None, target_dir=None, batch_size=None, device=None):
@@ -30,6 +31,10 @@ class DeepBibleEmbeddingProcessor:
         ORDER BY b.book_number, v.chapter, v.verse;
         """
 
+    # Remove any XML-like tags from text
+    def sanitize(self, text):
+        return re.sub(r"<[^>]+>", "", text)
+
     # Fetch verses from database
     def fetch_verses(self):
         conn = sqlite3.connect(self.sqlite_path())
@@ -38,7 +43,7 @@ class DeepBibleEmbeddingProcessor:
         print(f"Fetching verses from {self.database}...")
         cursor.execute(self.fetch_verses_sql())
         verses = [dict(row) for row in cursor.fetchall()]
-        print(f"- loaded {len(verses)} merged verses from SQLite.")
+        print(f"- loaded {len(verses)} verses from SQLite.")
         conn.close()
         return verses
 
@@ -46,7 +51,7 @@ class DeepBibleEmbeddingProcessor:
     def generate_embeddings(self):
         verses = self.fetch_verses()
         print("Generating embeddings...")
-        texts = [v["text"] for v in verses]  # Use first source as main text
+        texts = [self.sanitize(v["text"]) for v in verses]  # Use first source as main text
         embeddings = self.model.encode(texts, show_progress_bar=True).tolist()
         return [verses, embeddings]
 
