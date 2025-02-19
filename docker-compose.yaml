@@ -33,6 +33,22 @@ services:
       - qdrant-data:/qdrant/storage
     restart: always
 
+  n8n-chatbot:
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - CHAT_WEBHOOK_URL=${CHAT_WEBHOOK_URL}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   api:
     build:
       context: .
