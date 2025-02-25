@@ -11,9 +11,10 @@ pkgs.mkShell {
     python3Packages.requests
     python3Packages.beautifulsoup4
     python3Packages.lxml
+    python3Packages.numpy
+    python3Packages.sentence-transformers
   ];
   shellHook = ''
-    export SQLITE_VEC_PATH=${pkgs.sqlite-vec}/lib/vec.so
+    export SQLITE_VEC_PATH=${pkgs.sqlite-vec}/lib/vec0.so
   '';
 }
-
