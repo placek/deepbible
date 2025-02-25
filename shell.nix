@@ -16,5 +16,6 @@ pkgs.mkShell {
   ];
   shellHook = ''
     export SQLITE_VEC_PATH=${pkgs.sqlite-vec}/lib/vec0.so
+    export MODEL_NAME=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
   '';
 }

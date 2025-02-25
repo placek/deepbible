@@ -6,9 +6,11 @@ import numpy as np
 import signal
 
 MERGED_DIR = "merged"
+MODEL_NAME = os.getenv("MODEL_NAME", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+MODEL_SIZE = int(os.getenv("MODEL_SIZE", 384))
 
 # Load embedding model
-model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+model = SentenceTransformer(MODEL_NAME)
 
 # Connect to SQLite database
 database = sys.argv[1]
@@ -32,7 +34,7 @@ cur.execute("""
                verse_number_from INTEGER,
                chapter_number_to INTEGER,
                verse_number_to INTEGER,
-               vector float[384]
+               vector float[{MODEL_SIZE}]
                );
 """)
 conn.commit()
