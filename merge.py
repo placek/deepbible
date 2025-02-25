@@ -99,10 +99,25 @@ def merge_databases():
         merged_cursor.execute("DETACH source;")
 
     # Create view combining all verses
-    merged_cursor.execute(f"CREATE VIEW _all_verses AS {' UNION ALL '.join(verses_view_sql)};")
+    merged_cursor.execute(f"""
+        CREATE VIEW _all_verses AS
+        SELECT v.*,
+               (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address,
+               s.name AS source
+        FROM ({' UNION ALL '.join(verses_view_sql)}) v
+        JOIN _sources s ON v.source_number = s.source_number
+        JOIN _books b ON v.book_number = b.book_number;
+    """)
     # Create view combining all commentaries
     if commentaries_view_sql:
-        merged_cursor.execute(f"CREATE VIEW _all_commentaries AS {' UNION ALL '.join(commentaries_view_sql)};")
+        merged_cursor.execute(f"""
+            CREATE VIEW _all_commentaries AS 
+            SELECT c.*, 
+                   (b.short_name || ' ' || c.chapter_number_from || ',' || c.verse_number_from) AS address_from,
+                   (b.short_name || ' ' || c.chapter_number_to || ',' || c.verse_number_to) AS address_to
+            FROM ({' UNION ALL '.join(commentaries_view_sql)}) c
+            JOIN _books b ON c.book_number = b.book_number;
+        """)
 
     # Commit and close
     merged_conn.commit()
