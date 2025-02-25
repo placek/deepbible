@@ -5,13 +5,16 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 import signal
 
+MERGED_DIR = "merged"
+
 # Load embedding model
 model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 # Connect to SQLite database
 database = sys.argv[1]
+dbpath = os.path.join(MERGED_DIR, f"{database}.SQLite3")
 sqlite_vec_path = os.getenv("SQLITE_VEC_PATH", "sqlite_vec")
-conn = sqlite3.connect(database)
+conn = sqlite3.connect(dbpath)
 cur = conn.cursor()
 
 # Enable loading of extensions
@@ -46,9 +49,9 @@ current_state = {
 # Signal handler to print current processing state
 def print_status(signum, frame):
     print(f"\nCurrently processing -> Type: {current_state['type']}, "
-          f"Source Number: {current_state['source_number']}, "
-          f"Book Number: {current_state['book_number']}, "
-          f"Chapter Number: {current_state['chapter_number']}")
+          f"Source: {current_state['source_number']}, "
+          f"Book: {current_state['book_number']}, "
+          f"Chapter: {current_state['chapter_number']}")
 
 # Register the signal handler
 signal.signal(signal.SIGTSTP, print_status)  # Triggered by Ctrl+Z

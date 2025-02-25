@@ -8,11 +8,16 @@ import shutil
 LANGUAGE = sys.argv[1]
 MAIN = sys.argv[2]
 GROUPED_DIR = "grouped"
+MERGED_DIR = "merged"
 
 def merge_databases():
+    # Check if the merged directory exists
+    if not os.path.exists(MERGED_DIR):
+        os.mkdir(MERGED_DIR)
+
     lang_dir = os.path.join(GROUPED_DIR, LANGUAGE)
     db_files = sorted(glob.glob(os.path.join(lang_dir, "*.SQLite3")))
-    merged_db_path = f"{LANGUAGE}.db"
+    merged_db_path = os.path.join(MERGED_DIR, f"{LANGUAGE}.SQLite3")
 
     # Remove previous merged database if exists
     if os.path.exists(merged_db_path):
