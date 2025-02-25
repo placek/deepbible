@@ -18,6 +18,7 @@ def merge_databases():
     lang_dir = os.path.join(GROUPED_DIR, LANGUAGE)
     db_files = sorted(glob.glob(os.path.join(lang_dir, "*.SQLite3")))
     merged_db_path = os.path.join(MERGED_DIR, f"{LANGUAGE}.SQLite3")
+    references_db_path = "cross_references.SQLite3"
 
     # Remove previous merged database if exists
     if os.path.exists(merged_db_path):
@@ -39,6 +40,7 @@ def merge_databases():
     # Create tables
     merged_cursor.execute("CREATE TABLE IF NOT EXISTS _info (source_number NUM, name TEXT, value TEXT);")
     merged_cursor.execute("CREATE TABLE IF NOT EXISTS _sources (source_number NUM, name TEXT, relation TEXT);")
+    merged_cursor.execute("CREATE TABLE IF NOT EXISTS _all_references (address TEXT, address_from TEXT, address_to TEXT, rate NUM);")
 
     verses_view_sql = []
     commentaries_view_sql = []
@@ -97,6 +99,23 @@ def merge_databases():
 
         # Detach database
         merged_cursor.execute("DETACH source;")
+
+    # Copy cross_references
+    print(f"Copying cross_references...")
+    merged_cursor.execute(f"ATTACH '{references_db_path}' AS ref;")
+    merged_cursor.execute(f"""
+        INSERT INTO _all_references
+        SELECT (b.short_name || ' ' || r.chapter || ',' || r.verse) AS address,
+               (b1.short_name || ' ' || r.c1 || ',' || r.v1) AS address_from,
+               (b2.short_name || ' ' || r.c2 || ',' || r.v2) AS address_to,
+               r.rate
+        FROM ref.cross_references r
+        JOIN _books b ON r.book_number = b.book_number
+        JOIN _books b1 ON r.b1 = b1.book_number
+        JOIN _books b2 ON r.b2 = b2.book_number;
+    """)
+    merged_cursor.execute("COMMIT;")
+    merged_cursor.execute("DETACH ref;")
 
     # Create view combining all verses
     merged_cursor.execute(f"""
