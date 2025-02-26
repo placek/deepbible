@@ -128,8 +128,11 @@ def create_all_commentaries_view(cursor):
             CREATE VIEW _all_commentaries AS 
             SELECT c.*, 
                    (b.short_name || ' ' || c.chapter_number_from || ',' || c.verse_number_from) AS address_from,
-                   (b.short_name || ' ' || c.chapter_number_to || ',' || c.verse_number_to) AS address_to
+                   (b.short_name || ' ' || c.chapter_number_to || ',' ||
+                   c.verse_number_to) AS address_to,
+                   s.name AS source
             FROM ({' UNION ALL '.join(commentaries_view_sql)}) c
+            JOIN _sources s ON c.source_number = s.source_number
             JOIN _books b ON c.book_number = b.book_number;
         """)
 
