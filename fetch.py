@@ -11,6 +11,7 @@ print("Querying for:", data)
 MERGED_DIR = "merged"
 MODEL_NAME = os.getenv("MODEL_NAME", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 MODEL_SIZE = int(os.getenv("MODEL_SIZE", 384))
+LIMIT = int(os.getenv("LIMIT", 20))
 
 # Load embedding model
 model = SentenceTransformer(MODEL_NAME)
@@ -31,18 +32,17 @@ query_vec = model.encode(data, convert_to_numpy=True).tolist()
 
 # Fetch the results
 cur.execute(f"""
-    SELECT distance, source, address_from, address_to
-    FROM _vectors
-    WHERE vector MATCH '{query_vec}'
-    ORDER BY distance
-    LIMIT 20;
+    SELECT e.distance, v.address, v.text
+    FROM ( SELECT distance, source, address_from
+           FROM _vectors
+           WHERE vector MATCH '{query_vec}' AND type = 'verse'
+           ORDER BY distance
+           LIMIT {LIMIT} ) e
+    JOIN _all_verses v
+    ON e.source = v.source AND e.address_from = v.address;
 """)
 results = cur.fetchall()
 
 # Print the results
 for result in results:
     print(result)
-#     distance, source, address_from, address_to = result
-#     cur.execute(f"SELECT text FROM _all_verses WHERE source = '{source}' AND address = '{address_from}';")
-#     text = cur.fetchone()[0]
-#     print(f"- {source:5s} - {address_from} ({distance}):", text)
