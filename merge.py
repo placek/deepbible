@@ -34,24 +34,28 @@ def insert_source(cursor, index, name, relation):
             (SELECT value FROM source.info WHERE name = 'chapter_string') AS chapter_string,
             (SELECT value FROM source.info WHERE name = 'chapter_string_ps') AS chapter_string_ps;
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_sources_number ON _sources (source_number);")
 
 def copy_books(cursor):
     print(f"- Copying books...")
     cursor.execute(f"CREATE TABLE _books AS SELECT * FROM source.books_all;")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_books_number ON _books (book_number);")
 
 def copy_verses(cursor, index, name):
     print(f"- Copying verses...")
-    table_name = f"verses_{index:02d}"
-    cursor.execute(f"CREATE TABLE {table_name} AS SELECT * FROM source.verses;")
-    verses_view_sql.append(f"SELECT '{index}' AS source_number, book_number, chapter, verse, text FROM {table_name}")
-    insert_source(cursor, index, name, table_name)
+    table = f"verses_{index:02d}"
+    cursor.execute(f"CREATE TABLE {table} AS SELECT * FROM source.verses;")
+    cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{table}_lookup ON {table} (book_number, chapter, verse);")
+    verses_view_sql.append(f"SELECT '{index}' AS source_number, book_number, chapter, verse, text FROM {table}")
+    insert_source(cursor, index, name, table)
 
 def copy_commentaries(cursor, index, name):
     print(f"- Copying commentaries...")
-    table_name = f"commentaries_{index:02d}"
-    cursor.execute(f"CREATE TABLE {table_name} AS SELECT * FROM source.commentaries;")
-    commentaries_view_sql.append(f"SELECT '{index}' AS source_number, book_number, chapter_number_from, verse_number_from, chapter_number_to, verse_number_to, marker, text FROM {table_name}")
-    insert_source(cursor, index, name, table_name)
+    table = f"commentaries_{index:02d}"
+    cursor.execute(f"CREATE TABLE {table} AS SELECT * FROM source.commentaries;")
+    commentaries_view_sql.append(f"SELECT '{index}' AS source_number, book_number, chapter_number_from, verse_number_from, chapter_number_to, verse_number_to, marker, text FROM {table}")
+    cursor.execute(f"CREATE INDEX IF NOT EXISTS idx_{table}_lookup ON {table} (book_number, chapter_number_from, verse_number_from);")
+    insert_source(cursor, index, name, table)
 
 def copy_dictionary(cursor, index, name):
     print(f"- Copying dictionary...")
@@ -88,6 +92,8 @@ def copy_cross_references(cursor):
     print(f"Copying _all_references...")
     references_db_path = "cross_references.SQLite3"
     cursor.execute("CREATE TABLE IF NOT EXISTS _all_references (address TEXT, address_from TEXT, address_to TEXT, rate NUM);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_references_from ON _all_references (address_from);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_references_to ON _all_references (address_to);")
     cursor.execute(f"ATTACH '{references_db_path}' AS ref;")
     cursor.execute("""
         INSERT INTO _all_references
