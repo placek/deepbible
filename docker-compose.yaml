@@ -15,5 +15,19 @@ services:
       - "8000:8000"
     command: "uvicorn api:app --log-level debug --reload --host 0.0.0.0 --port 8000"
 
+  frontend:
+    image: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=http://backend:8080
+    restart: unless-stopped
+    depends_on:
+      - backend
+
 volumes:
   models_storage:
