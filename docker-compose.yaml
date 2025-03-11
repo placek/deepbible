@@ -1,0 +1,19 @@
+services:
+  backend:
+    image: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DB_PATH=/data/pl.SQLite3
+    volumes:
+      - ./backend:/app
+      - models_storage:/models
+      - ./data/merged:/data
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    command: "uvicorn api:app --log-level debug --reload --host 0.0.0.0 --port 8000"
+
+volumes:
+  models_storage:
