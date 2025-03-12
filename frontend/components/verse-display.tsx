@@ -1,76 +1,44 @@
 "use client"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Bookmark, Share2 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { saveBookmark } from "@/lib/user-data"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchVerses } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import AddressedTile from "./addressed-tile"
 
-export default function VerseDisplay({ address, verses, isLoading }) {
+export default function VerseDisplay({ address }) {
   const { toast } = useToast()
+  const [verses, setVerses] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleBookmark = async () => {
-    try {
-      await saveBookmark({
-        address,
-        verses: verses.slice(0, 1), // Just bookmark the first verse for simplicity
-      })
-
-      toast({
-        title: "Zakładka zapisana",
-        description: `${address} zostało dodane do zakładek.`,
-      })
-    } catch (error) {
-      toast({
-        title: "Error saving bookmark",
-        description: "Could not save bookmark. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator
-        .share({
-          title: address,
-          text: `${verses[0]?.text || ""} - ${address}`,
-          url: window.location.href,
-        })
-        .catch((error) => {
-          toast({
-            title: "Error sharing",
-            description: "Could not share these verses.",
-            variant: "destructive",
-          })
-        })
-    } else {
-      // Fallback for browsers that don't support navigator.share
-      const textToShare = verses.map((v) => `${v.text} (${v.source})`).join("\n\n")
-      navigator.clipboard.writeText(`${address}\n\n${textToShare}\n${window.location.href}`).then(() => {
+  useEffect(() => {
+    async function loadVerses() {
+      setIsLoading(true)
+      try {
+        const data = await fetchVerses(address)
+        setVerses(data)
+      } catch (error) {
+        console.error("Verse fetch error:", error)
+        setVerses([])
         toast({
-          description: "Verses copied to clipboard",
+          title: "Błąd ładowania wersetów",
+          description: "Nie udało się załadować wersetów dla podanego adresu. Spróbuj ponownie.",
+          variant: "destructive",
         })
-      })
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
+
+    loadVerses()
+  }, [address, toast])
 
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-3/4" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-5/6" />
+        <CardContent className="py-10 text-center text-muted-foreground">
+          Ładowanie wersetów dla podanego adresu: {address}
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
-        </CardFooter>
       </Card>
     )
   }
@@ -92,30 +60,17 @@ export default function VerseDisplay({ address, verses, isLoading }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{address}</CardTitle>
+        <CardTitle>Wersety dla adresu: {address}</CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-4">
-        {versesFromDefaultSource.map((verse, index) => (
-          <div key={index} className="pb-2">
-            {versesFromDefaultSource.length > 1 && (
-              <div className="text-sm font-medium text-muted-foreground mb-1">{verse.address}</div>
-            )}
-            <div className="text-lg" dangerouslySetInnerHTML={{ __html: verse.text }} />
-          </div>
+        {versesFromDefaultSource.map(verse => (
+          <AddressedTile
+            source={verse.source}
+            address={verse.address}
+            content={verse.text} />
         ))}
-        <div className="text-sm text-muted-foreground mt-2">Źródło: {defaultSource}</div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={handleBookmark}>
-          <Bookmark className="h-4 w-4 mr-2" />
-          Zakładka
-        </Button>
-        <Button variant="outline" onClick={handleShare}>
-          <Share2 className="h-4 w-4 mr-2" />
-          Udostępnij
-        </Button>
-      </CardFooter>
     </Card>
   )
 }
-

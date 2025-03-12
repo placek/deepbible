@@ -1,18 +1,42 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Skeleton } from "@/components/ui/skeleton"
+"use client"
 
-export default function CompareView({ address, verses, isLoading }) {
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchVerses } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
+
+export default function CompareView({ address }) {
+  const { toast } = useToast()
+  const [verses, setVerses] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadVerses() {
+      setIsLoading(true)
+      try {
+        const data = await fetchVerses(address)
+        setVerses(data)
+      } catch (error) {
+        console.error("Verse fetch error:", error)
+        setVerses([])
+        toast({
+          title: "Błąd ładowania wersetów",
+          description: "Nie udało się załadować wersetów dla podanego adresu. Spróbuj ponownie.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadVerses()
+  }, [address, toast])
+
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-3/4" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-5/6" />
+        <CardContent className="py-10 text-center text-muted-foreground">
+          Ładowanie wersetów dla podanego adresu: {address}
         </CardContent>
       </Card>
     )
@@ -22,7 +46,7 @@ export default function CompareView({ address, verses, isLoading }) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          Nie znaleziono wersetów dla adresu: {address}
+          Brak wersetów dla podanego adresu: {address}
         </CardContent>
       </Card>
     )
@@ -44,43 +68,29 @@ export default function CompareView({ address, verses, isLoading }) {
       <CardHeader>
         <CardTitle>Porównanie tłumaczeń: {address}</CardTitle>
       </CardHeader>
+
       <CardContent>
         <div className="mt-8 border rounded-lg p-6">
           <div className="space-y-6">
-            {/* If we have multiple verses, group by verse number */}
-            {verses.some((v) => v.verse) ? (
-              // Group by verse number
-              Array.from(new Set(verses.map((v) => v.verse))).map((verseNum) => (
-                <div key={verseNum} className="space-y-3">
-                  <div className="font-medium">Werset {verseNum}</div>
-                  <div className="grid gap-3">
-                    {sources.map((source) => {
-                      const verse = sourceGroups[source].find((v) => v.verse === verseNum)
-                      return verse ? (
-                        <div key={source} className="grid grid-cols-[100px_1fr] gap-2">
-                          <div className="font-medium text-muted-foreground">{source}:</div>
-                           <div dangerouslySetInnerHTML={{ __html: verse.text }} />
-                        </div>
-                      ) : null
-                    })}
-                  </div>
+            {Array.from(new Set(verses.map((v) => v.address))).map((verseAddr) => (
+              <div key={verseAddr} className="border rounded-lg p-4">
+                <div className="font-semibold mb-2">{verseAddr}</div>
+                <div className="grid gap-3">
+                  {sources.map((source) => {
+                    const verse = sourceGroups[source].find((v) => v.address === verseAddr)
+                    return verse ? (
+                      <div key={source} className="grid grid-cols-[100px_1fr] gap-2">
+                        <div className="font-medium text-muted-foreground">{source}:</div>
+                         <div dangerouslySetInnerHTML={{ __html: verse.text }} />
+                      </div>
+                    ) : null
+                  })}
                 </div>
-              ))
-            ) : (
-              // Just compare the sources
-              <div className="grid gap-3">
-                {sources.map((source) => (
-                  <div key={source} className="grid grid-cols-[100px_1fr] gap-2">
-                    <div className="font-medium text-muted-foreground">{source}:</div>
-                    <div>{sourceGroups[source][0].text}</div>
-                  </div>
-                ))}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </CardContent>
     </Card>
   )
 }
-
