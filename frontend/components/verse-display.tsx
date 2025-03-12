@@ -18,8 +18,8 @@ export default function VerseDisplay({ address, verses, isLoading }) {
       })
 
       toast({
-        title: "Bookmark saved",
-        description: `${address} has been saved to your bookmarks.`,
+        title: "Zakładka zapisana",
+        description: `${address} zostało dodane do zakładek.`,
       })
     } catch (error) {
       toast({
@@ -79,14 +79,14 @@ export default function VerseDisplay({ address, verses, isLoading }) {
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          No verses found for the address: {address}
+          Brak wersetów dla podanego adresu: {address}
         </CardContent>
       </Card>
     )
   }
 
   // Group verses by source
-  const defaultSource = verses[0]?.source || "Unknown"
+  const defaultSource = "PAU"
   const versesFromDefaultSource = verses.filter((v) => v.source === defaultSource)
 
   return (
@@ -98,21 +98,21 @@ export default function VerseDisplay({ address, verses, isLoading }) {
         {versesFromDefaultSource.map((verse, index) => (
           <div key={index} className="pb-2">
             {versesFromDefaultSource.length > 1 && (
-              <div className="text-sm font-medium text-muted-foreground mb-1">Verse {verse.verseNumber}</div>
+              <div className="text-sm font-medium text-muted-foreground mb-1">{verse.address}</div>
             )}
-            <div className="text-lg">{verse.text}</div>
+            <div className="text-lg" dangerouslySetInnerHTML={{ __html: verse.text }} />
           </div>
         ))}
-        <div className="text-sm text-muted-foreground mt-2">Source: {defaultSource}</div>
+        <div className="text-sm text-muted-foreground mt-2">Źródło: {defaultSource}</div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={handleBookmark}>
           <Bookmark className="h-4 w-4 mr-2" />
-          Bookmark
+          Zakładka
         </Button>
         <Button variant="outline" onClick={handleShare}>
           <Share2 className="h-4 w-4 mr-2" />
-          Share
+          Udostępnij
         </Button>
       </CardFooter>
     </Card>

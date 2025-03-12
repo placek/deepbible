@@ -12,7 +12,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.API_BASE_URL || 'http://localhost:8080'}/:path*`,
+        destination: `${process.env.API_BASE_URL || 'http://backend:8000'}/:path*`,
       },
     ];
   },
@@ -55,4 +55,3 @@ function mergeConfig(nextConfig, userConfig) {
 }
 
 export default nextConfig
-

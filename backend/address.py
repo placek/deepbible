@@ -77,9 +77,28 @@ class CommentariesQueryBuilder:
 
     def _build_query_part(self, book: str, chapter: int, verses: List[int], is_range_to_end: bool) -> str:
         if is_range_to_end:
-            return f"SELECT * FROM {self.table_name} WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}') AND chapter_number_from = {chapter} AND verse_number_from >= {verses[0]}"
+            return f"""
+                SELECT *
+                FROM {self.table_name}
+                WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}')
+                  AND (chapter_number_from + 1) * 1000 >= {chapter * 1000 + verses[0]}
+                  AND COALESCE(chapter_number_to, chapter_number_from) * 1000 + COALESCE(verse_number_to, verse_number_from) >= {chapter * 1000 + verses[0]}
+            """
         elif verses:
-            verse_conditions = ', '.join(map(str, verses))
-            return f"SELECT * FROM {self.table_name} WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}') AND chapter_number_from = {chapter} AND verse_number_from IN ({verse_conditions})"
+            verse_conditions = " OR ".join(map(lambda v: f"""
+                      (chapter_number_from * 1000 + verse_number_from <= {chapter * 1000 + v}
+                       AND COALESCE(chapter_number_to, chapter_number_from) * 1000 + COALESCE(verse_number_to, verse_number_from) >= {chapter * 1000 + v})
+            """, verses))
+            return f"""
+                SELECT *
+                FROM {self.table_name}
+                WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}')
+                  AND ( 1 = 2 OR {verse_conditions})
+            """
         else:
-            return f"SELECT * FROM {self.table_name} WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}') AND chapter_number_from = {chapter}"
+            return f"""
+                SELECT *
+                FROM {self.table_name}
+                WHERE book_number = (SELECT book_number FROM _books WHERE short_name = '{book}')
+                  AND (chapter_number_from >= {chapter} OR COALESCE(chapter_number_to, chapter_number_from) <= {chapter})
+            """

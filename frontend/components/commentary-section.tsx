@@ -22,7 +22,7 @@ export default function CommentarySection({ address }) {
       setIsLoading(true)
       try {
         const data = await fetchCommentaries(address)
-        setCommentaries(data.published || [])
+        setCommentaries(data || [])
         setUserCommentary(data.user || "")
       } catch (error) {
         toast({
@@ -71,13 +71,13 @@ export default function CommentarySection({ address }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Commentaries for {address}</CardTitle>
+        <CardTitle>Komentarze dla {address}</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="published">Published Commentaries</TabsTrigger>
-            <TabsTrigger value="user">Your Commentary</TabsTrigger>
+            <TabsTrigger value="published">Publiczne komentarze</TabsTrigger>
+            <TabsTrigger value="user">Twoje komentarze</TabsTrigger>
           </TabsList>
 
           <TabsContent value="published">
@@ -86,13 +86,14 @@ export default function CommentarySection({ address }) {
                 {commentaries.map((commentary, index) => (
                   <div key={index} className="border rounded-lg p-4">
                     <div className="font-semibold mb-2">{commentary.source}</div>
-                    <div>{commentary.text}</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">{commentary.address_from}-{commentary.address_to}</div>
+                    <div dangerouslySetInnerHTML={{ __html: commentary.text }} />
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                No published commentaries available for this passage.
+                Brak komentarzy.
               </div>
             )}
           </TabsContent>
@@ -100,12 +101,12 @@ export default function CommentarySection({ address }) {
           <TabsContent value="user">
             <div className="space-y-4">
               <Textarea
-                placeholder="Write your own commentary for this passage..."
+                placeholder="Napisz własny komentarz do danej perykopy..."
                 value={userCommentary}
                 onChange={(e) => setUserCommentary(e.target.value)}
                 rows={6}
               />
-              <Button onClick={handleSaveUserCommentary}>Save Commentary</Button>
+              <Button onClick={handleSaveUserCommentary}>Zapisz komentarz</Button>
             </div>
           </TabsContent>
         </Tabs>
@@ -113,4 +114,3 @@ export default function CommentarySection({ address }) {
     </Card>
   )
 }
-

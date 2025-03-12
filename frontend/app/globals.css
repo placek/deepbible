@@ -6,6 +6,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+f {
+  display: none;
+}
+
+n {
+  font-family: monospace;
+  color: steelblue;
+}
+
+e {
+  font-family: monospace;
+  font-weight: 600;
+  color: steelblue;
+}
+
+m, s {
+  font-family: monospace;
+  color: darkgray;
+  font-size: xx-small;
+  text-decoration: none;
+}
+
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

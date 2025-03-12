@@ -39,7 +39,7 @@ export async function fetchVerses(address: string) {
         }
 
         // If no match found, return the first mock data
-        return mockVerses["John 3:16"]
+        return mockVerses["J 1,1"]
       }
     }
   } catch (error) {
@@ -100,7 +100,7 @@ export async function fetchNavigation(address: string) {
   try {
     // First try to fetch from the API
     try {
-      const response = await fetch(`/api/navigation?address=${encodeURIComponent(address)}`, {
+      const response = await fetch(`/navigation?address=${encodeURIComponent(address)}`, {
         headers: {
           Accept: "application/json",
         },
