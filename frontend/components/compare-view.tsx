@@ -70,25 +70,23 @@ export default function CompareView({ address }) {
       </CardHeader>
 
       <CardContent>
-        <div className="mt-8 border rounded-lg p-6">
-          <div className="space-y-6">
-            {Array.from(new Set(verses.map((v) => v.address))).map((verseAddr) => (
-              <div key={verseAddr} className="border rounded-lg p-4">
-                <div className="font-semibold mb-2">{verseAddr}</div>
-                <div className="grid gap-3">
-                  {sources.map((source) => {
-                    const verse = sourceGroups[source].find((v) => v.address === verseAddr)
-                    return verse ? (
-                      <div key={source} className="grid grid-cols-[100px_1fr] gap-2">
-                        <div className="font-medium text-muted-foreground">{source}:</div>
-                         <div dangerouslySetInnerHTML={{ __html: verse.text }} />
-                      </div>
-                    ) : null
-                  })}
-                </div>
+        <div className="space-y-6">
+          {Array.from(new Set(verses.map((v) => v.address))).map((verseAddr) => (
+            <div key={verseAddr} className="border rounded-lg p-4">
+              <div className="font-semibold mb-2">{verseAddr}</div>
+              <div className="grid gap-3">
+                {sources.map((source) => {
+                  const verse = sourceGroups[source].find((v) => v.address === verseAddr)
+                  return verse ? (
+                    <div key={source} className="grid grid-cols-[100px_1fr] gap-2">
+                      <div className="font-medium text-muted-foreground">{source}:</div>
+                       <div dangerouslySetInnerHTML={{ __html: verse.text }} />
+                    </div>
+                  ) : null
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
