@@ -13,6 +13,10 @@ pkgs.mkShell {
     python3Packages.lxml
     python3Packages.numpy
     python3Packages.sentence-transformers
+
+    nodejs
+    spago
+    purescript
   ];
   shellHook = ''
     export SQLITE_VEC_PATH=${pkgs.sqlite-vec}/lib/vec0.so

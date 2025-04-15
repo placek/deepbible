@@ -8,7 +8,6 @@ services:
       - DB_PATH=/data/pl.SQLite3
     volumes:
       - ./backend:/app
-      - models_storage:/models
       - ./data/merged:/data
     restart: unless-stopped
     ports:
@@ -27,6 +26,3 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-
-volumes:
-  models_storage:

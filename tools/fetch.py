@@ -9,7 +9,7 @@ data = sys.stdin.read()
 print("Querying for:", data)
 
 MERGED_DIR = "data/merged"
-MODEL_NAME = os.getenv("MODEL_NAME", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+MODEL_NAME = os.getenv("MODEL_NAME", "models/paraphrase-multilingual-MiniLM-L12-v2")
 MODEL_SIZE = int(os.getenv("MODEL_SIZE", 384))
 LIMIT = int(os.getenv("LIMIT", 20))
 
@@ -35,9 +35,10 @@ cur.execute(f"""
     SELECT e.distance, v.address, v.text
     FROM ( SELECT distance, source, address_from
            FROM _vectors
-           WHERE vector MATCH '{query_vec}' AND type = 'verse'
-           ORDER BY distance
-           LIMIT {LIMIT} ) e
+           WHERE vector MATCH '{query_vec}'
+             AND type = 'verse'
+             AND k = {LIMIT}
+           ORDER BY distance) e
     JOIN _all_verses v
     ON e.source = v.source AND e.address_from = v.address;
 """)

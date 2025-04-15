@@ -90,7 +90,7 @@ def process_source(cursor, index, main_db_path, db_path):
 
 def copy_cross_references(cursor):
     print(f"Copying _all_references...")
-    references_db_path = "cross_references.SQLite3"
+    references_db_path = "data/cross_references.SQLite3"
     cursor.execute("CREATE TABLE IF NOT EXISTS _all_references (address TEXT, address_from TEXT, address_to TEXT, rate NUM);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_references_from ON _all_references (address_from);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_references_to ON _all_references (address_to);")
