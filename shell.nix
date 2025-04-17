@@ -3,33 +3,8 @@
 pkgs.mkShell {
   buildInputs = with pkgs; [
     sqlite
-    sqlite-vec
     rlwrap
     sqlitebrowser
-    llama-cpp
     p7zip
-
-    python3
-    python3Packages.requests
-    python3Packages.beautifulsoup4
-    python3Packages.lxml
-    python3Packages.numpy
-    python3Packages.sentence-transformers
-    python3Packages.transformers
-    python3Packages.datasets
-    python3Packages.peft
-    python3Packages.accelerate
-    python3Packages.sentencepiece
-    python3Packages.huggingface-hub
-    python3Packages.bitsandbytes
-    python3Packages.regex
-
-    nodejs
-    spago
-    purescript
   ];
-  shellHook = ''
-    export SQLITE_VEC_PATH=${pkgs.sqlite-vec}/lib/vec0.so
-    export MODEL_NAME=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-  '';
 }
