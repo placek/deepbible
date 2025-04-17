@@ -1,4 +1,5 @@
 *.zip
 *.SQLite3
-*.db
 __pycache__
+*.txt
+data/

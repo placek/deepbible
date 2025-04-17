@@ -6,6 +6,8 @@ pkgs.mkShell {
     sqlite-vec
     rlwrap
     sqlitebrowser
+    llama-cpp
+    p7zip
 
     python3
     python3Packages.requests
@@ -13,6 +15,14 @@ pkgs.mkShell {
     python3Packages.lxml
     python3Packages.numpy
     python3Packages.sentence-transformers
+    python3Packages.transformers
+    python3Packages.datasets
+    python3Packages.peft
+    python3Packages.accelerate
+    python3Packages.sentencepiece
+    python3Packages.huggingface-hub
+    python3Packages.bitsandbytes
+    python3Packages.regex
 
     nodejs
     spago
