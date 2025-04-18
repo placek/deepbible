@@ -115,12 +115,12 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 
 upload-%: $(merged_dir)/%.SQLite3
 	@echo ">> uploading SQLite3 DB for language: $* to $(output_dir)"
-	@python3 upload.py "$<"
+	@python3 scripts/upload.py "$<"
 
 # trains the LoRA model using the merged SQLite3 databases
 #train: $(wildcard $(merged_dir)/*.SQLite3) | $(output_dir)
 #	@echo ">> launching LoRA training script..."
-#	@python3 train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
+#	@python3 scripts/train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
 upload: $(addprefix upload-,$(langs)) $(helpers_sql)
 	@echo ">> applying helpers"
