@@ -6,6 +6,7 @@ grouped_dir  := data/grouped
 merged_dir   := data/merged
 output_dir   := data/lamb3
 
+langs       ?= pl la grc
 # model_id     ?= NousResearch/Llama-2-7b-hf
 # final_jsonl  := $(output_dir)/bible.jsonl
 # gguf_path    := $(output_dir)/gguf
@@ -117,3 +118,10 @@ upload-%: $(merged_dir)/%.SQLite3
 #	@echo ">> launching LoRA training script..."
 #	@python3 train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
+view.sql: $(addprefix upload-,$(langs))
+	@echo ">> generating SQL view for schemas: $(langs)"
+	@echo "CREATE OR REPLACE VIEW public._all_verses AS" > $@
+	@$(foreach lang, $(langs), \
+	  printf "SELECT\n  '$(lang)/' || id AS id,\n  '$(lang)' AS language,\n  source,\n  address,\n  source_number,\n  book_number,\n  chapter,\n  verse,\n  regexp_replace(\n    text,\n    '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\\\s[^<>]*)?/?>',\n    '',\n    'gi'\n  ) AS text\nFROM $(lang)._all_verses" >> $@; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> $@; fi; \
+	)
