@@ -134,6 +134,9 @@ apply-helpers: $(helpers_sql)
 	  -d $(POSTGRES_DB) \
 	  -f $(helpers_sql)
 
+embed:
+	python3 scripts/embed.py
+
 $(helpers_sql):
 	@echo ">> generating SQL helper functions and materialized views for schemas: $(langs)"
 	@echo "-- IMMUTABLE SQL FUNCTIONS" > $@

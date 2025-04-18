@@ -10,5 +10,7 @@ pkgs.mkShell {
 
     python3
     python3Packages.psycopg2
+    python3Packages.requests
+    python3Packages.tqdm
   ];
 }
