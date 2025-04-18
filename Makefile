@@ -12,7 +12,7 @@ langs       ?= pl la grc
 # gguf_path    := $(output_dir)/gguf
 
 .PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
-.PHONY: fetch re-fetch clean upload-% # train
+.PHONY: fetch re-fetch clean upload-% upload # train
 
 all:
 	@echo "Read Makefile first to understand how to use it."
@@ -118,7 +118,10 @@ upload-%: $(merged_dir)/%.SQLite3
 #	@echo ">> launching LoRA training script..."
 #	@python3 train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
-view.sql: $(addprefix upload-,$(langs))
+upload: $(addprefix upload-,$(langs))
+	@echo ">> all SQLite3 databases uploaded to target"
+
+view.sql:
 	@echo ">> generating SQL view for schemas: $(langs)"
 	@echo "CREATE OR REPLACE VIEW public._all_verses AS" > $@
 	@$(foreach lang, $(langs), \
