@@ -98,7 +98,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  idx=$$((idx+1)); \
 	done; \
 	verses_sql=$${verses_sql% UNION ALL }; \
-	echo "CREATE VIEW _all_verses AS SELECT v.*, s.name AS source, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address FROM ($$verses_sql) v JOIN _sources s ON v.source_number = s.source_number JOIN _books b ON v.book_number = b.book_number;" >> $$tmp_sql; \
+	echo "CREATE VIEW _all_verses AS SELECT (s.name || '/' || b.short_name || '/' || v.chapter || '/' || v.verse) AS id, s.name AS source, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address, v.* FROM ($$verses_sql) v JOIN _sources s ON v.source_number = s.source_number JOIN _books b ON v.book_number = b.book_number;" >> $$tmp_sql; \
 	sqlite3 "$@" < "$$tmp_sql"; \
 	rm -f "$$tmp_sql"
 
