@@ -10,8 +10,14 @@ output_dir   := data/lamb3
 # final_jsonl  := $(output_dir)/bible.jsonl
 # gguf_path    := $(output_dir)/gguf
 
+.PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
+.PHONY: fetch re-fetch clean upload-% # train
+
 all:
 	@echo "…"
+
+clean:
+	-rm -rf $(merged_dir) download-list.txt failed.txt view.sql
 
 # fetches the list of available zip files
 download-list.txt:
@@ -111,8 +117,3 @@ upload-%: $(merged_dir)/%.SQLite3
 #	@echo ">> launching LoRA training script..."
 #	@python3 train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
-clean:
-	-rm -rf $(merged_dir) download-list.txt failed.txt
-
-.PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
-.PHONY: fetch re-fetch clean upload-% # train
