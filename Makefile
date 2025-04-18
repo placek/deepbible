@@ -4,7 +4,7 @@ download_dir := data/downloads
 extract_dir  := data/extracted
 grouped_dir  := data/grouped
 merged_dir   := data/merged
-output_dir   := data/lamb3
+helpers_sql  := helpers.sql
 
 langs       ?= pl la grc
 # model_id     ?= NousResearch/Llama-2-7b-hf
@@ -18,7 +18,7 @@ all:
 	@echo "Read Makefile first to understand how to use it."
 
 clean:
-	-rm -rf $(merged_dir) download-list.txt failed.txt helpers.sql
+	-rm -rf $(merged_dir) download-list.txt failed.txt $(helpers_sql)
 
 # fetches the list of available zip files
 download-list.txt:
@@ -105,7 +105,11 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  idx=$$((idx+1)); \
 	done; \
 	verses_sql=$${verses_sql% UNION ALL }; \
-	echo "CREATE VIEW _all_verses AS SELECT (s.name || '/' || b.short_name || '/' || v.chapter || '/' || v.verse) AS id, s.name AS source, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address, v.* FROM ($$verses_sql) v JOIN _sources s ON v.source_number = s.source_number JOIN _books b ON v.book_number = b.book_number;" >> $$tmp_sql; \
+	echo "CREATE VIEW _all_verses AS" >> $$tmp_sql; \
+	echo "SELECT ('$*/' || v.source_number || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id, '$*' AS language, s.name AS source, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address, v.*" >> $$tmp_sql; \
+	echo "  FROM ($$verses_sql) v" >> $$tmp_sql; \
+	echo "  JOIN _sources s ON v.source_number = s.source_number" >> $$tmp_sql; \
+	echo "  JOIN _books b ON v.book_number = b.book_number;" >> $$tmp_sql; \
 	sqlite3 "$@" < "$$tmp_sql"; \
 	rm -f "$$tmp_sql"
 
@@ -118,16 +122,28 @@ upload-%: $(merged_dir)/%.SQLite3
 #	@echo ">> launching LoRA training script..."
 #	@python3 train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
-upload: $(addprefix upload-,$(langs))
-	@echo ">> all SQLite3 databases uploaded to target"
+upload: $(addprefix upload-,$(langs)) $(helpers_sql)
+	@echo ">> applying helpers"
+	@PGPASSWORD=$(POSTGRES_PASSWORD) psql \
+	  -h $(POSTGRES_HOST) \
+	  -p $(POSTGRES_PORT) \
+	  -U $(POSTGRES_USER) \
+	  -d $(POSTGRES_DB) \
+	  -f $(helpers_sql)
 
-helpers.sql:
+$(helpers_sql):
 	@echo ">> generating SQL view for schemas: $(langs)"
 	@echo "CREATE OR REPLACE VIEW public._all_verses AS" > $@
 	@$(foreach lang, $(langs), \
-	  printf "SELECT\n  '$(lang)/' || id AS id,\n  '$(lang)' AS language,\n  source,\n  address,\n  source_number,\n  book_number,\n  chapter,\n  verse,\n  regexp_replace(\n    text,\n    '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\\\s[^<>]*)?/?>',\n    '',\n    'gi'\n  ) AS text\nFROM $(lang)._all_verses" >> $@; \
+	  printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@; \
+	  printf "       regexp_replace(text, '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\\\s[^<>]*)?/?>', '', 'gi') AS text\n" >> $@; \
+	  printf "  FROM $(lang)._all_verses" >> $@; \
 	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> $@; fi; \
 	)
 	@printf ";\n\n" >> $@
 	@echo ">> generating SQL view with sanitized text"
-	@printf "CREATE OR REPLACE VIEW public._sanitized_verses AS\nSELECT\n  id,\n  source,\n  address,\n  source_number,\n  book_number,\n  chapter,\n  verse,\n  regexp_replace(\n    regexp_replace(\n      regexp_replace(\n        regexp_replace(\n          regexp_replace(\n            regexp_replace(\n              regexp_replace(\n                regexp_replace(\n                  regexp_replace(\n                    text,\n                    '<(S|m|f|n)(\\\\s[^<>]*)?>.*?</\\\\1>', '', 'gi'\n                  ),\n                  '<(S|m|f|n)(\\\\s[^<>]*)?/?>', '', 'gi'\n                ),\n                '</?(J|e|i)(\\\\s[^<>]*)?/?>', '', 'gi'\n              ),\n              '<(br|pb)(\\\\s[^<>]*)?/?>', '', 'gi'\n            ),\n            '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g'\n          ),\n          '<>', '', 'g'\n        ),\n        '[<>]+', '', 'g'\n      ),\n      '\\\\s+', ' ', 'g'\n    ),\n    '^\\\\s+|\\\\s+$$', '', 'g'\n  ) AS text\nFROM public._all_verses;" >> $@
+	@echo "CREATE OR REPLACE VIEW public._sanitized_verses AS" >> $@
+	@printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@
+	@printf "       regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(text, '<(S|m|f|n)(\\\\s[^<>]*)?>.*?</\\\\1>', '', 'gi'), '<(S|m|f|n)(\\\\s[^<>]*)?/?>', '', 'gi'), '</?(J|e|i)(\\\\s[^<>]*)?/?>', '', 'gi'), '<(br|pb)(\\\\s[^<>]*)?/?>', '', 'gi'), '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g'), '<>', '', 'g'), '[<>]+', '', 'g'), '\\\\s+', ' ', 'g'), '^\\\\s+|\\\\s+$$', '', 'g') AS text" >> $@
+	@printf "  FROM public._all_verses" >> $@
+	@printf ";\n\n" >> $@
