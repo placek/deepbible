@@ -12,6 +12,16 @@
     <WW> ignore tag - 2 verses
     <small> inside <n> tag, class='far', ignore
     <t> looks like "main text" - ignore
+[x] make sanitized view
+    <S> strong
+    <m> morphology
+    <f> footnote
+    <J> Jesus words
+    <n> note
+    <e> emphasis (?)
+    <i> missing text
+    <br> line break
+    <pb> page break
 [ ] vector embeddings
 [ ] chat with text
 [ ] get metadata from XML tags
