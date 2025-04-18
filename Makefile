@@ -102,6 +102,10 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	sqlite3 "$@" < "$$tmp_sql"; \
 	rm -f "$$tmp_sql"
 
+upload-%: $(merged_dir)/%.SQLite3
+	@echo ">> uploading SQLite3 DB for language: $* to $(output_dir)"
+	@python3 upload.py "$<"
+
 # trains the LoRA model using the merged SQLite3 databases
 #train: $(wildcard $(merged_dir)/*.SQLite3) | $(output_dir)
 #	@echo ">> launching LoRA training script..."
@@ -111,4 +115,4 @@ clean:
 	-rm -rf $(merged_dir) download-list.txt failed.txt
 
 .PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
-.PHONY: fetch re-fetch clean # train
+.PHONY: fetch re-fetch clean upload-% # train
