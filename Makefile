@@ -14,7 +14,7 @@ output_dir   := data/lamb3
 .PHONY: fetch re-fetch clean upload-% # train
 
 all:
-	@echo "…"
+	@echo "Read Makefile first to understand how to use it."
 
 clean:
 	-rm -rf $(merged_dir) download-list.txt failed.txt view.sql
