@@ -3,4 +3,4 @@
 __pycache__
 *.txt
 data/
-view.sql
+helpers.sql

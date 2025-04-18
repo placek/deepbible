@@ -18,7 +18,7 @@ all:
 	@echo "Read Makefile first to understand how to use it."
 
 clean:
-	-rm -rf $(merged_dir) download-list.txt failed.txt view.sql
+	-rm -rf $(merged_dir) download-list.txt failed.txt helpers.sql
 
 # fetches the list of available zip files
 download-list.txt:
@@ -121,7 +121,7 @@ upload-%: $(merged_dir)/%.SQLite3
 upload: $(addprefix upload-,$(langs))
 	@echo ">> all SQLite3 databases uploaded to target"
 
-view.sql:
+helpers.sql:
 	@echo ">> generating SQL view for schemas: $(langs)"
 	@echo "CREATE OR REPLACE VIEW public._all_verses AS" > $@
 	@$(foreach lang, $(langs), \
