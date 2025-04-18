@@ -1,6 +1,6 @@
 # TODO
 
-[x] sanitize text from XML tags with view
+- [x] sanitize text from XML tags with view
     <div> ignore - align='center'
     <q> ignore tag - one verse
     <Q> ignore tag - one verse
@@ -12,7 +12,7 @@
     <WW> ignore tag - 2 verses
     <small> inside <n> tag, class='far', ignore
     <t> looks like "main text" - ignore
-[x] make sanitized view
+- [x] make sanitized view
     <S> strong
     <m> morphology
     <f> footnote
@@ -22,9 +22,9 @@
     <i> missing text
     <br> line break
     <pb> page break
-[ ] vector embeddings
-[ ] chat with text
-[ ] get metadata from XML tags
+- [x] vector embeddings
+- [ ] chat with text
+- [ ] get metadata from XML tags
     <S> strong
     <m> morphology
     <f> footnote
@@ -34,10 +34,11 @@
     <i> missing text
     <br> line break
     <pb> page break
-[ ] address parser
-[ ] sources comparison
-[ ] dicitonaries
-[ ] commentaries
-[ ] fix known mistakes
+- [ ] UI
+- [ ] address parser
+- [ ] sources comparison
+- [ ] dicitonaries
+- [ ] commentaries
+- [ ] fix known mistakes
     <> two mistakes
     <:space: three mistakes
