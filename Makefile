@@ -6,9 +6,9 @@ grouped_dir  := data/grouped
 merged_dir   := data/merged
 output_dir   := data/lamb3
 
-model_id     ?= NousResearch/Llama-2-7b-hf
-final_jsonl  := $(output_dir)/bible.jsonl
-gguf_path    := $(output_dir)/gguf
+# model_id     ?= NousResearch/Llama-2-7b-hf
+# final_jsonl  := $(output_dir)/bible.jsonl
+# gguf_path    := $(output_dir)/gguf
 
 all:
 	@echo "…"
