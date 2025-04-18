@@ -74,7 +74,8 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	idx=0; \
 	verses_sql=""; \
 	dbs=$$(find "$<" -name '*.SQLite3' | sort); \
-	echo "ATTACH 'data/extracted/VULG/VULG.SQLite3' AS source;" >> $$tmp_sql; \
+	main_db=$$(cat main_sources.json | jq -r ".$*"); \
+	echo "ATTACH '$$main_db' AS source;" >> $$tmp_sql; \
 	echo "CREATE TABLE _books AS SELECT * FROM source.books_all;" >> $$tmp_sql; \
 	echo "CREATE INDEX IF NOT EXISTS idx_books_number ON _books (book_number);" >> $$tmp_sql; \
 	echo "DETACH source;" >> $$tmp_sql; \
