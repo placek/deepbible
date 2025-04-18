@@ -12,7 +12,7 @@ langs       ?= pl la grc
 # gguf_path    := $(output_dir)/gguf
 
 .PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
-.PHONY: fetch re-fetch clean upload-% upload # train
+.PHONY: fetch re-fetch clean upload-% upload apply-helpers # train
 
 all:
 	@echo "Read Makefile first to understand how to use it."
@@ -122,7 +122,10 @@ upload-%: $(merged_dir)/%.SQLite3
 #	@echo ">> launching LoRA training script..."
 #	@python3 scripts/train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
-upload: $(addprefix upload-,$(langs)) $(helpers_sql)
+upload: $(addprefix upload-,$(langs)) apply-helpers
+	@echo ">> uploading SQLite3 DBs for languages: $(langs)"
+
+apply-helpers: $(helpers_sql)
 	@echo ">> applying helpers"
 	@PGPASSWORD=$(POSTGRES_PASSWORD) psql \
 	  -h $(POSTGRES_HOST) \
@@ -132,18 +135,53 @@ upload: $(addprefix upload-,$(langs)) $(helpers_sql)
 	  -f $(helpers_sql)
 
 $(helpers_sql):
-	@echo ">> generating SQL view for schemas: $(langs)"
-	@echo "CREATE OR REPLACE VIEW public._all_verses AS" > $@
+	@echo ">> generating SQL helper functions and materialized views for schemas: $(langs)"
+	@echo "-- IMMUTABLE SQL FUNCTIONS" > $@
+	@echo "CREATE OR REPLACE FUNCTION public.strip_basic_tags(input text)" >> $@
+	@echo "RETURNS text AS \$$\$$" >> $@
+	@echo "  SELECT regexp_replace(input, '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\s[^<>]*)?/?>', '', 'gi');" >> $@
+	@echo "\$$\$$ LANGUAGE sql IMMUTABLE;" >> $@
+	@echo "" >> $@
+	@echo "CREATE OR REPLACE FUNCTION public.sanitize_text(input text)" >> $@
+	@echo "RETURNS text AS \$$\$$" >> $@
+	@echo "  SELECT regexp_replace(" >> $@
+	@echo "           regexp_replace(" >> $@
+	@echo "             regexp_replace(" >> $@
+	@echo "               regexp_replace(" >> $@
+	@echo "                 regexp_replace(" >> $@
+	@echo "                   regexp_replace(" >> $@
+	@echo "                     regexp_replace(" >> $@
+	@echo "                       regexp_replace(" >> $@
+	@echo "                         regexp_replace(input," >> $@
+	@echo "                           '<(S|m|f|n)(\\s[^<>]*)?>.*?</\\1>', '', 'gi')," >> $@
+	@echo "                         '<(S|m|f|n)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
+	@echo "                       '</?(J|e|i)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
+	@echo "                     '<(br|pb)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
+	@echo "                   '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g')," >> $@
+	@echo "                 '<>', '', 'g')," >> $@
+	@echo "               '[<>]+', '', 'g')," >> $@
+	@echo "             '\\s+', ' ', 'g')," >> $@
+	@echo "           '^\\s+|\\s+$$', '', 'g');" >> $@
+	@echo "\$$\$$ LANGUAGE sql IMMUTABLE;" >> $@
+	@echo "" >> $@
+	@echo "-- MATERIALIZED VIEW: _all_verses" >> $@
+	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" >> $@
 	@$(foreach lang, $(langs), \
 	  printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@; \
-	  printf "       regexp_replace(text, '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\\\s[^<>]*)?/?>', '', 'gi') AS text\n" >> $@; \
+	  printf "       public.strip_basic_tags(text) AS text\n" >> $@; \
 	  printf "  FROM $(lang)._all_verses" >> $@; \
 	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> $@; fi; \
 	)
-	@printf ";\n\n" >> $@
-	@echo ">> generating SQL view with sanitized text"
-	@echo "CREATE OR REPLACE VIEW public._sanitized_verses AS" >> $@
+	@printf "\nWITH NO DATA;\n\n" >> $@
+	@echo "-- MATERIALIZED VIEW: _sanitized_verses" >> $@
+	@printf "CREATE MATERIALIZED VIEW public._sanitized_verses AS\n" >> $@
 	@printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@
-	@printf "       regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(text, '<(S|m|f|n)(\\\\s[^<>]*)?>.*?</\\\\1>', '', 'gi'), '<(S|m|f|n)(\\\\s[^<>]*)?/?>', '', 'gi'), '</?(J|e|i)(\\\\s[^<>]*)?/?>', '', 'gi'), '<(br|pb)(\\\\s[^<>]*)?/?>', '', 'gi'), '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g'), '<>', '', 'g'), '[<>]+', '', 'g'), '\\\\s+', ' ', 'g'), '^\\\\s+|\\\\s+$$', '', 'g') AS text" >> $@
-	@printf "  FROM public._all_verses" >> $@
-	@printf ";\n\n" >> $@
+	@printf "       public.sanitize_text(text) AS text\n" >> $@
+	@printf "  FROM public._all_verses\n" >> $@
+	@printf "WITH NO DATA;\n\n" >> $@
+	@echo "-- INDEXES" >> $@
+	@echo "CREATE INDEX idx_sanitized_verses_language ON public._sanitized_verses(language);" >> $@
+	@echo "CREATE INDEX idx_sanitized_verses_book_chapter_verse ON public._sanitized_verses(book_number, chapter, verse);" >> $@
+	@echo "CREATE INDEX idx_sanitized_verses_source_number ON public._sanitized_verses(source_number);" >> $@
+	@echo "REFRESH MATERIALIZED VIEW public._all_verses;" >> $@
+	@echo "REFRESH MATERIALIZED VIEW public._sanitized_verses;" >> $@
