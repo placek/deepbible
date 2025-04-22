@@ -5,8 +5,10 @@ pkgs.mkShell {
     sqlite
     rlwrap
     sqlitebrowser
-    p7zip
+
     postgresql
+
+    p7zip
 
     python3
     python3Packages.psycopg2
