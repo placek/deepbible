@@ -169,14 +169,25 @@ $(helpers_sql):
 	)
 	@printf "\nWITH NO DATA;\n\n" >> $@
 	@echo "-- MATERIALIZED VIEW: _sanitized_verses" >> $@
-	@printf "CREATE MATERIALIZED VIEW public._sanitized_verses AS\n" >> $@
-	@printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@
-	@printf "       public.sanitize_text(text) AS text\n" >> $@
-	@printf "  FROM public._all_verses\n" >> $@
-	@printf "WITH NO DATA;\n\n" >> $@
+	@echo "CREATE MATERIALIZED VIEW public._sanitized_verses AS" >> $@
+	@echo "SELECT id, language, source, address, source_number, book_number, chapter, verse," >> $@
+	@echo "       public.sanitize_text(text) AS text" >> $@
+	@echo "  FROM public._all_verses" >> $@
+	@echo "WITH NO DATA;" >> $@
+	@echo "" >> $@
 	@echo "-- INDEXES" >> $@
 	@echo "CREATE INDEX idx_sanitized_verses_language ON public._sanitized_verses(language);" >> $@
 	@echo "CREATE INDEX idx_sanitized_verses_book_chapter_verse ON public._sanitized_verses(book_number, chapter, verse);" >> $@
 	@echo "CREATE INDEX idx_sanitized_verses_source_number ON public._sanitized_verses(source_number);" >> $@
 	@echo "REFRESH MATERIALIZED VIEW public._all_verses;" >> $@
 	@echo "REFRESH MATERIALIZED VIEW public._sanitized_verses;" >> $@
+	@echo "" >> $@
+	@echo "-- VECTOR EXTENSION AND TABLE" >> $@
+	@echo "CREATE EXTENSION IF NOT EXISTS vector;" >> $@
+	@echo "CREATE TABLE IF NOT EXISTS public._verse_embeddings (" >> $@
+	@echo "    id UUID PRIMARY KEY," >> $@
+	@echo "    embedding vector(1024)," >> $@
+	@echo "    content TEXT," >> $@
+	@echo "    metadata JSONB" >> $@
+	@echo ");" >> $@
+	@echo "" >> $@

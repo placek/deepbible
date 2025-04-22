@@ -23,17 +23,6 @@ def get_db_connection():
 def get_embedding(text):
     return model.encode(text).tolist()
 
-def create_table_if_not_exists(cur):
-    cur.execute(f"""
-        CREATE EXTENSION IF NOT EXISTS vector;
-        CREATE TABLE IF NOT EXISTS public.{TABLE_NAME} (
-            id UUID PRIMARY KEY,
-            embedding vector(1024),
-            content TEXT,
-            metadata JSONB
-        )
-    """)
-
 def get_batch(cur, offset):
     cur.execute(f"""
         SELECT sv.id AS id,
@@ -61,9 +50,6 @@ def get_batch(cur, offset):
 def main():
     conn = get_db_connection()
     cur = conn.cursor()
-
-    create_table_if_not_exists(cur)
-
     offset = 0
     while True:
         rows = get_batch(cur, offset)
