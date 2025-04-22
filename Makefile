@@ -191,3 +191,25 @@ $(helpers_sql):
 	@echo "    metadata JSONB" >> $@
 	@echo ");" >> $@
 	@echo "" >> $@
+	@echo "-- VECTOR SEARCH FUNCTION" >> $@
+	@echo "CREATE OR REPLACE FUNCTION public.search_embeddings(" >> $@
+	@echo "    query_vector vector," >> $@
+	@echo "    result_limit INT DEFAULT 5" >> $@
+	@echo ") RETURNS TABLE (" >> $@
+	@echo "    id UUID," >> $@
+	@echo "    content TEXT," >> $@
+	@echo "    metadata JSONB," >> $@
+	@echo "    similarity FLOAT" >> $@
+	@echo ") AS \$$\$$" >> $@
+	@echo "BEGIN" >> $@
+	@echo "    RETURN QUERY" >> $@
+	@echo "    SELECT" >> $@
+	@echo "        id," >> $@
+	@echo "        content," >> $@
+	@echo "        metadata," >> $@
+	@echo "        1 - (embedding <=> query_vector) AS similarity" >> $@
+	@echo "    FROM public._verse_embeddings" >> $@
+	@echo "    ORDER BY embedding <=> query_vector" >> $@
+	@echo "    LIMIT result_limit;" >> $@
+	@echo "END;" >> $@
+	@echo "\$$\$$ LANGUAGE plpgsql STABLE;" >> $@

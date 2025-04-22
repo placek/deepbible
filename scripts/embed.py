@@ -13,7 +13,6 @@ DB_CONFIG = {
     "port": os.getenv("POSTGRES_PORT", 5432),
 }
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 256))
-TABLE_NAME = os.getenv("TABLE_NAME", "_verse_embeddings")
 
 model = SentenceTransformer("BAAI/bge-m3")
 
@@ -38,7 +37,7 @@ def get_batch(cur, offset):
                                            'v', sv.verse)
                 ) AS metadata
         FROM public._sanitized_verses sv
-        LEFT JOIN public.{TABLE_NAME} ve
+        LEFT JOIN public._verse_embeddings ve
                ON ve.metadata->>'id' = sv.id
         WHERE sv.text IS NOT NULL
           AND ve.id IS NULL
@@ -66,8 +65,8 @@ def main():
                 if not isinstance(embedding, list) or len(embedding) == 0:
                     print(f">> skipping verse {verse_id}: empty embedding")
                     continue
-                cur.execute(f"""
-                    INSERT INTO public.{TABLE_NAME} (id, embedding, content, metadata)
+                cur.execute("""
+                    INSERT INTO public._verse_embeddings (id, embedding, content, metadata)
                     VALUES (%s, %s, %s, %s)
                 """, (str(uuid.uuid4()), embedding, content, json.dumps(metadata)))
 
