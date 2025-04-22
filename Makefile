@@ -7,9 +7,6 @@ merged_dir   := data/merged
 helpers_sql  := helpers.sql
 
 langs       ?= pl la grc
-# model_id     ?= NousResearch/Llama-2-7b-hf
-# final_jsonl  := $(output_dir)/bible.jsonl
-# gguf_path    := $(output_dir)/gguf
 
 .PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
 .PHONY: fetch re-fetch clean upload-% upload apply-helpers # train
@@ -116,11 +113,6 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 upload-%: $(merged_dir)/%.SQLite3
 	@echo ">> uploading SQLite3 DB for language: $* to $(output_dir)"
 	@python3 scripts/upload.py "$<"
-
-# trains the LoRA model using the merged SQLite3 databases
-#train: $(wildcard $(merged_dir)/*.SQLite3) | $(output_dir)
-#	@echo ">> launching LoRA training script..."
-#	@python3 scripts/train.py "$(model_id)" "$(output_dir)" $(wildcard $(merged_dir)/*.SQLite3)
 
 upload: $(addprefix upload-,$(langs)) apply-helpers
 	@echo ">> uploading SQLite3 DBs for languages: $(langs)"
