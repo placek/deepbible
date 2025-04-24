@@ -23,8 +23,7 @@
     <br> line break
     <pb> page break
 - [x] vector embeddings
-- [ ] chat with text
-- [ ] get metadata from XML tags
+- [x] get metadata from XML tags
     <S> strong
     <m> morphology
     <f> footnote
@@ -34,6 +33,8 @@
     <i> missing text
     <br> line break
     <pb> page break
+
+- [ ] chat with text
 - [ ] UI
 - [ ] address parser
 - [ ] sources comparison

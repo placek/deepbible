@@ -1,15 +1,15 @@
 bible_sources_url := https://www.ph4.org
 
-download_dir := data/downloads
-extract_dir  := data/extracted
-grouped_dir  := data/grouped
-merged_dir   := data/merged
-helpers_sql  := helpers.sql
+download_dir      := data/downloads
+extract_dir       := data/extracted
+grouped_dir       := data/grouped
+merged_dir        := data/merged
+helpers_sql       := helpers.sql
 
-langs       ?= pl la grc
+langs             ?= pl la grc
 
 .PRECIOUS: $(download_dir)/%.zip $(extract_dir)/% $(grouped_dir)/% $(merged_dir)/%.SQLite3
-.PHONY: fetch re-fetch clean upload-% upload apply-helpers # train
+.PHONY: all clean fetch re-fetch upload-% upload apply-helpers embed
 
 all:
 	@echo "Read Makefile first to understand how to use it."
@@ -47,7 +47,7 @@ fetch: download-list.txt
 
 # re-fetches the zip files that failed to download or extract
 re-fetch: failed.txt
-	@echo "Re-fetching failed zip files..."
+	@echo ">> re-fetching failed zip files..."
 	@while read file; do \
 	  rm -rf "$$file"; \
 	  $(MAKE) "$$file"; \
@@ -110,13 +110,26 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	sqlite3 "$@" < "$$tmp_sql"; \
 	rm -f "$$tmp_sql"
 
+# uploads the merged SQLite3 database to the PostgreSQL database
 upload-%: $(merged_dir)/%.SQLite3
 	@echo ">> uploading SQLite3 DB for language: $* to $(output_dir)"
 	@python3 scripts/upload.py "$<"
 
-upload: $(addprefix upload-,$(langs)) apply-helpers
-	@echo ">> uploading SQLite3 DBs for languages: $(langs)"
+# generates the helpers.sql file with materialized views and functions for all languages
+$(helpers_sql): helpers.sql.tpl
+	@echo ">> generating helpers.sql with materialized views for: $(langs)"
+	@cp helpers.sql.tpl $@.tmp
+	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" > all_verses.sql
+	@$(foreach lang, $(langs), \
+	  printf "SELECT id, language, source, address, source_number, book_number, chapter, verse, text\n  FROM $(lang)._all_verses" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
+	  printf "\n" >> all_verses.sql; \
+	)
+	@echo "WITH NO DATA;" >> all_verses.sql
+	@sed -e '/<ALL_VERSES>/ {' -e 'r all_verses.sql' -e 'd' -e '}' $@.tmp > $@
+	@rm $@.tmp all_verses.sql
 
+# applies the helpers.sql file to the PostgreSQL database
 apply-helpers: $(helpers_sql)
 	@echo ">> applying helpers"
 	@PGPASSWORD=$(POSTGRES_PASSWORD) psql \
@@ -126,90 +139,10 @@ apply-helpers: $(helpers_sql)
 	  -d $(POSTGRES_DB) \
 	  -f $(helpers_sql)
 
+# uploads the SQLite3 databases for all languages
+upload: $(addprefix upload-,$(langs)) apply-helpers
+	@echo ">> uploading SQLite3 DBs for languages: $(langs)"
+
+# generates the embeddings for all languages
 embed:
 	python3 scripts/embed.py
-
-$(helpers_sql):
-	@echo ">> generating SQL helper functions and materialized views for schemas: $(langs)"
-	@echo "-- IMMUTABLE SQL FUNCTIONS" > $@
-	@echo "CREATE OR REPLACE FUNCTION public.strip_basic_tags(input text)" >> $@
-	@echo "RETURNS text AS \$$\$$" >> $@
-	@echo "  SELECT regexp_replace(input, '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\\s[^<>]*)?/?>', '', 'gi');" >> $@
-	@echo "\$$\$$ LANGUAGE sql IMMUTABLE;" >> $@
-	@echo "" >> $@
-	@echo "CREATE OR REPLACE FUNCTION public.sanitize_text(input text)" >> $@
-	@echo "RETURNS text AS \$$\$$" >> $@
-	@echo "  SELECT regexp_replace(" >> $@
-	@echo "           regexp_replace(" >> $@
-	@echo "             regexp_replace(" >> $@
-	@echo "               regexp_replace(" >> $@
-	@echo "                 regexp_replace(" >> $@
-	@echo "                   regexp_replace(" >> $@
-	@echo "                     regexp_replace(" >> $@
-	@echo "                       regexp_replace(" >> $@
-	@echo "                         regexp_replace(input," >> $@
-	@echo "                           '<(S|m|f|n)(\\s[^<>]*)?>.*?</\\1>', '', 'gi')," >> $@
-	@echo "                         '<(S|m|f|n)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
-	@echo "                       '</?(J|e|i)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
-	@echo "                     '<(br|pb)(\\s[^<>]*)?/?>', '', 'gi')," >> $@
-	@echo "                   '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g')," >> $@
-	@echo "                 '<>', '', 'g')," >> $@
-	@echo "               '[<>]+', '', 'g')," >> $@
-	@echo "             '\\s+', ' ', 'g')," >> $@
-	@echo "           '^\\s+|\\s+$$', '', 'g');" >> $@
-	@echo "\$$\$$ LANGUAGE sql IMMUTABLE;" >> $@
-	@echo "" >> $@
-	@echo "-- MATERIALIZED VIEW: _all_verses" >> $@
-	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" >> $@
-	@$(foreach lang, $(langs), \
-	  printf "SELECT id, language, source, address, source_number, book_number, chapter, verse,\n" >> $@; \
-	  printf "       public.strip_basic_tags(text) AS text\n" >> $@; \
-	  printf "  FROM $(lang)._all_verses" >> $@; \
-	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> $@; fi; \
-	)
-	@printf "\nWITH NO DATA;\n\n" >> $@
-	@echo "-- MATERIALIZED VIEW: _sanitized_verses" >> $@
-	@echo "CREATE MATERIALIZED VIEW public._sanitized_verses AS" >> $@
-	@echo "SELECT id, language, source, address, source_number, book_number, chapter, verse," >> $@
-	@echo "       public.sanitize_text(text) AS text" >> $@
-	@echo "  FROM public._all_verses" >> $@
-	@echo "WITH NO DATA;" >> $@
-	@echo "" >> $@
-	@echo "-- INDEXES" >> $@
-	@echo "CREATE INDEX idx_sanitized_verses_language ON public._sanitized_verses(language);" >> $@
-	@echo "CREATE INDEX idx_sanitized_verses_book_chapter_verse ON public._sanitized_verses(book_number, chapter, verse);" >> $@
-	@echo "CREATE INDEX idx_sanitized_verses_source_number ON public._sanitized_verses(source_number);" >> $@
-	@echo "REFRESH MATERIALIZED VIEW public._all_verses;" >> $@
-	@echo "REFRESH MATERIALIZED VIEW public._sanitized_verses;" >> $@
-	@echo "" >> $@
-	@echo "-- VECTOR EXTENSION AND TABLE" >> $@
-	@echo "CREATE EXTENSION IF NOT EXISTS vector;" >> $@
-	@echo "CREATE TABLE IF NOT EXISTS public._verse_embeddings (" >> $@
-	@echo "    id UUID PRIMARY KEY," >> $@
-	@echo "    embedding vector(1024)," >> $@
-	@echo "    content TEXT," >> $@
-	@echo "    metadata JSONB" >> $@
-	@echo ");" >> $@
-	@echo "" >> $@
-	@echo "-- VECTOR SEARCH FUNCTION" >> $@
-	@echo "CREATE OR REPLACE FUNCTION public.search_embeddings(" >> $@
-	@echo "    query_vector vector," >> $@
-	@echo "    result_limit INT DEFAULT 5" >> $@
-	@echo ") RETURNS TABLE (" >> $@
-	@echo "    id UUID," >> $@
-	@echo "    content TEXT," >> $@
-	@echo "    metadata JSONB," >> $@
-	@echo "    similarity FLOAT" >> $@
-	@echo ") AS \$$\$$" >> $@
-	@echo "BEGIN" >> $@
-	@echo "    RETURN QUERY" >> $@
-	@echo "    SELECT" >> $@
-	@echo "        id," >> $@
-	@echo "        content," >> $@
-	@echo "        metadata," >> $@
-	@echo "        1 - (embedding <=> query_vector) AS similarity" >> $@
-	@echo "    FROM public._verse_embeddings" >> $@
-	@echo "    ORDER BY embedding <=> query_vector" >> $@
-	@echo "    LIMIT result_limit;" >> $@
-	@echo "END;" >> $@
-	@echo "\$$\$$ LANGUAGE plpgsql STABLE;" >> $@
