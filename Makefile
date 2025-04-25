@@ -127,6 +127,12 @@ $(helpers_sql): helpers.sql.tpl
 	)
 	@echo "WITH NO DATA;" >> all_verses.sql
 	@sed -e '/<ALL_VERSES>/ {' -e 'r all_verses.sql' -e 'd' -e '}' $@.tmp > $@
+	@echo >> $@
+	@cat errata.sql >> $@
+	@echo >> $@
+	@echo '-- REFRESH VIEWS' >> $@
+	@echo 'REFRESH MATERIALIZED VIEW public._all_verses;' >> $@
+	@echo 'REFRESH MATERIALIZED VIEW public._raw_verses;' >> $@
 	@rm $@.tmp all_verses.sql
 
 # applies the helpers.sql file to the PostgreSQL database

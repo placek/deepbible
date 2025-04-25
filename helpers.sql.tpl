@@ -11,33 +11,34 @@ CREATE TABLE IF NOT EXISTS public._verse_embeddings (
 
 -- HELPER SQL FUNCTIONS
 
--- removes basic XML tags from text
-CREATE OR REPLACE FUNCTION public.strip_basic_tags(input text)
-RETURNS text AS $$
-  SELECT regexp_replace(input, '</?(div|q|Q|x|X|E|g|G|WW|small|t)(\s[^<>]*)?/?>', '', 'gi');
-$$ LANGUAGE sql IMMUTABLE;
-
--- removes all known XML tags from text
-CREATE OR REPLACE FUNCTION public.sanitize_text(input text)
+-- removes basic XML formatting tags from text
+CREATE OR REPLACE FUNCTION public.text_without_format(input text)
 RETURNS text AS $$
   SELECT regexp_replace(
            regexp_replace(
-             regexp_replace(
-               regexp_replace(
-                 regexp_replace(
-                   regexp_replace(
-                     regexp_replace(
-                       regexp_replace(
-                         regexp_replace(input,
-                           '<(S|m|f|n)(\s[^<>]*)?>.*?</\1>', '', 'gi'),
-                         '<(S|m|f|n)(\s[^<>]*)?/?>', '', 'gi'),
-                       '</?(J|e|i)(\s[^<>]*)?/?>', '', 'gi'),
-                     '<(br|pb)(\s[^<>]*)?/?>', '', 'gi'),
-                   '<(/)?[a-zA-Z0-9]+[^<>]*>', '', 'g'),
-                 '<>', '', 'g'),
-               '[<>]+', '', 'g'),
-             '\s+', ' ', 'g'),
-           '^\s+|\s+$', '', 'g');
+               input, '</?t>', '', 'g'
+           ), '<(br|pb)/?>', '', 'g'
+         )
+$$ LANGUAGE sql IMMUTABLE;
+
+-- removes metadata XML tags from text
+CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
+RETURNS text AS $$
+  SELECT regexp_replace(
+           input, '<(S|m|f|n|h)>[^<]+</\1>', '', 'g'
+         )
+$$ LANGUAGE sql IMMUTABLE;
+
+-- removes all known XML tags from text
+CREATE OR REPLACE FUNCTION public.raw_text(input text)
+RETURNS text AS $$
+  SELECT regexp_replace(
+           public.text_without_metadata(
+             public.text_without_format(
+               input
+             )
+           ), '</?(J|i)>', '', 'g'
+         )
 $$ LANGUAGE sql IMMUTABLE;
 
 -- removes all known XML tags from text and extracts structured words
@@ -55,19 +56,15 @@ DECLARE
   note text;
   cleaned text;
 BEGIN
-   -- 1. Replace <i> with [ and </i> with ]
-  cleaned := replace(input, '<i>', '[');
+  cleaned := public.text_without_format(input);
+  cleaned := replace(cleaned, '<i>', '[');
   cleaned := replace(cleaned, '</i>', ']');
 
-  -- 2. Remove irrelevant tags
-  cleaned := regexp_replace(cleaned, '<\/?(J|pb|br|div|small|e|t)[^>]*>', '', 'gsi');
-
-  -- 3. Extract word + tag groups
   FOR chunk IN
     SELECT unnest(
       regexp_matches(
         cleaned,
-        '([^\s<]+(?:<S>\d+</S>|<m>[^<]+</m>|<f>.*?</f>|<n>.*?</n>)*)',
+        '([^\s<]+(?:<S>\d+</S>|<m>[^<]+</m>|<f>.*?</f>|<n>.*?</n>|<h>.*?</h>)*)',
         'g'
       )
     )
@@ -77,14 +74,7 @@ BEGIN
     morph := substring(chunk from '<m>([^<]+)</m>');
     footnote := substring(chunk from '<f>(.*?)</f>');
     note := substring(chunk from '<n>(.*?)</n>');
-
-    -- Clean nested <small> inside notes/footnotes
-    IF footnote IS NOT NULL THEN
-      footnote := regexp_replace(footnote, '<small[^>]*>.*?</small>', '', 'g');
-    END IF;
-    IF note IS NOT NULL THEN
-      note := regexp_replace(note, '<small[^>]*>.*?</small>', '', 'g');
-    END IF;
+    header := substring(chunk from '<h>(.*?)</h>');
 
     IF word IS NOT NULL THEN
       result := result || jsonb_strip_nulls(jsonb_build_object(
@@ -92,7 +82,8 @@ BEGIN
         'strong', strong,
         'morph', morph,
         'footnote', footnote,
-        'note', note
+        'note', note,
+        'header', header
       ));
     END IF;
   END LOOP;
@@ -125,25 +116,13 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 -- MATERIALIZED VIEWS
-DROP MATERIALIZED VIEW IF EXISTS public._sanitized_verses;
+DROP MATERIALIZED VIEW IF EXISTS public._raw_verses;
 DROP MATERIALIZED VIEW IF EXISTS public._all_verses;
 -- all verses from the known schemas
 <ALL_VERSES>
 
-REFRESH MATERIALIZED VIEW public._all_verses;
-
 -- all_verses with sanitized text
-CREATE MATERIALIZED VIEW public._sanitized_verses AS
-SELECT id, language, source, address, source_number, book_number, chapter, verse,
-       public.sanitize_text(text) AS text
+CREATE MATERIALIZED VIEW public._raw_verses AS
+SELECT id, language, source, address, source_number, book_number, chapter, verse, public.raw_text(text) AS text
   FROM public._all_verses
 WITH NO DATA;
-
-REFRESH MATERIALIZED VIEW public._sanitized_verses;
-
-DROP INDEX IF EXISTS idx_sanitized_verses_language;
-CREATE INDEX idx_sanitized_verses_language ON public._sanitized_verses(language);
-DROP INDEX IF EXISTS idx_sanitized_verses_book_chapter_verse;
-CREATE INDEX idx_sanitized_verses_book_chapter_verse ON public._sanitized_verses(book_number, chapter, verse);
-DROP INDEX IF EXISTS idx_sanitized_verses_source_number;
-CREATE INDEX idx_sanitized_verses_source_number ON public._sanitized_verses(source_number);
