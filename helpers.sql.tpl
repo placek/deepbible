@@ -12,22 +12,37 @@ CREATE TABLE IF NOT EXISTS public._verse_embeddings (
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
-CREATE OR REPLACE FUNCTION public.text_without_format(input text)
-RETURNS text AS $$
-  SELECT regexp_replace(
-           regexp_replace(
-               input, '</?t>', '', 'g'
-           ), '<(br|pb)/?>', '', 'g'
-         )
-$$ LANGUAGE sql IMMUTABLE;
-
--- removes metadata XML tags from text
 CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
 RETURNS text AS $$
   SELECT regexp_replace(
            input, '<(S|m|f|n|h)>[^<]+</\1>', '', 'g'
          )
 $$ LANGUAGE sql IMMUTABLE;
+
+-- removes metadata XML tags from text
+CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
+RETURNS text AS $$
+DECLARE
+  output text := input;
+  new_output text;
+BEGIN
+  LOOP
+    -- Try to remove one level of matched metadata tags
+    new_output := regexp_replace(
+      output,
+      '<(S|m|f|n|h)>[^<>]*</\1>',
+      '',
+      'g'
+    );
+
+    -- Exit when nothing changes
+    EXIT WHEN new_output = output;
+    output := new_output;
+  END LOOP;
+
+  RETURN output;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- removes all known XML tags from text
 CREATE OR REPLACE FUNCTION public.raw_text(input text)
@@ -54,6 +69,7 @@ DECLARE
   morph text;
   footnote text;
   note text;
+  header text;
   cleaned text;
 BEGIN
   cleaned := public.text_without_format(input);

@@ -198,3 +198,21 @@ UPDATE pl._all_verses
 UPDATE pl._all_verses
   SET text = REPLACE(text, '<Szebna i Joach>', '[Szebna i Joach]')
   WHERE id = 'pl/5/290/36/11';
+
+-- fix morphology of grc/13/540/8/19
+UPDATE grc._all_verses
+  SET text = REPLACE(text, 'κυριου <S>2962</S> <m>>', 'κυριου <S>2962</S> <m>N-GSM</m>');
+
+-- fix >>
+UPDATE grc._all_verses
+  SET text = REPLACE(text, '>>', '>')
+  WHERE text ~ '>>';
+UPDATE pl._all_verses
+  SET text = REPLACE(text, '>>', '>')
+  WHERE text ~ '>>';
+UPDATE grc._all_verses
+  SET text = REPLACE(text, '<<', '<')
+  WHERE text ~ '<<';
+UPDATE pl._all_verses
+  SET text = REPLACE(text, '<<', '<')
+  WHERE text ~ '<<';
