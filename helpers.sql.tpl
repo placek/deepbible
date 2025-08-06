@@ -12,11 +12,9 @@ CREATE TABLE IF NOT EXISTS public._verse_embeddings (
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
-CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
+CREATE OR REPLACE FUNCTION public.text_without_format(input text)
 RETURNS text AS $$
-  SELECT regexp_replace(
-           input, '<(S|m|f|n|h)>[^<]+</\1>', '', 'g'
-         )
+  SELECT regexp_replace(input, '</?(strong|b|br|div|pb)[^>]*>', '', 'ig')
 $$ LANGUAGE sql IMMUTABLE;
 
 -- removes metadata XML tags from text
