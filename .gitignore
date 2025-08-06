@@ -1,4 +1,5 @@
 *.zip
+*.pdf
 *.SQLite3
 __pycache__
 *.txt

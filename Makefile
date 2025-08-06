@@ -15,7 +15,7 @@ all:
 	@echo "Read Makefile first to understand how to use it."
 
 clean:
-	-rm -rf $(merged_dir) download-list.txt failed.txt $(helpers_sql)
+	-rm -rf $(merged_dir) download-list.txt failed.txt data/*.csv $(helpers_sql)
 
 # fetches the list of available zip files
 download-list.txt:
@@ -103,7 +103,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	done; \
 	verses_sql=$${verses_sql% UNION ALL }; \
 	echo "CREATE VIEW _all_verses AS" >> $$tmp_sql; \
-	echo "SELECT ('$*/' || v.source_number || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id, '$*' AS language, s.name AS source, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address, v.*" >> $$tmp_sql; \
+	echo "SELECT ('$*/' || v.source_number || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id, '$*' AS language, s.name AS source, b.short_name AS book, b.long_name AS book_name, (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address, v.*" >> $$tmp_sql; \
 	echo "  FROM ($$verses_sql) v" >> $$tmp_sql; \
 	echo "  JOIN _sources s ON v.source_number = s.source_number" >> $$tmp_sql; \
 	echo "  JOIN _books b ON v.book_number = b.book_number;" >> $$tmp_sql; \
@@ -152,3 +152,35 @@ upload: $(addprefix upload-,$(langs)) apply-helpers
 # generates the embeddings for all languages
 embed:
 	python3 scripts/embed.py
+
+data/%.csv:
+	@echo ">> exporting parallel CSV for $*"
+	@mkdir -p "$(dir $@)"
+	@name=$* ; \
+	left_part=$${name%%_*} ; \
+	right_part=$${name#*_} ; \
+	lang1=$${left_part%-*} ; \
+	src1=$${left_part#*-} ; \
+	lang2=$${right_part%-*} ; \
+	src2=$${right_part#*-} ; \
+	db1="$(merged_dir)/$$lang1.SQLite3" ; \
+	db2="$(merged_dir)/$$lang2.SQLite3" ; \
+	echo "Generating parallel CSV for $$lang1 ($$src1) and $$lang2 ($$src2)" ; \
+	sqlite3 -csv -header ":memory:" " \
+		ATTACH '$$db1' AS db1; \
+		ATTACH '$$db2' AS db2; \
+		SELECT \
+			db1._all_verses.chapter, \
+			db1._all_verses.verse, \
+			db1._all_verses.text AS text_left, \
+			db2._all_verses.text AS text_right \
+		FROM db1._all_verses \
+		JOIN db2._all_verses \
+		  ON db1._all_verses.book = db2._all_verses.book \
+		 AND db1._all_verses.chapter = db2._all_verses.chapter \
+		 AND db1._all_verses.verse = db2._all_verses.verse \
+		WHERE db1._all_verses.source = '$$src1' \
+		  AND db2._all_verses.source = '$$src2' \
+		  AND db1._all_verses.book = 'Ps' \
+			ORDER BY db1._all_verses.chapter, db1._all_verses.verse; \
+	" > "$@"
