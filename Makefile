@@ -119,20 +119,38 @@ upload-%: $(merged_dir)/%.SQLite3
 $(helpers_sql): helpers.sql.tpl
 	@echo ">> generating helpers.sql with materialized views for: $(langs)"
 	@cp helpers.sql.tpl $@.tmp
+	@echo "-- all verses for public schema" > all_verses.sql
 	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" > all_verses.sql
 	@$(foreach lang, $(langs), \
-	  printf "SELECT id, language, source, address, source_number, book_number, chapter, verse, text\n  FROM $(lang)._all_verses" >> all_verses.sql; \
+		printf "SELECT id, language, source, address, regexp_replace(source_number, '\D', '', 'g')::integer AS source_number, regexp_replace(book_number, '\D', '', 'g')::integer AS book_number, regexp_replace(chapter, '\D', '', 'g')::integer AS chapter, regexp_replace(verse, '\D', '', 'g')::integer AS verse, text\n  FROM $(lang)._all_verses" >> all_verses.sql; \
 	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
 	  printf "\n" >> all_verses.sql; \
 	)
 	@echo "WITH NO DATA;" >> all_verses.sql
+	@echo >> all_verses.sql
+	@echo '-- all books for public schema' >> all_verses.sql
+	@echo 'CREATE VIEW public._all_books AS' >> all_verses.sql
+	@$(foreach lang, $(langs), \
+		printf "SELECT '$(lang)' AS language, regexp_replace(book_number, '\D', '', 'g')::integer AS book_number, short_name\n  FROM $(lang)._books" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
+	  printf "\n" >> all_verses.sql; \
+	)
+	@echo "ORDER BY language, book_number;" >> all_verses.sql
+	@echo >> all_verses.sql
+	@echo '-- all sources for public schema' >> all_verses.sql
+	@echo 'CREATE VIEW public._all_sources AS' >> all_verses.sql
+	@$(foreach lang, $(langs), \
+		printf "SELECT '$(lang)' AS language, *\n  FROM $(lang)._sources" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
+	  printf "\n" >> all_verses.sql; \
+	)
+	@echo "ORDER BY language, source_number;" >> all_verses.sql
 	@sed -e '/<ALL_VERSES>/ {' -e 'r all_verses.sql' -e 'd' -e '}' $@.tmp > $@
 	@echo >> $@
 	@cat errata.sql >> $@
 	@echo >> $@
 	@echo '-- REFRESH VIEWS' >> $@
 	@echo 'REFRESH MATERIALIZED VIEW public._all_verses;' >> $@
-	@echo 'REFRESH MATERIALIZED VIEW public._raw_verses;' >> $@
 	@rm $@.tmp all_verses.sql
 
 # applies the helpers.sql file to the PostgreSQL database
