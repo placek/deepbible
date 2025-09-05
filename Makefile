@@ -202,3 +202,9 @@ data/%.csv:
 		  AND db1._all_verses.book = 'Ps' \
 			ORDER BY db1._all_verses.chapter, db1._all_verses.verse; \
 	" > "$@"
+
+j.csv: data/grouped/grc/NA28.SQLite3
+	sqlite3 data/grouped/grc/NA28.SQLite3 'select chapter,verse,text from verses where book_number = 500 order by chapter, verse' -csv > j.csv
+
+j.pdf: j.csv
+	typst compile j.typ
