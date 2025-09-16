@@ -223,6 +223,27 @@ BEGIN
 END;
 $BODY$;
 
+-- compares verses from different sources for a given book number
+DROP FUNCTION IF EXISTS public.verses_comparison(integer, text[]);
+CREATE OR REPLACE FUNCTION public.verses_comparison(p_book_number integer, p_sources text[])
+  RETURNS TABLE(book_number text, chapter text, verse text, comparison jsonb)
+  LANGUAGE 'sql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+  SELECT
+    book_number,
+    chapter,
+    verse,
+    jsonb_object_agg(id, public.words_with_metadata(text) ORDER BY source_number) AS comparison
+  FROM public._all_verses
+  WHERE book_number = p_book_number
+    AND source = ANY(p_sources)
+  GROUP BY book_number, chapter, verse
+  ORDER BY chapter::int, verse::int;
+$BODY$;
+
 -- vector search function
 -- CREATE OR REPLACE FUNCTION public.search_embeddings(
 --     query_vector vector,
