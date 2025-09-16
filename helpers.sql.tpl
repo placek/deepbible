@@ -14,104 +14,113 @@
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
+DROP FUNCTION IF EXISTS public.text_without_format(text);
 CREATE OR REPLACE FUNCTION public.text_without_format(input text)
-RETURNS text AS $$
+  RETURNS text
+  LANGUAGE 'sql'
+  COST 100
+  IMMUTABLE PARALLEL UNSAFE
+AS $BODY$
   SELECT regexp_replace(input, '</?(strong|b|br|div|pb|t)[^>]*>', '', 'ig')
-$$ LANGUAGE sql IMMUTABLE;
+$BODY$;
 
 -- removes metadata XML tags from text
+DROP FUNCTION IF EXISTS public.text_without_metadata(text);
 CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
-RETURNS text AS $$
+  RETURNS text
+  LANGUAGE 'plpgsql'
+  COST 100
+  IMMUTABLE PARALLEL UNSAFE
+AS $BODY$
 DECLARE
   output text := input;
   new_output text;
 BEGIN
   LOOP
-    -- Try to remove one level of matched metadata tags
-    new_output := regexp_replace(
-      output,
-      '<(S|m|f|n|h)>[^<>]*</\1>',
-      '',
-      'g'
-    );
-
-    -- Exit when nothing changes
+    new_output := regexp_replace(output, '<(S|m|f|n|h)>[^<>]*</\1>', '', 'g');
     EXIT WHEN new_output = output;
     output := new_output;
   END LOOP;
-
   RETURN output;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$BODY$;
 
 -- removes all known XML tags from text
+DROP FUNCTION IF EXISTS public.raw_text(text);
 CREATE OR REPLACE FUNCTION public.raw_text(input text)
-RETURNS text AS $$
-  SELECT regexp_replace(
-           public.text_without_metadata(
-             public.text_without_format(
-               input
-             )
-           ), '</?(J|i)>', '', 'g'
-         )
-$$ LANGUAGE sql IMMUTABLE;
+  RETURNS text
+  LANGUAGE 'sql'
+  COST 100
+  IMMUTABLE PARALLEL UNSAFE
+AS $BODY$
+  SELECT regexp_replace(public.text_without_metadata(public.text_without_format(input)), '</?(J|i)>', '', 'g')
+$BODY$;
 
--- removes all known XML tags from text and extracts structured words
+-- splits text into words with associated metadata (strong, morph, footnote, note, header)
+DROP FUNCTION IF EXISTS public.words_with_metadata(text);
 CREATE OR REPLACE FUNCTION public.words_with_metadata(input text)
   RETURNS jsonb
-  LANGUAGE plpgsql
-AS $$
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+AS $BODY$
 DECLARE
-  result jsonb := '[]'::jsonb;
-  chunk text;
-  word text;
-  strong text;
-  morph text;
+  result   jsonb := '[]'::jsonb;
+  word     text;
+  tags     text;   -- all tags that follow the word (space-separated in the source)
+  strong   text;
+  morph    text;
   footnote text;
-  note text;
-  header text;
-  cleaned text;
+  note     text;
+  header   text;
+  cleaned  text;
 BEGIN
   cleaned := public.text_without_format(input);
   cleaned := replace(cleaned, '<i>', '[');
   cleaned := replace(cleaned, '</i>', ']');
 
-  FOR chunk IN
-    SELECT unnest(
-      regexp_matches(
-        cleaned,
-        '([^\s<]+(?:<S>\d+</S>|<m>[^<]+</m>|<f>.*?</f>|<n>.*?</n>|<h>.*?</h>)*)',
-        'g'
-      )
-    )
+  -- 1st group = the word (no whitespace or '<')
+  -- 2nd group = zero or more following tags belonging to that word
+  FOR word, tags IN
+    SELECT m[1], m[2]
+    FROM regexp_matches(
+      cleaned,
+      '([^\s<]+)' ||
+      '((?:\s*(?:<S>[^<]+</S>|<m>[^<]+</m>|<f>[^<]+</f>|<n>[^<]+</n>|<h>[^<]+</h>))*)',
+      'g'
+    ) AS m
   LOOP
-    word := substring(chunk from '^([^\s<]+)');
-    strong := substring(chunk from '<S>(\d+)</S>');
-    morph := substring(chunk from '<m>([^<]+)</m>');
-    footnote := substring(chunk from '<f>(.*?)</f>');
-    note := substring(chunk from '<n>(.*?)</n>');
-    header := substring(chunk from '<h>(.*?)</h>');
+    -- pull fields from the collected tags blob
+    strong   := substring(tags from '<S>([^<]+)</S>');
+    morph    := substring(tags from '<m>([^<]+)</m>');
+    footnote := substring(tags from '<f>([^<]+)</f>');
+    note     := substring(tags from '<n>([^<]+)</n>');
+    header   := substring(tags from '<h>([^<]+)</h>');
 
-    IF word IS NOT NULL THEN
-      result := result || jsonb_strip_nulls(jsonb_build_object(
-        'text', word,
-        'strong', strong,
-        'morph', morph,
+    result := result || jsonb_build_array(
+      jsonb_strip_nulls(jsonb_build_object(
+        'text',     word,
+        'strong',   strong,
+        'morph',    morph,
         'footnote', footnote,
-        'note', note,
-        'header', header
-      ));
-    END IF;
+        'note',     note,
+        'header',   header
+      ))
+    );
   END LOOP;
 
   RETURN result;
 END;
-$$;
+$BODY$;
 
 -- parses a Bible address
+DROP FUNCTION IF EXISTS public.parse_address(text);
 CREATE OR REPLACE FUNCTION public.parse_address(address text)
   RETURNS TABLE(book text, chapter integer, verse integer)
   LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
 AS $BODY$
 DECLARE
   segment TEXT;
@@ -145,9 +154,13 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-CREATE OR REPLACE FUNCTION verses_by_address(p_address TEXT, p_language TEXT DEFAULT NULL, p_source TEXT DEFAULT NULL)
-  RETURNS TABLE (id TEXT, verses JSONB)
+DROP FUNCTION IF EXISTS public.verses_by_address(text, text, text);
+CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_language text DEFAULT NULL::text, p_source text DEFAULT NULL::text)
+  RETURNS TABLE(id text, verses jsonb)
   LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
 AS $BODY$
 BEGIN
   RETURN QUERY
@@ -170,6 +183,43 @@ BEGIN
     jsonb_agg(jsonb_build_object('id', verses_raw.id, 'language', verses_raw.language, 'source', verses_raw.source, 'address', verses_raw.address, 'text', verses_raw.text)) AS verses
   FROM verses_raw
   GROUP BY verses_raw.book_number, verses_raw.chapter, verses_raw.verse;
+END;
+$BODY$;
+
+-- retrieves verses by filters, grouped by book, chapter, and verse
+DROP FUNCTION IF EXISTS public.verses_by_filters(text, text, text, integer, integer);
+CREATE OR REPLACE FUNCTION public.verses_by_filters(p_language text DEFAULT NULL::text, p_source text DEFAULT NULL::text, p_book_short_name text DEFAULT NULL::text, p_chapter integer DEFAULT NULL::integer, p_verse integer DEFAULT NULL::integer)
+  RETURNS TABLE(id text, verses jsonb)
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+BEGIN
+  RETURN QUERY
+  SELECT v.book_number || '/' || v.chapter || '/' || v.verse AS id,
+         jsonb_agg(
+           jsonb_build_object(
+             'id', v.id,
+             'language', v.language,
+             'source', v.source,
+             'address', v.address,
+             'text', v.text
+           )
+           ORDER BY v.verse
+         ) AS verses
+  FROM _all_verses v
+  WHERE (p_language IS NULL OR v.language = p_language)
+    AND (p_source IS NULL OR v.source = p_source)
+    AND (
+         p_book_short_name IS NULL
+         OR v.book_number IN (
+             SELECT book_number FROM _all_books WHERE short_name = p_book_short_name
+           )
+        )
+    AND (p_chapter IS NULL OR v.chapter = p_chapter)
+    AND (p_verse IS NULL OR v.verse = p_verse)
+  GROUP BY v.book_number, v.chapter, v.verse;
 END;
 $BODY$;
 
