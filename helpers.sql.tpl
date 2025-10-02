@@ -1,14 +1,3 @@
--- VECTOR EXTENSION
--- CREATE EXTENSION IF NOT EXISTS vector;
-
--- EMBEDDINGS TABLE
--- CREATE TABLE IF NOT EXISTS public._verse_embeddings (
---     id UUID PRIMARY KEY,
---     embedding vector(1024),
---     content TEXT,
---     metadata JSONB
--- );
-
 <ALL_VERSES>
 
 -- HELPER SQL FUNCTIONS
@@ -123,40 +112,50 @@ CREATE OR REPLACE FUNCTION public.parse_address(address text)
   ROWS 1000
 AS $BODY$
 DECLARE
-  segment TEXT;
-  matches TEXT[];
-  verses_part TEXT;
+  m TEXT[];
+  part TEXT;
   start_verse INT;
   end_verse INT;
   v INT;
 BEGIN
-  matches := regexp_match(trim(address), '^(\d?[[:alpha:]żźćńółęąśŻŹĆĄŚĘŁÓŃ]+)\s+(\d+),([\d\.-]+)$');
-  IF matches IS NULL THEN
-    RAISE EXCEPTION 'Invalid address format: %', address;
-  END IF;
-  book := matches[1];
-  chapter := matches[2]::INT;
-  verses_part := matches[3];
-  FOR segment IN SELECT unnest(string_to_array(verses_part, '.')) LOOP
-    IF position('-' IN segment) > 0 THEN
-      start_verse := split_part(segment, '-', 1)::INT;
-      end_verse   := split_part(segment, '-', 2)::INT;
-      FOR v IN start_verse..end_verse LOOP
-        verse := v;
+  m := regexp_match(trim(address), '^(\d?\s*[[:alpha:]żźćńółęąśŻŹĆĄŚĘŁÓŃ]+)\s+(\d+),\s*([\d\.\-]+)$');
+  IF m IS NOT NULL THEN
+    book    := trim(regexp_replace(m[1], '\s+', ' ', 'g'));
+    chapter := m[2]::INT;
+    FOR part IN SELECT unnest(string_to_array(m[3], '.')) LOOP
+      IF position('-' IN part) > 0 THEN
+        start_verse := split_part(part, '-', 1)::INT;
+        end_verse   := split_part(part, '-', 2)::INT;
+        IF end_verse < start_verse THEN
+          RAISE EXCEPTION 'Invalid verse range: % in %', part, address;
+        END IF;
+        FOR v IN start_verse..end_verse LOOP
+          verse := v;
+          RETURN NEXT;
+        END LOOP;
+      ELSE
+        verse := part::INT;
         RETURN NEXT;
-      END LOOP;
-    ELSE
-      verse := segment::INT;
-      RETURN NEXT;
-    END IF;
-  END LOOP;
+      END IF;
+    END LOOP;
+    RETURN;
+  END IF;
+  m := regexp_match(trim(address), '^(\d?\s*[[:alpha:]żźćńółęąśŻŹĆĄŚĘŁÓŃ]+)\s+(\d+)$');
+  IF m IS NOT NULL THEN
+    book    := trim(regexp_replace(m[1], '\s+', ' ', 'g'));
+    chapter := m[2]::INT;
+    verse   := NULL;
+    RETURN NEXT;
+    RETURN;
+  END IF;
+  RAISE EXCEPTION 'Invalid address format: %', address;
 END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
 DROP FUNCTION IF EXISTS public.verses_by_address(text, text, text);
 CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_language text DEFAULT NULL::text, p_source text DEFAULT NULL::text)
-  RETURNS TABLE(id text, verses jsonb)
+  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
   VOLATILE PARALLEL UNSAFE
@@ -164,105 +163,32 @@ CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_language t
 AS $BODY$
 BEGIN
   RETURN QUERY
-  WITH
-    addresses AS (
-      SELECT b.book_number, a.chapter, a.verse
-      FROM parse_address(p_address) a
-      JOIN _all_books b ON a.book = b.short_name
-    ),
-    verses_raw AS (
-      SELECT v.book_number, v.chapter, v.verse, v.id, v.language, v.source, v.address, raw_text(v.text) AS text
-      FROM addresses a
-      JOIN public._all_verses v
-        ON v.book_number = a.book_number AND v.chapter = a.chapter AND v.verse = a.verse
-      WHERE
-        (p_language IS NULL OR v.language = p_language)
-        AND (p_source IS NULL OR v.source = p_source)
-    )
-  SELECT verses_raw.book_number || '/' || verses_raw.chapter || '/' || verses_raw.verse AS id,
-    jsonb_agg(jsonb_build_object('id', verses_raw.id, 'language', verses_raw.language, 'source', verses_raw.source, 'address', verses_raw.address, 'text', verses_raw.text)) AS verses
-  FROM verses_raw
-  GROUP BY verses_raw.book_number, verses_raw.chapter, verses_raw.verse;
+  WITH addresses AS (
+    SELECT DISTINCT
+      b.book_number::int AS book_number,
+      a.chapter::int     AS chapter,
+      a.verse            AS verse
+    FROM parse_address(p_address) a
+    JOIN public._all_books b
+      ON a.book = b.short_name
+  )
+  SELECT DISTINCT
+    v.book_number,
+    v.chapter,
+    v.verse,
+    v.id         AS verse_id,
+    v.language,
+    v.source,
+    v.address,
+    raw_text(v.text) AS text
+  FROM addresses a
+  JOIN public._all_verses v
+    ON v.book_number = a.book_number
+   AND v.chapter     = a.chapter
+   AND (a.verse IS NULL OR v.verse = a.verse)
+  WHERE
+    (p_language IS NULL OR v.language = p_language)
+    AND (p_source   IS NULL OR v.source   = p_source)
+  ORDER BY v.book_number, v.chapter, v.verse, v.language, v.source, v.id;
 END;
 $BODY$;
-
--- retrieves verses by filters, grouped by book, chapter, and verse
-DROP FUNCTION IF EXISTS public.verses_by_filters(text, text, text, integer, integer);
-CREATE OR REPLACE FUNCTION public.verses_by_filters(p_language text DEFAULT NULL::text, p_source text DEFAULT NULL::text, p_book_short_name text DEFAULT NULL::text, p_chapter integer DEFAULT NULL::integer, p_verse integer DEFAULT NULL::integer)
-  RETURNS TABLE(id text, verses jsonb)
-  LANGUAGE 'plpgsql'
-  COST 100
-  VOLATILE PARALLEL UNSAFE
-  ROWS 1000
-AS $BODY$
-BEGIN
-  RETURN QUERY
-  SELECT v.book_number || '/' || v.chapter || '/' || v.verse AS id,
-         jsonb_agg(
-           jsonb_build_object(
-             'id', v.id,
-             'language', v.language,
-             'source', v.source,
-             'address', v.address,
-             'text', v.text
-           )
-           ORDER BY v.verse
-         ) AS verses
-  FROM _all_verses v
-  WHERE (p_language IS NULL OR v.language = p_language)
-    AND (p_source IS NULL OR v.source = p_source)
-    AND (
-         p_book_short_name IS NULL
-         OR v.book_number IN (
-             SELECT book_number FROM _all_books WHERE short_name = p_book_short_name
-           )
-        )
-    AND (p_chapter IS NULL OR v.chapter = p_chapter)
-    AND (p_verse IS NULL OR v.verse = p_verse)
-  GROUP BY v.book_number, v.chapter, v.verse;
-END;
-$BODY$;
-
--- compares verses from different sources for a given book number
-DROP FUNCTION IF EXISTS public.verses_comparison(integer, text[]);
-CREATE OR REPLACE FUNCTION public.verses_comparison(p_book_number integer, p_sources text[])
-  RETURNS TABLE(book_number text, chapter text, verse text, comparison jsonb)
-  LANGUAGE 'sql'
-  COST 100
-  VOLATILE PARALLEL UNSAFE
-  ROWS 1000
-AS $BODY$
-  SELECT
-    book_number,
-    chapter,
-    verse,
-    jsonb_object_agg(source, public.words_with_metadata(text) ORDER BY source_number) AS comparison
-  FROM public._all_verses
-  WHERE book_number = p_book_number
-    AND source = ANY(p_sources)
-  GROUP BY book_number, chapter, verse
-  ORDER BY chapter::int, verse::int;
-$BODY$;
-
--- vector search function
--- CREATE OR REPLACE FUNCTION public.search_embeddings(
---     query_vector vector,
---     result_limit INT DEFAULT 5
--- ) RETURNS TABLE (
---     id UUID,
---     content TEXT,
---     metadata JSONB,
---     similarity FLOAT
--- ) AS $$
--- BEGIN
---     RETURN QUERY
---     SELECT
---         id,
---         content,
---         metadata,
---         1 - (embedding <=> query_vector) AS similarity
---     FROM public._verse_embeddings
---     ORDER BY embedding <=> query_vector
---     LIMIT result_limit;
--- END;
--- $$ LANGUAGE plpgsql STABLE;
