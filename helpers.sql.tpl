@@ -236,7 +236,7 @@ AS $BODY$
     book_number,
     chapter,
     verse,
-    jsonb_object_agg(id, public.words_with_metadata(text) ORDER BY source_number) AS comparison
+    jsonb_object_agg(source, public.words_with_metadata(text) ORDER BY source_number) AS comparison
   FROM public._all_verses
   WHERE book_number = p_book_number
     AND source = ANY(p_sources)
