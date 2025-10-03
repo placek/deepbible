@@ -171,22 +171,22 @@ BEGIN
       ON a.book = b.short_name
   )
   SELECT DISTINCT
-    v.book_number,
-    v.chapter,
-    v.verse,
-    v.id         AS verse_id,
+    v.book_number::int AS book_number,
+    v.chapter::int     AS chapter,
+    v.verse::int       AS verse,
+    v.id               AS verse_id,
     v.language,
     v.source,
     v.address,
-    raw_text(v.text) AS text
+    raw_text(v.text)   AS "text"
   FROM addresses a
   JOIN public._all_verses v
     ON v.book_number = a.book_number
-   AND v.chapter     = a.chapter
+   AND v.chapter = a.chapter
    AND (a.verse IS NULL OR v.verse = a.verse)
   WHERE
     (p_language IS NULL OR v.language = p_language)
-    AND (p_source   IS NULL OR v.source   = p_source)
-  ORDER BY v.book_number, v.chapter, v.verse, v.language, v.source, v.id;
+    AND (p_source IS NULL OR v.source = p_source)
+  ORDER BY book_number, chapter, verse, language, source, verse_id;
 END;
 $BODY$;
