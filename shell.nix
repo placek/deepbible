@@ -5,14 +5,10 @@ pkgs.mkShell {
     sqlite
     rlwrap
     sqlitebrowser
+    pgloader
 
     postgresql
 
     p7zip
-
-    python3
-    python3Packages.psycopg2
-    python3Packages.sentence-transformers
-    python3Packages.tqdm
   ];
 }

@@ -68,13 +68,14 @@ $(grouped_dir)/%: $(grouped_dir)
 	  fi; \
 	done
 
-# merges the SQLite3 databases for each language
+# merges the SQLite3 databases for each language into one _all_verses table (no temp tables, no SQLite views)
 $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	@{ \
 	  tmp_sql=$$(mktemp); \
 	  echo 'PRAGMA foreign_keys=OFF;' >> $$tmp_sql; \
+	  \
 	  echo "CREATE TABLE IF NOT EXISTS _sources (" >> $$tmp_sql; \
-	  echo "  id TEXT PRIMARY KEY," >> $$tmp_sql; \
+	  echo "  id TEXT NOT NULL," >> $$tmp_sql; \
 	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
 	  echo "  source_number INTEGER NOT NULL," >> $$tmp_sql; \
 	  echo "  name TEXT," >> $$tmp_sql; \
@@ -84,24 +85,39 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  echo "  chapter_string TEXT," >> $$tmp_sql; \
 	  echo "  chapter_string_ps TEXT" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
-	  echo "CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_lang_num ON _sources (language, source_number);" >> $$tmp_sql; \
+	  \
 	  echo "CREATE TABLE IF NOT EXISTS _books (" >> $$tmp_sql; \
-	  echo "  id TEXT PRIMARY KEY," >> $$tmp_sql; \
+	  echo "  id TEXT NOT NULL," >> $$tmp_sql; \
 	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
 	  echo "  source_number INTEGER NOT NULL," >> $$tmp_sql; \
 	  echo "  book_number INTEGER NOT NULL," >> $$tmp_sql; \
 	  echo "  short_name TEXT," >> $$tmp_sql; \
 	  echo "  long_name  TEXT" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
-	  echo "CREATE UNIQUE INDEX IF NOT EXISTS idx_books_lang_src_book ON _books (language, source_number, book_number);" >> $$tmp_sql; \
+	  \
+	  echo "DROP TABLE IF EXISTS _all_verses;" >> $$tmp_sql; \
+	  echo "CREATE TABLE _all_verses (" >> $$tmp_sql; \
+	  echo "  id TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  source TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  book TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  book_name TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  address TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  source_number INTEGER NOT NULL," >> $$tmp_sql; \
+	  echo "  book_number INTEGER NOT NULL," >> $$tmp_sql; \
+	  echo "  chapter INTEGER NOT NULL," >> $$tmp_sql; \
+	  echo "  verse INTEGER NOT NULL," >> $$tmp_sql; \
+	  echo "  text TEXT" >> $$tmp_sql; \
+	  echo ");" >> $$tmp_sql; \
+	  \
 	  idx=0; \
-	  verses_sql=""; \
 	  dbs=$$(find "$<" -name '*.SQLite3' | sort); \
 	  for db in $$dbs; do \
 	    name=$$(basename "$$db" .SQLite3); \
 	    dot_count=$$(echo "$$name" | sed 's/[^.]//g' | wc -c | tr -d '[:space:]'); \
 	    if [ "$$dot_count" -gt 1 ]; then continue; fi; \
 	    echo "ATTACH '$$db' AS source;" >> $$tmp_sql; \
+	    \
 	    echo "INSERT INTO _sources (id, language, source_number, name, description_short, description_long, origin, chapter_string, chapter_string_ps)" >> $$tmp_sql; \
 	    echo "SELECT ('$*/' || $$idx) AS id," >> $$tmp_sql; \
 	    echo "       '$*'        AS language," >> $$tmp_sql; \
@@ -112,6 +128,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    echo "       (SELECT value FROM source.info WHERE name='origin')," >> $$tmp_sql; \
 	    echo "       (SELECT value FROM source.info WHERE name='chapter_string')," >> $$tmp_sql; \
 	    echo "       (SELECT value FROM source.info WHERE name='chapter_string_ps');" >> $$tmp_sql; \
+	    \
 	    echo "INSERT OR IGNORE INTO _books (id, language, source_number, book_number, short_name, long_name)" >> $$tmp_sql; \
 	    echo "SELECT ('$*/' || $$idx || '/' || b.book_number) AS id," >> $$tmp_sql; \
 	    echo "       '$*'  AS language," >> $$tmp_sql; \
@@ -119,27 +136,28 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    echo "       b.book_number, b.short_name, COALESCE(b.long_name, b.short_name) AS long_name" >> $$tmp_sql; \
 	    echo "FROM source.books b;" >> $$tmp_sql; \
 	    \
-	    table="verses_$$(printf "%02d" $$idx)"; \
-	    echo "CREATE TABLE $$table AS SELECT $$idx AS source_number, book_number, chapter, verse, text FROM source.verses;" >> $$tmp_sql; \
-	    echo "CREATE INDEX IF NOT EXISTS idx_$$table ON $$table (book_number, chapter, verse);" >> $$tmp_sql; \
+	    echo "INSERT INTO _all_verses (" >> $$tmp_sql; \
+	    echo "  id, language, source, book, book_name, address," >> $$tmp_sql; \
+	    echo "  source_number, book_number, chapter, verse, text)" >> $$tmp_sql; \
+	    echo "SELECT" >> $$tmp_sql; \
+	    echo "  ('$*/' || $$idx || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id," >> $$tmp_sql; \
+	    echo "  '$*' AS language," >> $$tmp_sql; \
+	    echo "  (SELECT '$$name') AS source," >> $$tmp_sql; \
+	    echo "  b.short_name AS book," >> $$tmp_sql; \
+	    echo "  COALESCE(b.long_name, b.short_name) AS book_name," >> $$tmp_sql; \
+	    echo "  (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address," >> $$tmp_sql; \
+	    echo "  CAST($$idx AS INTEGER)       AS source_number," >> $$tmp_sql; \
+	    echo "  CAST(v.book_number AS INTEGER) AS book_number," >> $$tmp_sql; \
+	    echo "  CAST(v.chapter     AS INTEGER) AS chapter," >> $$tmp_sql; \
+	    echo "  CAST(v.verse       AS INTEGER) AS verse," >> $$tmp_sql; \
+	    echo "  v.text" >> $$tmp_sql; \
+	    echo "FROM source.verses v" >> $$tmp_sql; \
+	    echo "JOIN source.books  b ON b.book_number = v.book_number;" >> $$tmp_sql; \
 	    \
 	    echo "DETACH source;" >> $$tmp_sql; \
-	    verses_sql="$$verses_sql SELECT * FROM $$table UNION ALL "; \
 	    idx=$$((idx+1)); \
 	  done; \
-	  verses_sql=$${verses_sql% UNION ALL }; \
 	  \
-	  echo "CREATE VIEW _all_verses AS" >> $$tmp_sql; \
-	  echo "SELECT ('$*/' || v.source_number || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id," >> $$tmp_sql; \
-	  echo "       '$*' AS language," >> $$tmp_sql; \
-	  echo "       s.name AS source," >> $$tmp_sql; \
-	  echo "       b.short_name AS book," >> $$tmp_sql; \
-	  echo "       b.long_name  AS book_name," >> $$tmp_sql; \
-	  echo "       (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address," >> $$tmp_sql; \
-	  echo "       v.*" >> $$tmp_sql; \
-	  echo "  FROM ($$verses_sql) v" >> $$tmp_sql; \
-	  echo "  JOIN _sources s ON s.language = '$*' AND s.source_number = v.source_number" >> $$tmp_sql; \
-	  echo "  JOIN _books   b ON b.language = '$*' AND b.source_number = v.source_number AND b.book_number = v.book_number;" >> $$tmp_sql; \
 	  sqlite3 "$@" < "$$tmp_sql"; \
 	  rm -f "$$tmp_sql"; \
 	}
@@ -147,43 +165,46 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 # uploads the merged SQLite3 database to the PostgreSQL database
 upload-%: $(merged_dir)/%.SQLite3
 	@echo ">> uploading SQLite3 DB for language: $* using $(DATABASE_URL)"
-	@python3 scripts/upload.py "$<"
+	@SCHEMA="$*"; \
+	SQLITE_PATH="$$(realpath "$<")"; \
+	PGURL="$(DATABASE_URL)"; \
+	sed "s#{{SQLITE_PATH}}#$$SQLITE_PATH#g; s#{{PGURL}}#$$PGURL#g; s#{{SCHEMA}}#$$SCHEMA#g" upload.load > /tmp/pgloader.$*.load; \
+	pgloader /tmp/pgloader.$*.load
 
 # generates the helpers.sql file with materialized views and functions for all languages
 $(helpers_sql): helpers.sql.tpl
 	@echo ">> generating helpers.sql with materialized views for: $(langs)"
 	@cp helpers.sql.tpl $@.tmp
+
 	@echo "-- all verses for public schema" > all_verses.sql
+	@echo "DROP MATERIALIZED VIEW IF EXISTS public._all_verses;" >> all_verses.sql
 	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" >> all_verses.sql
 	@$(foreach lang, $(langs), \
-		printf "SELECT id, language, source, address, \
-		NULLIF(BTRIM(regexp_replace(source_number, '[^0-9]', '', 'g')), '')::integer AS source_number, \
-		NULLIF(BTRIM(regexp_replace(book_number,  '[^0-9]', '', 'g')), '')::integer AS book_number, \
-		NULLIF(BTRIM(regexp_replace(chapter,      '[^0-9]', '', 'g')), '')::integer AS chapter, \
-		NULLIF(BTRIM(regexp_replace(verse,        '[^0-9]', '', 'g')), '')::integer AS verse, \
-		text\n  FROM $(lang)._all_verses" >> all_verses.sql; \
-	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
-	  printf "\n" >> all_verses.sql; \
+		printf "SELECT id, language, source, book, book_name, address, source_number, book_number, chapter, verse, text\n  FROM $(lang)._all_verses" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> all_verses.sql; fi; \
 	)
-	@echo "WITH NO DATA;" >> all_verses.sql
+	@echo ";" >> all_verses.sql
 	@echo >> all_verses.sql
+
 	@echo '-- all books for public schema' >> all_verses.sql
-	@echo 'CREATE VIEW public._all_books AS' >> all_verses.sql
+	@echo 'CREATE OR REPLACE VIEW public._all_books AS' >> all_verses.sql
 	@$(foreach lang, $(langs), \
-		printf "SELECT *\n  FROM $(lang)._books" >> all_verses.sql; \
-	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
-	  printf "\n" >> all_verses.sql; \
+		printf "SELECT * FROM $(lang)._books" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> all_verses.sql; fi; \
 	)
+	@echo >> all_verses.sql
 	@echo "ORDER BY language, book_number;" >> all_verses.sql
 	@echo >> all_verses.sql
+
 	@echo '-- all sources for public schema' >> all_verses.sql
-	@echo 'CREATE VIEW public._all_sources AS' >> all_verses.sql
+	@echo 'CREATE OR REPLACE VIEW public._all_sources AS' >> all_verses.sql
 	@$(foreach lang, $(langs), \
-		printf "SELECT *\n  FROM $(lang)._sources" >> all_verses.sql; \
-	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL" >> all_verses.sql; fi; \
-	  printf "\n" >> all_verses.sql; \
+		printf "SELECT * FROM $(lang)._sources" >> all_verses.sql; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> all_verses.sql; fi; \
 	)
+	@echo >> all_verses.sql
 	@echo "ORDER BY id;" >> all_verses.sql
+
 	@sed -e '/<ALL_VERSES>/ {' -e 'r all_verses.sql' -e 'd' -e '}' $@.tmp > $@
 	@echo >> $@
 	@cat errata.sql >> $@
@@ -202,10 +223,6 @@ apply-helpers: $(helpers_sql)
 # uploads the SQLite3 databases for all languages
 upload: $(addprefix upload-,$(langs)) apply-helpers
 	@echo ">> uploading SQLite3 DBs for languages: $(langs)"
-
-# generates the embeddings for all languages
-embed:
-	python3 scripts/embed.py
 
 data/%.csv:
 	@echo ">> exporting parallel CSV for $*"
