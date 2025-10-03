@@ -1,5 +1,3 @@
-<ALL_VERSES>
-
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
