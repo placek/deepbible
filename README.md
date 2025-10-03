@@ -69,16 +69,28 @@ DeepBible is a pipeline for downloading and processing biblical texts from ph4.o
  ```
  This uploads the `_sources`, `_books`, and `_all_verses` tables to schemas named by each language code.
 
- ## Directory Structure
- ```
- .
- ├── Makefile            # Pipeline tasks (fetch, group, merge, upload, embed)
- ├── build/              # Makefile components
- ├── sql/                # Raw SQL scripts for postgres
- ├── shell.nix           # Nix development shell
- ├── TODO.md             # Roadmap and feature list
- └── README.md           # Project overview and usage
- ```
+## Directory Structure
+```
+.
+├── Makefile            # Pipeline tasks (fetch, group, merge, upload, embed)
+├── build/              # Makefile components
+├── frontend/           # PureScript + Halogen UI for browsing verses via PostgREST
+├── sql/                # Raw SQL scripts for postgres
+├── shell.nix           # Nix development shell
+├── TODO.md             # Roadmap and feature list
+└── README.md           # Project overview and usage
+```
+
+## Frontend previewer
+
+A lightweight PureScript/Halogen interface lives in [`frontend/`](frontend/). It connects to the PostgREST schema defined in
+[`sql/postgrest.sql`](sql/postgrest.sql) and lets you:
+
+- Paste multiple Bible addresses separated by semicolons.
+- Choose and freely reorder translations (sources) exposed in the `_all_sources` view.
+- Display the resulting verses grouped by address, with verse references tucked to the margin so the text stays in focus.
+
+See [`frontend/README.md`](frontend/README.md) for build and usage instructions.
 
  ## Contributing
  Contributions are welcome! Please open issues or pull requests.
