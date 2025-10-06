@@ -151,8 +151,8 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-DROP FUNCTION IF EXISTS public.verses_by_address(text, text, text);
-CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_language text DEFAULT NULL::text, p_source text DEFAULT NULL::text)
+DROP FUNCTION IF EXISTS public.verses_by_address(text, text);
+CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_source text DEFAULT NULL::text)
   RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -185,8 +185,7 @@ BEGIN
    AND v.chapter = a.chapter
    AND (a.verse IS NULL OR v.verse = a.verse)
   WHERE
-    (p_language IS NULL OR v.language = p_language)
-    AND (p_source IS NULL OR v.source = p_source)
+    p_source IS NULL OR v.source = p_source
   ORDER BY book_number, chapter, verse, language, source, verse_id;
 END;
 $BODY$;
