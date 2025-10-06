@@ -1,0 +1,69 @@
+<!doctype html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Web Page</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+background-color: #eee8d5;
+color: #586e75;
+margin: 2em 0;
+}
+.pericope {
+display: flex;
+max-width: 70em;
+margin: auto;
+}
+.pericope + .pericope {
+border-top: 1px dotted #cccccc;
+}
+.didascalia {
+padding: 1em;
+min-width: 7em;
+text-align: right;
+user-select: none;
+cursor: move; /* for drag handle */
+}
+.didascalia .address, .didascalia .source { cursor: pointer; }
+.didascalia .address.editing input,
+.didascalia .source.editing input {
+width: 6.5em;
+font: inherit;
+color: inherit;
+background: #fdf6e3;
+border: 1px solid #ccc;
+padding: 0.2em 0.3em;
+border-radius: 4px;
+}
+.source {
+color: #b58900;
+font-size: 0.7em;
+}
+.textus {
+padding: 1em;
+background-color: #fdf6e3;
+flex: 1;
+}
+.verse::before {
+content: attr(data-verse);
+color: #dc322f;
+font-size: 0.7em;
+vertical-align: super;
+margin-right: 0.2em;
+}
+.verse { display: inline; }
+.verse + .verse::before { margin-left: 0.4em; }
+.verse.selected { text-decoration: underline; }
+.dropping { outline: 2px dashed #b58900; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="./app.js"></script>
+<script>
+// Boot the PureScript app
+window.App && window.App.main && window.App.main();
+</script>
+</body>
+</html>

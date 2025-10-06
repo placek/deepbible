@@ -10,5 +10,9 @@ pkgs.mkShell {
     postgresql
 
     p7zip
+
+    purescript
+    nodejs
+    spago
   ];
 }
