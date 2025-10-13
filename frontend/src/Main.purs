@@ -8,23 +8,33 @@ import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
+import Data.Void (Void)
+import Data.Const (Const)
 import Effect (Effect)
-import Effect.Aff (launchAff_)
+import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
+import Type.Proxy (Proxy(..))
+
 import Pericope as P
-import Types (AppState, Pericope, PericopeId(..), Verse(..))
+import Types (AppState, Pericope, PericopeId, Verse)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI component unit body
 
-component :: H.Component HH.HTML Unit Void Unit
+type ChildSlots =
+  ( pericope :: H.Slot P.Query P.Output PericopeId )
+
+pericopeSlot :: Proxy "pericope"
+pericopeSlot = Proxy
+
+type RootQuery = Const Void
+
+component :: H.Component RootQuery Unit Void Aff
 component =
   H.mkComponent
     { initialState
@@ -53,43 +63,30 @@ initialState _ =
   , nextId: 1
   }
 
-render :: AppState -> H.ComponentHTML () Action
+render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div_
-    (st.pericopes <#> renderPericope st)
+    (renderPericope <$> st.pericopes)
 
-renderPericope :: forall a . AppState -> Pericope -> HH.HTML a Action
-renderPericope _st p =
-  HH.slot p.id unit P.component p (ChildMsg p.id)
+renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
+renderPericope p =
+  HH.slot pericopeSlot p.id P.component p (ChildMsg p.id)
 
-handle :: Action -> H.HalogenM AppState Action () Void Unit
-handle = case _ of
+handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+handle action = case action of
   Initialize -> do
-    let add addr src = launchAff_ do
-          res <- fetchVerses { address: addr, source: src }
-          H.liftEffect case res of
-            Left _ -> pure unit
-            Right vs -> H.raise (AddPericope addr src vs)
-    -- seed like your example
-    add "J 3,16-17" "NVUL"
-    add "J 3,16-17" "PAU"
+    let seeds =
+          [ { address: "J 3,16-17", source: "NVUL" }
+          , { address: "J 3,16-17", source: "PAU" }
+          ]
+    for_ seeds \{ address, source } -> do
+      res <- H.liftAff $ fetchVerses address source
+      case res of
+        Left _ -> pure unit
+        Right verses -> insertPericope address source verses
 
-  AddPericope addr src verses -> do
-    st <- H.get
-    let pid = st.nextId
-        pericope =
-          { id: pid
-          , address: addr
-          , source: src
-          , verses
-          , selected: Set.empty
-          , editingAddress: false
-          , editingSource: false
-          }
-    H.put st
-      { pericopes = A.snoc st.pericopes pericope
-      , nextId = st.nextId + 1
-      }
+  AddPericope addr src verses ->
+    insertPericope addr src verses
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
@@ -116,12 +113,10 @@ handle = case _ of
         Just p -> do
           let addr = p.address
               src  = p.source
-
-          launchAff_ do
-            res <- fetchVerses { address: addr, source: src }
-            H.liftEffect case res of
-              Left _ -> pure unit
-              Right vs -> H.raise (AddPericope addr src vs)
+          res <- H.liftAff $ fetchVerses addr src
+          case res of
+            Left _ -> pure unit
+            Right vs -> insertPericope addr src vs
 
     P.DidRemove rid ->
       H.modify_ \st -> st { pericopes = A.filter (\q -> q.id /= rid) st.pericopes }
@@ -147,3 +142,23 @@ reorder fromId toId arr =
              fromMaybe arr' (A.insertAt j item arr')
            _, _ -> arr
        _, _ -> arr
+
+insertPericope
+  :: String
+  -> String
+  -> Array Verse
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+insertPericope address source verses = do
+  st <- H.get
+  let pid = st.nextId
+      pericope =
+        { id: pid
+        , address
+        , source
+        , verses
+        , selected: Set.empty
+        }
+  H.put st
+    { pericopes = A.snoc st.pericopes pericope
+    , nextId = st.nextId + 1
+    }
