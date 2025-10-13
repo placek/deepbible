@@ -1,8 +1,9 @@
 <!doctype html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>My Web Page</title>
+<title>DeepBible</title>
 <style>
 body {
 font-family: Arial, sans-serif;
@@ -28,13 +29,7 @@ cursor: move; /* for drag handle */
 .didascalia .address, .didascalia .source { cursor: pointer; }
 .didascalia .address.editing input,
 .didascalia .source.editing input {
-width: 6.5em;
-font: inherit;
-color: inherit;
-background: #fdf6e3;
-border: 1px solid #ccc;
-padding: 0.2em 0.3em;
-border-radius: 4px;
+@@ -38,32 +39,28 @@ border-radius: 4px;
 }
 .source {
 color: #b58900;
@@ -60,10 +55,6 @@ margin-right: 0.2em;
 </head>
 <body>
 <div id="app"></div>
-<script src="./app.js"></script>
-<script>
-// Boot the PureScript app
-window.App && window.App.main && window.App.main();
-</script>
+<script type="module" src="./main.js"></script>
 </body>
 </html>
