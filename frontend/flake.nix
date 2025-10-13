@@ -20,6 +20,12 @@
             "console"
             "effect"
             "prelude"
+            "maybe"
+            "either"
+            "aff"
+            "argonaut"
+            "affjax-web"
+            "halogen"
           ];
 
           dir = ./.;

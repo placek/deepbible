@@ -6,11 +6,10 @@ import Api (fetchVerses)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff_)
-import Effect.Class (liftEffect)
+import Effect.Aff (launchAff_)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -26,11 +25,15 @@ main = HA.runHalogenAff do
   runUI component unit body
 
 component :: H.Component HH.HTML Unit Void Unit
-component = H.mkComponent
-  { initialState
-  , render
-  , eval: H.mkEval H.defaultEval { initialize = Just Initialize, handleAction = handle }
-  }
+component =
+  H.mkComponent
+    { initialState
+    , render
+    , eval: H.mkEval $ H.defaultEval
+        { initialize = Just Initialize
+        , handleAction = handle
+        }
+    }
 
 -- Actions
 data Action
@@ -50,30 +53,30 @@ initialState _ =
   , nextId: 1
   }
 
-render :: AppState -> H.ComponentHTML Action ()
+render :: AppState -> H.ComponentHTML () Action
 render st =
   HH.div_
     (st.pericopes <#> renderPericope st)
 
-renderPericope :: AppState -> Pericope -> HH.HTML Action
-renderPericope st p =
-  HH.slot (p.id) unit (P.component) p (ChildMsg p.id)
+renderPericope :: forall a . AppState -> Pericope -> HH.HTML a Action
+renderPericope _st p =
+  HH.slot p.id unit P.component p (ChildMsg p.id)
 
 handle :: Action -> H.HalogenM AppState Action () Void Unit
 handle = case _ of
   Initialize -> do
-    -- Optional: seed with two demo pericopes like your HTML example
+    let add addr src = launchAff_ do
+          res <- fetchVerses { address: addr, source: src }
+          H.liftEffect case res of
+            Left _ -> pure unit
+            Right vs -> H.raise (AddPericope addr src vs)
+    -- seed like your example
     add "J 3,16-17" "NVUL"
     add "J 3,16-17" "PAU"
-    where
-    add addr src = launchAff_ do
-      res <- fetchVerses { address: addr, source: src }
-      H.liftEffect $ case res of
-        Left _ -> pure unit
-        Right vs -> H.raise (AddPericope addr src vs)
+
   AddPericope addr src verses -> do
     st <- H.get
-    let pid = PericopeId st.nextId
+    let pid = st.nextId
         pericope =
           { id: pid
           , address: addr
@@ -83,11 +86,20 @@ handle = case _ of
           , editingAddress: false
           , editingSource: false
           }
-    H.put st { pericopes = A.snoc st.pericopes pericope, nextId = st.nextId + 1 }
+    H.put st
+      { pericopes = A.snoc st.pericopes pericope
+      , nextId = st.nextId + 1
+      }
 
-  StartDrag pid -> H.modify_ _ { dragging = Just pid }
-  OverDrag pid -> H.modify_ _ { droppingOver = Just pid }
-  LeaveDrag _ -> H.modify_ _ { droppingOver = Nothing }
+  StartDrag pid ->
+    H.modify_ \st -> st { dragging = Just pid }
+
+  OverDrag pid  ->
+    H.modify_ \st -> st { droppingOver = Just pid }
+
+  LeaveDrag _   ->
+    H.modify_ \st -> st { droppingOver = Nothing }
+
   DropOn targetId -> do
     st <- H.get
     case st.dragging of
@@ -97,39 +109,41 @@ handle = case _ of
         H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
 
   ChildMsg pid out -> case out of
-    P.DidDuplicate { id: baseId, as } -> do
+    P.DidDuplicate { id: baseId, as: _ } -> do
       st <- H.get
-      case A.find (_ . id >>> (_ == baseId)) st.pericopes of
+      case A.find (\q -> q.id == baseId) st.pericopes of
         Nothing -> pure unit
         Just p -> do
-          let (addr, src) = case as of
-                "address" -> (p.address, p.source)
-                _ -> (p.address, p.source)
-          -- Duplicate pericope and focus editing on the clicked field
+          let addr = p.address
+              src  = p.source
+
           launchAff_ do
             res <- fetchVerses { address: addr, source: src }
-            H.liftEffect $ case res of
+            H.liftEffect case res of
               Left _ -> pure unit
               Right vs -> H.raise (AddPericope addr src vs)
 
-    P.DidRemove rid -> H.modify_ \st -> st { pericopes = A.filter (_.id /= rid) st.pericopes }
+    P.DidRemove rid ->
+      H.modify_ \st -> st { pericopes = A.filter (\q -> q.id /= rid) st.pericopes }
 
-    P.DidReorder { from, to } -> do
-      -- We treat child drop as a request to drop current dragging onto this id
+    P.DidReorder _ ->
+      -- Treat child drop as a request to drop current dragging onto this id
       handle (DropOn pid)
 
     P.DidUpdate updated ->
       H.modify_ \st -> st
-        { pericopes = st.pericopes <#> \p -> if p.id == updated.id then updated else p }
+        { pericopes = st.pericopes <#> \q -> if q.id == updated.id then updated else q }
 
--- Reorder helper
+-- Reorder helper (total, no partial indexing)
 reorder :: PericopeId -> PericopeId -> Array Pericope -> Array Pericope
 reorder fromId toId arr =
-  let fromIx = A.findIndex (_.id == fromId) arr
-      toIx = A.findIndex (_.id == toId) arr
-  in case { a: fromIx, b: toIx } of
-    { a: Just i, b: Just j } ->
-      let item = arr !! i
-          arr' = A.deleteAt i arr # fromMaybe arr
-      in A.insertAt j item arr' # fromMaybe arr'
-    _ -> arr
+  let
+    fromIx = A.findIndex (\p -> p.id == fromId) arr
+    toIx   = A.findIndex (\p -> p.id == toId) arr
+  in case fromIx, toIx of
+       Just i, Just j ->
+         case A.index arr i, A.deleteAt i arr of
+           Just item, Just arr' ->
+             fromMaybe arr' (A.insertAt j item arr')
+           _, _ -> arr
+       _, _ -> arr

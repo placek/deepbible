@@ -1,21 +1,20 @@
-module Pericope (Query(..), Output(..), component) where
+module Pericope (Query(..), Output(..), DuplicateWith, component) where
 
 import Prelude
 
 import Api (fetchVerses)
-import Data.Array as A
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromMaybe, isJust)
+import Data.Maybe (Maybe(..))
 import Data.Set as Set
-import Effect.Aff (launchAff_)
+import Web.UIEvent.MouseEvent (ctrlKey) -- <- ctrlKey belongs here, not KeyboardEvent
+import Web.UIEvent.KeyboardEvent (key)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Web.Event.Event (Event)
-import Web.HTML.Event.DataTransfer (getData, setData)
-import Web.UIEvent.KeyboardEvent (KeyboardEvent, ctrlKey)
-import Types (Pericope, PericopeId(..), Verse(..))
+import Effect.Aff.Class (class MonadAff)
+
+import Types (Pericope, PericopeId, Verse(..), Address, Source)
 
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 
@@ -23,22 +22,30 @@ data Query a
   = SetData Pericope a
   | Refresh a
 
+data DuplicateWith = DAddr | DSrc
+
 data Output
-  = DidDuplicate { id :: PericopeId, as :: "address" | "source" }
+  = DidDuplicate { id :: PericopeId, as :: DuplicateWith }
   | DidRemove PericopeId
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
 
-component :: H.Component HH.HTML Query Output Pericope
+type State = { pericope :: Pericope, editingAddress :: Boolean, editingSource :: Boolean }
+
+component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
-  { initialState: identity
+  { initialState: \p -> { pericope: p, editingAddress: false, editingSource: false }
   , render
-  , eval: H.mkEval $ H.defaultEval { handleAction = handle, receive = Just <<< SetData }
+  , eval: H.mkEval $ H.defaultEval
+      { handleAction = handle
+      , receive = Just <<< Receive
+      }
   }
 
 -- Local actions
 data Action
-  = ClickAddress Boolean -- ctrl?
+  = Noop
+  | ClickAddress Boolean -- ctrl?
   | ClickSource Boolean
   | ToggleSelect String -- verse_id
   | EditAddress
@@ -52,113 +59,125 @@ data Action
   | DragOver
   | DragLeave
   | Drop
+  | Receive Pericope
 
-render :: Pericope -> H.ComponentHTML Action ()
+render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.div [ HP.class_ (HH.ClassName "pericope") ]
     [ HH.div
         [ HP.class_ (HH.ClassName "didascalia")
         , HP.draggable true
-        , HE.onClick \_ -> pure Remove
-        , HE.onDragStart \e -> do
-            pure DragStart
-        , HE.onDragOver \e -> do
-            e.preventDefault
-            pure DragOver
-        , HE.onDragLeave \_ -> pure DragLeave
-        , HE.onDrop \e -> do
-            e.preventDefault
-            pure Drop
+        , HE.onClick \_ -> Remove
+        , HE.onDragStart \_ -> DragStart
+        , HE.onDragLeave \_ -> DragLeave
+        , HE.onDragOver \_ -> DragOver
+        , HE.onDrop \_ -> Drop
         ]
         [ -- Address (click = edit; ctrl+click = duplicate)
           if st.editingAddress then
-            HH.div [ HP.class_ (HH.ClassName "address editing"), HE.onClick HE.stopPropagation ]
+            HH.div
+              [ HP.class_ (HH.ClassName "address editing")
+              , HE.onClick \_ -> Noop
+              ]
               [ HH.input
-                  [ HP.value st.address
+                  [ HP.value st.pericope.address
                   , HE.onValueInput SetAddress
-                  , HE.onKeyDown \ke -> if ke.key == "Enter" then pure SubmitAddress else pure (HE.noop)
+                  , HE.onKeyDown \ke ->
+                      if key ke == "Enter" then SubmitAddress else Noop
                   , HP.autofocus true
                   ]
               ]
           else
-            HH.div [ HP.class_ (HH.ClassName "address")
-                   , HE.onClick \ev -> do
-                       ctrl <- ctrlKey ev
-                       if ctrl then pure (ClickAddress true) else pure EditAddress
-                   ]
-                   [ HH.text st.address ]
+            HH.div
+              [ HP.class_ (HH.ClassName "address")
+              , HE.onClick \ev ->
+                  if ctrlKey ev then ClickAddress true else EditAddress
+              ]
+              [ HH.text st.pericope.address ]
         , if st.editingSource then
-            HH.div [ HP.class_ (HH.ClassName "source editing"), HE.onClick HE.stopPropagation ]
+            HH.div
+              [ HP.class_ (HH.ClassName "source editing")
+              , HE.onClick \_ -> Noop
+              ]
               [ HH.input
-                  [ HP.value st.source
+                  [ HP.value st.pericope.source
                   , HE.onValueInput SetSource
-                  , HE.onKeyDown \ke -> if ke.key == "Enter" then pure SubmitSource else pure (HE.noop)
+                  , HE.onKeyDown \ke ->
+                      if key ke == "Enter" then SubmitSource else Noop
                   ]
               ]
           else
-            HH.div [ HP.class_ (HH.ClassName "source")
-                   , HE.onClick \ev -> do
-                       ctrl <- ctrlKey ev
-                       if ctrl then pure (ClickSource true) else pure EditSource
-                   ]
-                   [ HH.text st.source ]
+            HH.div
+              [ HP.class_ (HH.ClassName "source")
+              , HE.onClick \ev ->
+                  if ctrlKey ev then ClickSource true else EditSource
+              ]
+              [ HH.text st.pericope.source ]
         ]
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
-        (st.verses <#> \(Verse v) ->
-          let sel = Set.member v.verse_id st.selected in
+        (st.pericope.verses <#> \(Verse v) ->
+          let sel = Set.member v.verse_id st.pericope.selected in
           HH.div
             [ HP.class_ (HH.ClassName ("verse" <> if sel then " selected" else ""))
             , HP.attr (HH.AttrName "data-chapter") (show v.chapter)
             , HP.attr (HH.AttrName "data-verse") (show v.verse)
-            , HE.onClick \ev -> do
-                ev.stopPropagation
-                pure (ToggleSelect v.verse_id)
+            , HE.onClick \_ -> ToggleSelect v.verse_id
             ]
             [ HH.text v.text ]
         )
     ]
 
-handle :: Action -> H.HalogenM Pericope Action () Output Unit
+handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handle = case _ of
-  ClickAddress _ -> H.raise (DidDuplicate { id: _.id, as: "address" })
-  ClickSource _ -> H.raise (DidDuplicate { id: _.id, as: "source" })
+  Noop -> pure unit
+  ClickAddress _ -> do
+    st <- H.get
+    H.raise (DidDuplicate { id: st.pericope.id, as: DAddr })
+  ClickSource _ -> do
+    st <- H.get
+    H.raise (DidDuplicate { id: st.pericope.id, as: DSrc })
+
   EditAddress -> H.modify_ _ { editingAddress = true }
-  EditSource -> H.modify_ _ { editingSource = true }
-  SetAddress s -> H.modify_ _ { address = s }
-  SetSource s -> H.modify_ _ { source = s }
+  EditSource  -> H.modify_ _ { editingSource  = true }
+
+  SetAddress a -> H.modify_ \st -> st { pericope = st.pericope { address = a } }
+  SetSource  s -> H.modify_ \st -> st { pericope = st.pericope { source  = s } }
+
   SubmitAddress -> do
     st <- H.get
     H.modify_ _ { editingAddress = false }
-    launchFetch st.address st.source
+    launchFetch st.pericope.address st.pericope.source
+
   SubmitSource -> do
     st <- H.get
     H.modify_ _ { editingSource = false }
-    launchFetch st.address st.source
-  ToggleSelect vid -> H.modify_ \st -> st { selected =
-    if Set.member vid st.selected then Set.delete vid st.selected else Set.insert vid st.selected }
+    launchFetch st.pericope.address st.pericope.source
+
+  ToggleSelect vid ->
+    H.modify_ \st ->
+      let sel0 = st.pericope.selected
+          sel1 = if Set.member vid sel0 then Set.delete vid sel0 else Set.insert vid sel0
+      in st { pericope = st.pericope { selected = sel1 } }
+
   Remove -> do
     st <- H.get
-    H.raise (DidRemove st.id)
+    H.raise (DidRemove st.pericope.id)
+
   DragStart -> pure unit
-  DragOver -> pure unit
+  DragOver  -> pure unit
   DragLeave -> pure unit
   Drop -> do
     st <- H.get
-    H.raise (DidReorder { from: st.id, to: st.id }) -- parent interprets with drop target
+    H.raise (DidReorder { from: st.pericope.id, to: st.pericope.id }) -- parent interprets drop target
+  Receive p -> H.modify_ \st -> st { pericope = p }
 
-launchFetch :: String -> String -> H.HalogenM Pericope Action () Output Unit
+launchFetch :: forall m. MonadAff m => Address -> Source -> H.HalogenM State Action () Output m Unit
 launchFetch address source = do
-  st <- H.get
-  H.subscribe_ $ H.eventSource \emit -> do
-    launchAff_ do
-      res <- fetchVerses { address, source }
-      case res of
-        Left _ -> pure unit
-        Right vs -> emit (Right vs)
-    pure mempty
-  where
-  -- consume the emitted verses by updating state and notifying parent
-  handleVerses vs = do
-    H.modify_ _ { verses = vs }
-    st' <- H.get
-    H.raise (DidUpdate st')
+  res <- H.liftAff $ fetchVerses address source
+  case res of
+    Left _  -> pure unit
+    Right vs -> do
+      H.modify_ \st -> st { pericope = st.pericope { verses = vs } }
+      st' <- H.get
+      H.raise (DidUpdate st'.pericope)
+
