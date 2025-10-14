@@ -12,7 +12,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Types (Verse, Address, Source)
+import Types (Verse, Address, Source, SourceInfo)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
@@ -28,3 +28,13 @@ fetchVerses address source = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left $ "Failed to fetch verses: " <> address
       Right verses -> pure $ Right verses
+
+fetchSources :: Aff (Either String (Array SourceInfo))
+fetchSources = do
+  let url = baseUrl <> "/_all_sources"
+  res <- AX.get driver RF.json url
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left "Failed to fetch sources"
+      Right sources -> pure $ Right sources

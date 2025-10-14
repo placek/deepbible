@@ -12,6 +12,14 @@ type Source = String
 type VerseId = String
 type PericopeId = Int
 
+newtype SourceInfo =
+  SourceInfo
+    { name :: String
+    , description_short :: String
+    , language :: String
+    }
+derive instance newtypeSourceInfo :: Newtype SourceInfo _
+
 -- A verse as returned by /rpc/verses_by_address
 newtype Verse =
   Verse
@@ -47,6 +55,14 @@ instance decodeVerse :: DecodeJson Verse where
                  , address
                  , text
                  }
+
+instance decodeSourceInfo :: DecodeJson SourceInfo where
+  decodeJson j = do
+    obj <- decodeJson j
+    name <- obj .: "name"
+    description_short <- obj .: "description_short"
+    language <- obj .: "language"
+    pure $ SourceInfo { name, description_short, language }
 
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =

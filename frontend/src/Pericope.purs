@@ -2,12 +2,15 @@ module Pericope (Query(..), Output(..), component) where
 
 import Prelude
 
-import Api (fetchVerses)
+import Api (fetchSources, fetchVerses)
 import Data.Array (catMaybes)
+import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
+import Data.Newtype (unwrap)
+import Data.Ord (comparing)
 import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent as DragEv
@@ -19,7 +22,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Effect.Aff.Class (class MonadAff)
 
-import Types (Pericope, PericopeId, Verse(..), Address, Source)
+import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo)
 
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 
@@ -36,11 +39,16 @@ data Output
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
 
-type State = { pericope :: Pericope, editingAddress :: Boolean, editingSource :: Boolean }
+type State =
+  { pericope :: Pericope
+  , editingAddress :: Boolean
+  , editingSource :: Boolean
+  , sources :: Maybe (Array SourceInfo)
+  }
 
 component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
-  { initialState: \p -> { pericope: p, editingAddress: false, editingSource: false }
+  { initialState: \p -> { pericope: p, editingAddress: false, editingSource: false, sources: Nothing }
   , render
   , eval: H.mkEval $ H.defaultEval
       { handleAction = handle
@@ -59,6 +67,7 @@ data Action
   | SetSource String
   | SubmitAddress
   | SubmitSource
+  | SelectSource Source
   | Remove
   | DragStart DragEvent
   | DragOver DragEvent
@@ -109,17 +118,58 @@ render st =
               [ HH.text st.pericope.address ]
 
         , if st.editingSource then
+            let
+              sourceList = case st.sources of
+                Nothing ->
+                  [ HH.div [ HP.class_ (HH.ClassName "source-loading") ]
+                      [ HH.text "Loading sources..." ]
+                  ]
+                Just infos ->
+                  if A.null infos then
+                    [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
+                        [ HH.text "Unable to load sources." ]
+                    ]
+                  else
+                    let
+                      languages = Set.toUnfoldable (Set.fromFoldable (infos <#> (unwrap >>> _.language))) :: Array String
+                      renderOption infoRec =
+                        let
+                          info = unwrap infoRec
+                          isActive = info.name == st.pericope.source
+                          cls = "source-option" <> if isActive then " active" else ""
+                        in
+                        HH.li
+                          [ HP.class_ (HH.ClassName cls)
+                          , HE.onClick \_ -> SelectSource info.name
+                          ]
+                          [ HH.div [ HP.class_ (HH.ClassName "source-option-name") ] [ HH.text info.name ]
+                          , HH.div [ HP.class_ (HH.ClassName "source-option-description") ] [ HH.text info.description_short ]
+                          ]
+                      renderGroup lang =
+                        let
+                          entries = infos # A.filter (\infoRec -> (unwrap infoRec).language == lang)
+                          sorted = A.sortBy (comparing (unwrap >>> _.name)) entries
+                        in
+                        HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
+                          [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
+                          , HH.ul [ HP.class_ (HH.ClassName "source-options") ] (renderOption <$> sorted)
+                          ]
+                      sortedLanguages = A.sort languages
+                    in
+                    [ HH.div [ HP.class_ (HH.ClassName "source-list") ] (renderGroup <$> sortedLanguages)
+                    ]
+            in
             HH.div
               [ HP.class_ (HH.ClassName "source editing")
               , HE.onClick SwallowDidascaliaClick
               ]
-              [ HH.input
-                  [ HP.value st.pericope.source
-                  , HE.onValueInput SetSource
-                  , HE.onKeyDown \ke ->
-                      if key ke == "Enter" then SubmitSource else Noop
-                  ]
-              ]
+              ([ HH.input
+                    [ HP.value st.pericope.source
+                    , HE.onValueInput SetSource
+                    , HE.onKeyDown \ke ->
+                        if key ke == "Enter" then SubmitSource else Noop
+                    ]
+                ] <> sourceList)
           else
             HH.div
               [ HP.class_ (HH.ClassName "source")
@@ -162,8 +212,16 @@ handle = case _ of
     if ctrlKey ev then do
       st <- H.get
       H.raise (DidDuplicate { id: st.pericope.id })
-    else
+    else do
       H.modify_ _ { editingSource = true }
+      st <- H.get
+      case st.sources of
+        Just _ -> pure unit
+        Nothing -> do
+          res <- H.liftAff fetchSources
+          case res of
+            Left _ -> H.modify_ _ { sources = Just [] }
+            Right srcs -> H.modify_ _ { sources = Just srcs }
 
   SwallowDidascaliaClick ev ->
     H.liftEffect $ stopPropagation (toEvent ev)
@@ -183,6 +241,15 @@ handle = case _ of
     st <- H.get
     H.modify_ _ { editingSource = false }
     launchFetch st.pericope.address st.pericope.source
+
+  SelectSource newSource -> do
+    H.modify_ \st ->
+      st
+        { pericope = st.pericope { source = newSource }
+        , editingSource = false
+        }
+    st <- H.get
+    launchFetch st.pericope.address newSource
 
   ToggleSelect vid ->
     H.modify_ \st ->
