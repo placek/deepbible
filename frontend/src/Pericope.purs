@@ -6,7 +6,8 @@ import Api (fetchVerses)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
-import Web.UIEvent.MouseEvent (ctrlKey) -- <- ctrlKey belongs here, not KeyboardEvent
+import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
+import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (key)
 import Halogen as H
 import Halogen.HTML as HH
@@ -45,11 +46,10 @@ component = H.mkComponent
 -- Local actions
 data Action
   = Noop
-  | ClickAddress Boolean -- ctrl?
-  | ClickSource Boolean
+  | HandleAddressClick MouseEvent
+  | HandleSourceClick MouseEvent
+  | SwallowDidascaliaClick MouseEvent
   | ToggleSelect String -- verse_id
-  | EditAddress
-  | EditSource
   | SetAddress String
   | SetSource String
   | SubmitAddress
@@ -77,7 +77,7 @@ render st =
           if st.editingAddress then
             HH.div
               [ HP.class_ (HH.ClassName "address editing")
-              , HE.onClick \_ -> Noop
+              , HE.onClick SwallowDidascaliaClick
               ]
               [ HH.input
                   [ HP.value st.pericope.address
@@ -90,14 +90,13 @@ render st =
           else
             HH.div
               [ HP.class_ (HH.ClassName "address")
-              , HE.onClick \ev ->
-                  if ctrlKey ev then ClickAddress true else EditAddress
+              , HE.onClick HandleAddressClick
               ]
               [ HH.text st.pericope.address ]
         , if st.editingSource then
             HH.div
               [ HP.class_ (HH.ClassName "source editing")
-              , HE.onClick \_ -> Noop
+              , HE.onClick SwallowDidascaliaClick
               ]
               [ HH.input
                   [ HP.value st.pericope.source
@@ -109,8 +108,7 @@ render st =
           else
             HH.div
               [ HP.class_ (HH.ClassName "source")
-              , HE.onClick \ev ->
-                  if ctrlKey ev then ClickSource true else EditSource
+              , HE.onClick HandleSourceClick
               ]
               [ HH.text st.pericope.source ]
         ]
@@ -130,15 +128,22 @@ render st =
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handle = case _ of
   Noop -> pure unit
-  ClickAddress _ -> do
-    st <- H.get
-    H.raise (DidDuplicate { id: st.pericope.id, as: DAddr })
-  ClickSource _ -> do
-    st <- H.get
-    H.raise (DidDuplicate { id: st.pericope.id, as: DSrc })
-
-  EditAddress -> H.modify_ _ { editingAddress = true }
-  EditSource  -> H.modify_ _ { editingSource  = true }
+  HandleAddressClick ev -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    if ctrlKey ev then do
+      st <- H.get
+      H.raise (DidDuplicate { id: st.pericope.id, as: DAddr })
+    else
+      H.modify_ _ { editingAddress = true }
+  HandleSourceClick ev -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    if ctrlKey ev then do
+      st <- H.get
+      H.raise (DidDuplicate { id: st.pericope.id, as: DSrc })
+    else
+      H.modify_ _ { editingSource = true }
+  SwallowDidascaliaClick ev ->
+    H.liftEffect $ stopPropagation (toEvent ev)
 
   SetAddress a -> H.modify_ \st -> st { pericope = st.pericope { address = a } }
   SetSource  s -> H.modify_ \st -> st { pericope = st.pericope { source  = s } }
