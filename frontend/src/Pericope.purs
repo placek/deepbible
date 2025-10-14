@@ -71,7 +71,7 @@ render st =
         , HE.onDragOver \_ -> DragOver
         , HE.onDrop \_ -> Drop
         ]
-        [ -- Address (click = edit; ctrl+click = duplicate)
+        [
           if st.editingAddress then
             HH.div
               [ HP.class_ (HH.ClassName "address editing")
@@ -91,6 +91,7 @@ render st =
               , HE.onClick HandleAddressClick
               ]
               [ HH.text st.pericope.address ]
+
         , if st.editingSource then
             HH.div
               [ HP.class_ (HH.ClassName "source editing")
@@ -110,6 +111,7 @@ render st =
               ]
               [ HH.text st.pericope.source ]
         ]
+
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
         (st.pericope.verses <#> \(Verse v) ->
           let sel = Set.member v.verse_id st.pericope.selected in
@@ -125,7 +127,9 @@ render st =
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handle = case _ of
-  Noop -> pure unit
+  Noop ->
+    pure unit
+
   HandleAddressClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
     if ctrlKey ev then do
@@ -133,6 +137,7 @@ handle = case _ of
       H.raise (DidDuplicate { id: st.pericope.id })
     else
       H.modify_ _ { editingAddress = true }
+
   HandleSourceClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
     if ctrlKey ev then do
@@ -140,11 +145,15 @@ handle = case _ of
       H.raise (DidDuplicate { id: st.pericope.id })
     else
       H.modify_ _ { editingSource = true }
+
   SwallowDidascaliaClick ev ->
     H.liftEffect $ stopPropagation (toEvent ev)
 
-  SetAddress a -> H.modify_ \st -> st { pericope = st.pericope { address = a } }
-  SetSource  s -> H.modify_ \st -> st { pericope = st.pericope { source  = s } }
+  SetAddress a ->
+    H.modify_ \st -> st { pericope = st.pericope { address = a } }
+
+  SetSource s ->
+    H.modify_ \st -> st { pericope = st.pericope { source  = s } }
 
   SubmitAddress -> do
     st <- H.get
@@ -166,13 +175,21 @@ handle = case _ of
     st <- H.get
     H.raise (DidRemove st.pericope.id)
 
-  DragStart -> pure unit
-  DragOver  -> pure unit
-  DragLeave -> pure unit
+  DragStart ->
+    pure unit
+
+  DragOver ->
+    pure unit
+
+  DragLeave ->
+    pure unit
+
   Drop -> do
     st <- H.get
     H.raise (DidReorder { from: st.pericope.id, to: st.pericope.id }) -- parent interprets drop target
-  Receive p -> H.modify_ \st -> st { pericope = p }
+
+  Receive p ->
+    H.modify_ \st -> st { pericope = p }
 
 launchFetch :: forall m. MonadAff m => Address -> Source -> H.HalogenM State Action () Output m Unit
 launchFetch address source = do
