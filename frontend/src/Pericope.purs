@@ -10,7 +10,6 @@ import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Newtype (unwrap)
-import Data.Ord (comparing)
 import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent as DragEv
@@ -44,11 +43,20 @@ type State =
   , editingAddress :: Boolean
   , editingSource :: Boolean
   , sources :: Maybe (Array SourceInfo)
+  , originalAddress :: Maybe Address
+  , originalSource :: Maybe Source
   }
 
 component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
-  { initialState: \p -> { pericope: p, editingAddress: false, editingSource: false, sources: Nothing }
+  { initialState: \p ->
+      { pericope: p
+      , editingAddress: false
+      , editingSource: false
+      , sources: Nothing
+      , originalAddress: Nothing
+      , originalSource: Nothing
+      }
   , render
   , eval: H.mkEval $ H.defaultEval
       { handleAction = handle
@@ -67,6 +75,8 @@ data Action
   | SetSource String
   | SubmitAddress
   | SubmitSource
+  | CancelAddressEdit
+  | CancelSourceEdit
   | SelectSource Source
   | Remove
   | DragStart DragEvent
@@ -105,8 +115,10 @@ render st =
               [ HH.input
                   [ HP.value st.pericope.address
                   , HE.onValueInput SetAddress
-                  , HE.onKeyDown \ke ->
-                      if key ke == "Enter" then SubmitAddress else Noop
+                  , HE.onKeyDown \ke -> case key ke of
+                      "Enter" -> SubmitAddress
+                      "Escape" -> CancelAddressEdit
+                      _ -> Noop
                   , HP.autofocus true
                   ]
               ]
@@ -166,8 +178,10 @@ render st =
               ([ HH.input
                     [ HP.value st.pericope.source
                     , HE.onValueInput SetSource
-                    , HE.onKeyDown \ke ->
-                        if key ke == "Enter" then SubmitSource else Noop
+                    , HE.onKeyDown \ke -> case key ke of
+                        "Enter" -> SubmitSource
+                        "Escape" -> CancelSourceEdit
+                        _ -> Noop
                     ]
                 ] <> sourceList)
           else
@@ -205,7 +219,11 @@ handle = case _ of
       st <- H.get
       H.raise (DidDuplicate { id: st.pericope.id })
     else
-      H.modify_ _ { editingAddress = true }
+      H.modify_ \st ->
+        st
+          { editingAddress = true
+          , originalAddress = Just st.pericope.address
+          }
 
   HandleSourceClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
@@ -213,7 +231,11 @@ handle = case _ of
       st <- H.get
       H.raise (DidDuplicate { id: st.pericope.id })
     else do
-      H.modify_ _ { editingSource = true }
+      H.modify_ \st ->
+        st
+          { editingSource = true
+          , originalSource = Just st.pericope.source
+          }
       st <- H.get
       case st.sources of
         Just _ -> pure unit
@@ -234,14 +256,49 @@ handle = case _ of
 
   SubmitAddress -> do
     st <- H.get
-    H.modify_ _ { editingAddress = false }
+    H.modify_ _
+      { editingAddress = false
+      , originalAddress = Nothing
+      }
     launchFetch st.pericope.address st.pericope.source
 
   SubmitSource -> do
     st <- H.get
-    H.modify_ _ { editingSource = false }
+    H.modify_ _
+      { editingSource = false
+      , originalSource = Nothing
+      }
     launchFetch st.pericope.address st.pericope.source
 
+  CancelAddressEdit ->
+    H.modify_ \st ->
+      case st.originalAddress of
+        Just orig ->
+          st
+            { editingAddress = false
+            , originalAddress = Nothing
+            , pericope = st.pericope { address = orig }
+            }
+        Nothing ->
+          st
+            { editingAddress = false
+            , originalAddress = Nothing
+            }
+
+  CancelSourceEdit ->
+    H.modify_ \st ->
+      case st.originalSource of
+        Just orig ->
+          st
+            { editingSource = false
+            , originalSource = Nothing
+            , pericope = st.pericope { source = orig }
+            }
+        Nothing ->
+          st
+            { editingSource = false
+            , originalSource = Nothing
+            }
   SelectSource newSource -> do
     H.modify_ \st ->
       st
