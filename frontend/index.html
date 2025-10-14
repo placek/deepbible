@@ -22,16 +22,17 @@
     --blue:    #268bd2;
     --cyan:    #2aa198;
     --green:   #859900;
+    --font:    'Arial', sans-serif;
   }
   ::selection { color: var(--blue); background-color: var(--base2); }
   body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font);
     font-size: 1.1rem;
     background-color: var(--base2);
     color: var(--base01);
     margin: 2em 0;
   }
-  h3 {
+  h2 {
     text-align: center;
     color: var(--base3);
     margin-top: -1em;
@@ -81,10 +82,24 @@
     background-color: var(--base3);
     border: 1px dashed var(--base1);
     max-height: 30em;
+    max-width: 30em;
     overflow: auto;
   }
-  .source-language { font-weight: bold; text-align: left; padding: 0; margin: 0; display: block; margin-block-start: 0; margin-block-end: 0; }
-  .source-options { text-align: left; list-style: none; }
+  .source-language {
+    font-weight: bold;
+    text-align: left;
+    cursor: default;
+    color: var(--base00);
+  }
+  .source-options {
+    text-align: left;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: block;
+    margin-block-start: 0;
+    margin-block-end: 0;
+  }
   .source-option-name { color: var(--violet); }
   .source-option-description { color: var(--base1); }
   .textus {
@@ -106,8 +121,8 @@
 </style>
 </head>
 <body>
-<h3>deepbible</h3>
-<div id="app"></div>
-<script type="module" src="./main.js"></script>
+  <h2>deepbible</h2>
+  <div id="app"></div>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
