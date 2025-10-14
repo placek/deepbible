@@ -121,6 +121,15 @@ handle action = case action of
     P.DidRemove rid ->
       H.modify_ \st -> st { pericopes = A.filter (\q -> q.id /= rid) st.pericopes }
 
+    P.DidStartDrag _ ->
+      handle (StartDrag pid)
+
+    P.DidDragOver _ ->
+      handle (OverDrag pid)
+
+    P.DidDragLeave _ ->
+      handle (LeaveDrag pid)
+
     P.DidReorder _ ->
       -- Treat child drop as a request to drop current dragging onto this id
       handle (DropOn pid)

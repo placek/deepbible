@@ -7,7 +7,9 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
-import Web.Event.Event (stopPropagation)
+import Web.HTML.Event.DragEvent (DragEvent)
+import Web.HTML.Event.DragEvent as DragEv
+import Web.Event.Event (preventDefault, stopPropagation)
 import Web.UIEvent.KeyboardEvent (key)
 import Halogen as H
 import Halogen.HTML as HH
@@ -26,6 +28,9 @@ data Query a
 data Output
   = DidDuplicate { id :: PericopeId }
   | DidRemove PericopeId
+  | DidStartDrag PericopeId
+  | DidDragOver PericopeId
+  | DidDragLeave PericopeId
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
 
@@ -53,10 +58,10 @@ data Action
   | SubmitAddress
   | SubmitSource
   | Remove
-  | DragStart
-  | DragOver
-  | DragLeave
-  | Drop
+  | DragStart DragEvent
+  | DragOver DragEvent
+  | DragLeave DragEvent
+  | Drop DragEvent
   | Receive Pericope
 
 render :: forall m. State -> H.ComponentHTML Action () m
@@ -66,10 +71,10 @@ render st =
         [ HP.class_ (HH.ClassName "didascalia")
         , HP.draggable true
         , HE.onClick \_ -> Remove
-        , HE.onDragStart \_ -> DragStart
-        , HE.onDragLeave \_ -> DragLeave
-        , HE.onDragOver \_ -> DragOver
-        , HE.onDrop \_ -> Drop
+        , HE.onDragStart DragStart
+        , HE.onDragLeave DragLeave
+        , HE.onDragOver DragOver
+        , HE.onDrop Drop
         ]
         [
           if st.editingAddress then
@@ -175,16 +180,26 @@ handle = case _ of
     st <- H.get
     H.raise (DidRemove st.pericope.id)
 
-  DragStart ->
-    pure unit
+  DragStart ev -> do
+    H.liftEffect $ stopPropagation (DragEv.toEvent ev)
+    st <- H.get
+    H.raise (DidStartDrag st.pericope.id)
 
-  DragOver ->
-    pure unit
+  DragOver ev -> do
+    H.liftEffect do
+      preventDefault (DragEv.toEvent ev)
+      stopPropagation (DragEv.toEvent ev)
+    st <- H.get
+    H.raise (DidDragOver st.pericope.id)
 
-  DragLeave ->
-    pure unit
+  DragLeave _ -> do
+    st <- H.get
+    H.raise (DidDragLeave st.pericope.id)
 
-  Drop -> do
+  Drop ev -> do
+    H.liftEffect do
+      preventDefault (DragEv.toEvent ev)
+      stopPropagation (DragEv.toEvent ev)
     st <- H.get
     H.raise (DidReorder { from: st.pericope.id, to: st.pericope.id }) -- parent interprets drop target
 
