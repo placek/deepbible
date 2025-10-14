@@ -7,4 +7,4 @@ include build/helpers.mk
 
 all: clean upload apply-helpers
 
-clean: clean-download clean-merged clean-helpers
+clean: clean-download clean-merged clean-helpers upload-cross-references

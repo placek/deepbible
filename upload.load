@@ -1,21 +1,21 @@
 load database
-     from {{SQLITE_PATH}}
-     into {{PGURL}}
+  from {{SQLITE_PATH}}
+  into {{PGURL}}
 
  with include drop,
-      create tables,
-      create indexes,
-      reset sequences,
-      batch rows = 2000,
-      prefetch rows = 2000,
-      workers = 4,
-      concurrency = 4
+   create tables,
+   create indexes,
+   reset sequences,
+   batch rows = 2000,
+   prefetch rows = 2000,
+   workers = 4,
+   concurrency = 4
 
  set search_path to '"{{SCHEMA}}", public',
-     work_mem to '64MB',
-     maintenance_work_mem to '256MB'
+   work_mem to '64MB',
+   maintenance_work_mem to '256MB'
 
- including only table names like '_sources', '_books', '_all_verses'
+ including only table names like {{TABLES}}
 
  cast
    type "NUM" to integer,
