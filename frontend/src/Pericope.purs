@@ -1,4 +1,4 @@
-module Pericope (Query(..), Output(..), DuplicateWith, component) where
+module Pericope (Query(..), Output(..), component) where
 
 import Prelude
 
@@ -23,10 +23,8 @@ data Query a
   = SetData Pericope a
   | Refresh a
 
-data DuplicateWith = DAddr | DSrc
-
 data Output
-  = DidDuplicate { id :: PericopeId, as :: DuplicateWith }
+  = DidDuplicate { id :: PericopeId }
   | DidRemove PericopeId
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
@@ -132,14 +130,14 @@ handle = case _ of
     H.liftEffect $ stopPropagation (toEvent ev)
     if ctrlKey ev then do
       st <- H.get
-      H.raise (DidDuplicate { id: st.pericope.id, as: DAddr })
+      H.raise (DidDuplicate { id: st.pericope.id })
     else
       H.modify_ _ { editingAddress = true }
   HandleSourceClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
     if ctrlKey ev then do
       st <- H.get
-      H.raise (DidDuplicate { id: st.pericope.id, as: DSrc })
+      H.raise (DidDuplicate { id: st.pericope.id })
     else
       H.modify_ _ { editingSource = true }
   SwallowDidascaliaClick ev ->

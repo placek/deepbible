@@ -106,7 +106,7 @@ handle action = case action of
         H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
 
   ChildMsg pid out -> case out of
-    P.DidDuplicate { id: baseId, as: _ } -> do
+    P.DidDuplicate { id: baseId } -> do
       st <- H.get
       case A.find (\q -> q.id == baseId) st.pericopes of
         Nothing -> pure unit
