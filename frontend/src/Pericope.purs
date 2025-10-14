@@ -77,6 +77,7 @@ data Action
   | SubmitSource
   | CancelAddressEdit
   | CancelSourceEdit
+  | CloseSourceList
   | SelectSource Source
   | Remove
   | DragStart DragEvent
@@ -178,10 +179,12 @@ render st =
               ([ HH.input
                     [ HP.value st.pericope.source
                     , HE.onValueInput SetSource
-                    , HE.onKeyDown \ke -> case key ke of
-                        "Enter" -> SubmitSource
-                        "Escape" -> CancelSourceEdit
-                        _ -> Noop
+                    , HP.autofocus true
+                    , HE.onKeyDown \ke ->
+                        case key ke of
+                          "Enter" -> SubmitSource
+                          "Escape" -> CloseSourceList
+                          _ -> Noop
                     ]
                 ] <> sourceList)
           else
@@ -261,6 +264,9 @@ handle = case _ of
       , originalAddress = Nothing
       }
     launchFetch st.pericope.address st.pericope.source
+
+  CloseSourceList ->
+    H.modify_ _ { editingSource = false }
 
   SubmitSource -> do
     st <- H.get
