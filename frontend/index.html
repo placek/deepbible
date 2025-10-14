@@ -5,52 +5,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DeepBible</title>
 <style>
-body {
-font-family: Arial, sans-serif;
-background-color: #eee8d5;
-color: #586e75;
-margin: 2em 0;
-}
-.pericope {
-display: flex;
-max-width: 70em;
-margin: auto;
-}
-.pericope + .pericope {
-border-top: 1px dotted #cccccc;
-}
-.didascalia {
-padding: 1em;
-min-width: 7em;
-text-align: right;
-user-select: none;
-cursor: move; /* for drag handle */
-}
-.didascalia .address, .didascalia .source { cursor: pointer; }
-.didascalia .address.editing input,
-.didascalia .source.editing input {
-@@ -38,32 +39,28 @@ border-radius: 4px;
-}
-.source {
-color: #b58900;
-font-size: 0.7em;
-}
-.textus {
-padding: 1em;
-background-color: #fdf6e3;
-flex: 1;
-}
-.verse::before {
-content: attr(data-verse);
-color: #dc322f;
-font-size: 0.7em;
-vertical-align: super;
-margin-right: 0.2em;
-}
-.verse { display: inline; }
-.verse + .verse::before { margin-left: 0.4em; }
-.verse.selected { text-decoration: underline; }
-.dropping { outline: 2px dashed #b58900; }
+  :root {
+    --base03:  #002b36;
+    --base02:  #073642;
+    --base01:  #586e75;
+    --base00:  #657b83;
+    --base0:   #839496;
+    --base1:   #93a1a1;
+    --base2:   #eee8d5;
+    --base3:   #fdf6e3;
+    --yellow:  #b58900;
+    --orange:  #cb4b16;
+    --red:     #dc322f;
+    --magenta: #d33682;
+    --violet:  #6c71c4;
+    --blue:    #268bd2;
+    --cyan:    #2aa198;
+    --green:   #859900;
+  }
+  ::selection { color: var(--blue); background-color: var(--base2); }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 1.1rem;
+    background-color: var(--base2);
+    color: var(--base01);
+    margin: 2em 0;
+  }
+  .pericope {
+    display: flex;
+    max-width: 70em;
+    margin: auto;
+  }
+  .pericope + .pericope {
+    border-top: 1px dashed var(--base1);
+  }
+  .didascalia {
+    padding: 1em;
+    min-width: 7em;
+    text-align: right;
+    user-select: none;
+    cursor: move;
+  }
+  .didascalia .address, .didascalia .source { cursor: pointer; }
+  .didascalia .address.editing input:focus-visible,
+  .didascalia .source.editing input:focus-visible {
+    outline: none;
+  }
+  .didascalia .address.editing input,
+  .didascalia .source.editing input {
+    max-width: 6em;
+    box-sizing: border-box;
+    border: none;
+    background-color: var(--base3);
+    color: var(--base00);
+    font-size: 1em;
+  }
+  .didascalia .selected-address {
+    color: var(--green);
+    font-size: 0.7em;
+  }
+  .source {
+    color: var(--violet);
+    font-size: 0.7em;
+  }
+  .textus {
+    padding: 1em;
+    background-color: #fdf6e3;
+    flex: 1;
+  }
+  .verse::before {
+    content: attr(data-verse);
+    color: var(--red);
+    font-size: 0.7em;
+    vertical-align: super;
+    margin-right: 0.2em;
+  }
+  .verse { display: inline; }
+  .verse + .verse::before { margin-left: 0.4em; }
+  .verse.selected { color: var(--green); }
+  .dropping { outline: 2px dashed #b58900; }
 </style>
 </head>
 <body>
