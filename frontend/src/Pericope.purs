@@ -3,7 +3,9 @@ module Pericope (Query(..), Output(..), component) where
 import Prelude
 
 import Api (fetchVerses)
+import Data.Array (catMaybes)
 import Data.Either (Either(..))
+import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
@@ -66,6 +68,15 @@ data Action
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
+  let
+    selectedAddresses =
+      catMaybes $ st.pericope.verses <#> \(Verse v) ->
+        if Set.member v.verse_id st.pericope.selected then Just v.address else Nothing
+    addressText =
+      case selectedAddresses of
+        [] -> ""
+        xs -> intercalate "; " xs
+  in
   HH.div [ HP.class_ (HH.ClassName "pericope") ]
     [ HH.div
         [ HP.class_ (HH.ClassName "didascalia")
@@ -115,6 +126,9 @@ render st =
               , HE.onClick HandleSourceClick
               ]
               [ HH.text st.pericope.source ]
+        , HH.div
+            [ HP.class_ (HH.ClassName "selected-address") ]
+            [ HH.text addressText ]
         ]
 
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
