@@ -122,15 +122,15 @@ renderHelpModal true =
           , HE.onKeyDown HandleHelpKey
           ]
           [ HH.h3_ [ HH.text "How to use deepbible" ]
-          , HH.p_ [ HH.text "Use the sections below to work with pericopes and scripture selections." ]
           , HH.ul_
-              [ HH.li_ [ HH.text "Add a new pericope by entering an address and source, then load its verses." ]
-              , HH.li_ [ HH.text "Duplicate an existing pericope to explore variations of the same passage." ]
-              , HH.li_ [ HH.text "Remove pericopes you no longer need using the controls beside each section." ]
-              , HH.li_ [ HH.text "Reorder pericopes by dragging their headers and dropping them in a new position." ]
-              , HH.li_ [ HH.text "Change a pericope's address or source by clicking the text to edit it." ]
-              , HH.li_ [ HH.text "Select verses to highlight them or view related cross references." ]
-              , HH.li_ [ HH.text "Navigate between pericopes by scrolling the page or using the drag handles." ]
+              [ HH.li_ [ HH.text "Click address → type → Enter – change pericope address." ]
+              , HH.li_ [ HH.text "Click source name → type → Enter – change pericope source." ]
+              , HH.li_ [ HH.text "Click source name → select from list – change pericope source." ]
+              , HH.li_ [ HH.text "Ctrl + Click left margin – duplicate pericope." ]
+              , HH.li_ [ HH.text "Click left margin (not address/source) – delete pericope." ]
+              , HH.li_ [ HH.text "Drag left margin – reorder pericopes." ]
+              , HH.li_ [ HH.text "Click verse – highlight verse." ]
+              , HH.li_ [ HH.text "With one verse highlighted → click address (right margin) – add verse as new pericope." ]
               ]
           , HH.button
               [ HP.class_ (HH.ClassName "help-close")
