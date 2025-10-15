@@ -103,4 +103,5 @@ type AppState =
   , dragging :: Maybe PericopeId
   , droppingOver :: Maybe PericopeId
   , nextId :: Int
+  , helpOpen :: Boolean
   }

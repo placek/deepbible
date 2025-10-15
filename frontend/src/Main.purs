@@ -3,6 +3,7 @@ module Main where
 import Prelude
 
 import Api (fetchVerses)
+import Control.Monad (when)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
@@ -15,11 +16,16 @@ import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
+import Halogen.HTML.Properties.ARIA as HPA
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
 import Types (AppState, Pericope, PericopeId, Verse)
+import Web.HTML.HTMLElement (focus)
+import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -54,6 +60,9 @@ data Action
   | OverDrag PericopeId
   | LeaveDrag PericopeId
   | DropOn PericopeId
+  | OpenHelp
+  | CloseHelp
+  | HandleHelpKey KeyboardEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -61,16 +70,75 @@ initialState _ =
   , dragging: Nothing
   , droppingOver: Nothing
   , nextId: 1
+  , helpOpen: false
   }
+
+helpModalRef :: H.RefLabel
+helpModalRef = H.RefLabel "help-modal"
 
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div_
-    (renderPericope <$> st.pericopes)
+    ( [ HH.div_
+          (renderPericope <$> st.pericopes)
+      , renderHelpLink st.helpOpen
+      ] <> renderHelpModal st.helpOpen
+    )
 
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
   HH.slot pericopeSlot p.id P.component p (ChildMsg p.id)
+
+renderHelpLink :: Boolean -> H.ComponentHTML Action ChildSlots Aff
+renderHelpLink isOpen =
+  let
+    attrs =
+      [ HP.class_ (HH.ClassName "help-footer")
+      ]
+  in
+  HH.div attrs
+    [ HH.a
+        [ HP.href "#help"
+        , HP.class_ (HH.ClassName "help-link")
+        , HPA.role "button"
+        , HP.attr (HH.AttrName "aria-expanded") (if isOpen then "true" else "false")
+        , HE.onClick \_ -> OpenHelp
+        ]
+        [ HH.text "help" ]
+    ]
+
+renderHelpModal :: Boolean -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderHelpModal false = []
+renderHelpModal true =
+  [ HH.div
+      [ HP.class_ (HH.ClassName "help-modal-backdrop")
+      ]
+      [ HH.div
+          [ HP.class_ (HH.ClassName "help-modal")
+          , HP.id "help-modal"
+          , HP.ref helpModalRef
+          , HP.tabIndex 0
+          , HE.onKeyDown HandleHelpKey
+          ]
+          [ HH.h3_ [ HH.text "How to use deepbible" ]
+          , HH.p_ [ HH.text "Use the sections below to work with pericopes and scripture selections." ]
+          , HH.ul_
+              [ HH.li_ [ HH.text "Add a new pericope by entering an address and source, then load its verses." ]
+              , HH.li_ [ HH.text "Duplicate an existing pericope to explore variations of the same passage." ]
+              , HH.li_ [ HH.text "Remove pericopes you no longer need using the controls beside each section." ]
+              , HH.li_ [ HH.text "Reorder pericopes by dragging their headers and dropping them in a new position." ]
+              , HH.li_ [ HH.text "Change a pericope's address or source by clicking the text to edit it." ]
+              , HH.li_ [ HH.text "Select verses to highlight them or view related cross references." ]
+              , HH.li_ [ HH.text "Navigate between pericopes by scrolling the page or using the drag handles." ]
+              ]
+          , HH.button
+              [ HP.class_ (HH.ClassName "help-close")
+              , HE.onClick \_ -> CloseHelp
+              ]
+              [ HH.text "Close" ]
+          ]
+      ]
+  ]
 
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
@@ -104,6 +172,17 @@ handle action = case action of
       Just fromId -> do
         let ps = reorder fromId targetId st.pericopes
         H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
+
+  OpenHelp -> do
+    H.modify_ \st -> st { helpOpen = true }
+    mEl <- H.getHTMLElementRef helpModalRef
+    for_ mEl (H.liftEffect <<< focus)
+
+  CloseHelp ->
+    H.modify_ \st -> st { helpOpen = false }
+
+  HandleHelpKey ev ->
+    when (key ev == "Escape") (handle CloseHelp)
 
   ChildMsg pid out -> case out of
     P.DidDuplicate { id: baseId } -> do
