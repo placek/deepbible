@@ -347,6 +347,7 @@ handle = case _ of
       st
         { pericope = st.pericope { source = newSource }
         , editingSource = false
+        , originalSource = Nothing
         }
     st <- H.get
     launchFetch st.pericope.address newSource
@@ -407,7 +408,16 @@ handle = case _ of
     H.raise (DidReorder { from: st.pericope.id, to: st.pericope.id }) -- parent interprets drop target
 
   Receive p ->
-    H.modify_ \st -> st { pericope = p, crossRefs = CrossRefsIdle }
+    H.modify_ \st ->
+      let
+        shouldCloseSource = st.editingSource && p.source == st.pericope.source
+      in
+      st
+        { pericope = p
+        , crossRefs = CrossRefsIdle
+        , editingSource = if shouldCloseSource then false else st.editingSource
+        , originalSource = if shouldCloseSource then Nothing else st.originalSource
+        }
 
   OpenCrossReference address -> do
     st <- H.get
