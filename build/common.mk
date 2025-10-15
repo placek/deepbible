@@ -16,4 +16,4 @@ cross_refs_zip := $(cross_refs_dir)/cross_references.zip
 cross_refs_txt := $(cross_refs_dir)/cross_references.txt
 cross_refs_sql := $(cross_refs_dir)/cross_references.sql
 cross_refs_db := $(cross_refs_dir)/cross_references.SQLite3
-books_db := data/extracted/KJV_plus_/KJV+.SQLite3
+books_db := data/cross_references_books.SQLite3
