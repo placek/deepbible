@@ -241,7 +241,7 @@ render st =
         renderRef (CrossReference ref) =
           HH.li
             [ HP.class_ (HH.ClassName "cross-reference")
-            , HE.onClick \_ -> OpenCrossReference ref.address
+            , HE.onClick \_ -> OpenCrossReference ref.reference
             ]
             [ HH.text ref.reference ]
       in
