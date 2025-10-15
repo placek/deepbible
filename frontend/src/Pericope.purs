@@ -37,7 +37,7 @@ data Output
   | DidDragLeave PericopeId
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
-  | DidOpenCrossReference { source :: Source, address :: Address }
+  | DidLoadCrossReference { source :: Source, address :: Address }
 
 type State =
   { pericope :: Pericope
@@ -50,7 +50,7 @@ type State =
   }
 
 data CrossRefState
-  = CrossRefsHidden
+  = CrossRefsIdle
   | CrossRefsLoading
   | CrossRefsLoaded (Array CrossReference)
 
@@ -63,7 +63,7 @@ component = H.mkComponent
       , sources: Nothing
       , originalAddress: Nothing
       , originalSource: Nothing
-      , crossRefs: CrossRefsHidden
+      , crossRefs: CrossRefsIdle
       }
   , render
   , eval: H.mkEval $ H.defaultEval
@@ -219,11 +219,12 @@ render st =
             [ HH.text v.text ]
         )
     , let
-        marginClass = case st.crossRefs of
-          CrossRefsHidden -> "margin hidden"
-          _ -> "margin"
         renderCrossRefs = case st.crossRefs of
-          CrossRefsHidden -> []
+          CrossRefsIdle ->
+              [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
+                  [  ]
+              ]
+
           CrossRefsLoading ->
             [ HH.div [ HP.class_ (HH.ClassName "cross-references-loading") ]
                 [ HH.text "Loading cross references..." ]
@@ -231,7 +232,7 @@ render st =
           CrossRefsLoaded refs ->
             if A.null refs then
               [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
-                  [ HH.text "No cross references." ]
+                  [  ]
               ]
             else
               [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
@@ -244,7 +245,7 @@ render st =
             ]
             [ HH.text ref.reference ]
       in
-      HH.div [ HP.class_ (HH.ClassName marginClass) ] renderCrossRefs
+      HH.div [ HP.class_ (HH.ClassName "margin") ] renderCrossRefs
     ]
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
@@ -357,7 +358,7 @@ handle = case _ of
           sel0 = st.pericope.selected
           sel1 =
             if Set.member vid sel0 then Set.delete vid sel0 else Set.insert vid sel0
-          nextCrossRefState = if Set.size sel1 == 1 then CrossRefsLoading else CrossRefsHidden
+          nextCrossRefState = if Set.size sel1 == 1 then CrossRefsLoading else CrossRefsIdle
         in
         st
           { pericope = st.pericope { selected = sel1 }
@@ -406,11 +407,11 @@ handle = case _ of
     H.raise (DidReorder { from: st.pericope.id, to: st.pericope.id }) -- parent interprets drop target
 
   Receive p ->
-    H.modify_ \st -> st { pericope = p, crossRefs = CrossRefsHidden }
+    H.modify_ \st -> st { pericope = p, crossRefs = CrossRefsIdle }
 
   OpenCrossReference address -> do
     st <- H.get
-    H.raise (DidOpenCrossReference { source: st.pericope.source, address })
+    H.raise (DidLoadCrossReference { source: st.pericope.source, address })
 
 launchFetch :: forall m. MonadAff m => Address -> Source -> H.HalogenM State Action () Output m Unit
 launchFetch address source = do
@@ -420,7 +421,7 @@ launchFetch address source = do
     Right vs -> do
       H.modify_ \st -> st
         { pericope = st.pericope { verses = vs, selected = Set.empty }
-        , crossRefs = CrossRefsHidden
+        , crossRefs = CrossRefsIdle
         }
       st' <- H.get
       H.raise (DidUpdate st'.pericope)

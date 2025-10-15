@@ -141,7 +141,7 @@ handle action = case action of
       H.modify_ \st -> st
         { pericopes = st.pericopes <#> \q -> if q.id == updated.id then updated else q }
 
-    P.DidOpenCrossReference { source, address } -> do
+    P.DidLoadCrossReference { source, address } -> do
       res <- H.liftAff $ fetchVerses address source
       case res of
         Left _ -> pure unit
