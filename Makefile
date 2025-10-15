@@ -1,4 +1,5 @@
 include build/download.mk
+include build/cross_references.mk
 include build/merge.mk
 include build/upload.mk
 include build/helpers.mk

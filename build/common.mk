@@ -9,3 +9,11 @@ helpers_dir       := helpers
 sql_dir           := sql
 
 langs             ?= pl la grc en
+
+cross_refs_url := https://a.openbible.info/data/cross-references.zip
+cross_refs_dir := data/openbible
+cross_refs_zip := $(cross_refs_dir)/cross_references.zip
+cross_refs_txt := $(cross_refs_dir)/cross_references.txt
+cross_refs_sql := $(cross_refs_dir)/cross_references.sql
+cross_refs_db := $(cross_refs_dir)/cross_references.SQLite3
+books_db := data/extracted/KJV_plus_/KJV+.SQLite3

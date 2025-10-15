@@ -8,9 +8,9 @@ endif
 
 upload_tables ?= _sources _books _all_verses
 
-upload-cross-references:
+upload-cross-references: $(cross_refs_db)
 	@echo ">> uploading cross-references"
-	SQLITE_PATH="$$(realpath data/cross_references.SQLite3)"; \
+	SQLITE_PATH="$$(realpath $<)"; \
 	PGURL="$(DATABASE_URL)"; \
 	TABLES="'cross_references'"; \
 	SCHEMA="public"; \

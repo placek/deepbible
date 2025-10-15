@@ -64,6 +64,7 @@ BEGIN
   WHERE cr.book_number = v_book_number
     AND cr.chapter     = v_chapter
     AND cr.verse       = v_verse
+    AND cr.b1 is not null
   ORDER BY cr.rate DESC, cr.book_number, cr.chapter, cr.verse;
 
 END;
