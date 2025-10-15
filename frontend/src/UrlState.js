@@ -29,6 +29,18 @@ export const loadSeeds = () => {
     }
   }
 
+  const currentUrl =
+    window.location.pathname + window.location.search + window.location.hash;
+
+  window.history.replaceState({ pericopes: seeds }, "", currentUrl);
+
+  if (!window.__deepbibleHistoryListener) {
+    window.addEventListener("popstate", () => {
+      window.location.reload();
+    });
+    window.__deepbibleHistoryListener = true;
+  }
+
   return seeds;
 };
 
@@ -66,5 +78,14 @@ export const storeSeeds = seeds => () => {
     (search ? "?" + search : "") +
     window.location.hash;
 
-  window.history.replaceState(null, "", newUrl);
+  const currentUrl =
+    window.location.pathname + window.location.search + window.location.hash;
+
+  const state = { pericopes: seeds };
+
+  if (currentUrl === newUrl) {
+    window.history.replaceState(state, "", newUrl);
+  } else {
+    window.history.pushState(state, "", newUrl);
+  }
 };
