@@ -178,7 +178,7 @@ BEGIN
     v.language,
     v.source,
     v.address,
-    raw_text(v.text)   AS "text"
+    text_without_format(v.text) AS "text"
   FROM addresses a
   JOIN public._all_verses v
     ON v.book_number = a.book_number

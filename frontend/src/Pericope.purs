@@ -214,9 +214,10 @@ render st =
             [ HP.class_ (HH.ClassName ("verse" <> if sel then " selected" else ""))
             , HP.attr (HH.AttrName "data-chapter") (show v.chapter)
             , HP.attr (HH.AttrName "data-verse") (show v.verse)
+            , HP.prop (HH.PropName "innerHTML") v.text
             , HE.onClick \_ -> ToggleSelect v.verse_id
             ]
-            [ HH.text v.text ]
+            []
         )
     , let
         renderCrossRefs = case st.crossRefs of

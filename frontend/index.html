@@ -74,11 +74,11 @@
   }
   .didascalia .selected-address {
     color: var(--green);
-    font-size: 0.7em;
+    font-size: x-small;
   }
   .source {
     color: var(--violet);
-    font-size: 0.7em;
+    font-size: x-small;
   }
   .source-list {
     padding: 1em;
@@ -123,25 +123,30 @@
   }
   .cross-reference {
     color: var(--blue);
-    font-size: 0.7em;
+    font-size: x-small;
     cursor: pointer;
   }
   .cross-references-loading,
   .cross-references-empty {
     color: var(--base01);
-    font-size: 0.7em;
+    font-size: x-small;
   }
   .verse::before {
     content: attr(data-verse);
     color: var(--red);
-    font-size: 0.7em;
+    font-size: x-small;
     vertical-align: super;
     margin-right: 0.2em;
   }
   .verse { display: inline; }
   .verse + .verse::before { margin-left: 0.4em; }
   .verse.selected { color: var(--green); }
-  .dropping { outline: 2px dashed #b58900; }
+  .verse e { color: var(--base1); font-style: italic; text-shadow: none; }
+  .verse s { color: var(--violet); font-size: xx-small; text-decoration: none; text-shadow: none; }
+  .verse m { color: var(--magenta); font-size: xx-small; text-shadow: none; }
+  .verse n { color: var(--base1); font-size: xx-small; text-shadow: none; }
+  .verse f { color: var(--base1); text-shadow: none; }
+  .verse j { text-shadow: 0 0 var(--orange); }
 </style>
 </head>
 <body>
