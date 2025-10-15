@@ -24,6 +24,7 @@ import Type.Proxy (Proxy(..))
 
 import Pericope as P
 import Types (AppState, Pericope, PericopeId, Verse)
+import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
 import Web.HTML.HTMLElement (focus)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 
@@ -143,10 +144,12 @@ renderHelpModal true =
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
   Initialize -> do
-    let seeds =
+    urlSeeds <- H.liftEffect loadSeeds
+    let defaultSeeds =
           [ { address: "J 3,16-17", source: "NVUL" }
           , { address: "J 3,16-17", source: "PAU" }
           ]
+        seeds = if A.null urlSeeds then defaultSeeds else urlSeeds
     for_ seeds \{ address, source } -> do
       res <- H.liftAff $ fetchVerses address source
       case res of
@@ -172,6 +175,7 @@ handle action = case action of
       Just fromId -> do
         let ps = reorder fromId targetId st.pericopes
         H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
+        syncUrl
 
   OpenHelp -> do
     H.modify_ \st -> st { helpOpen = true }
@@ -197,12 +201,13 @@ handle action = case action of
             Left _ -> pure unit
             Right vs -> insertPericope addr src vs
 
-    P.DidRemove rid ->
+    P.DidRemove rid -> do
       H.modify_ \st ->
         if A.length st.pericopes > 1 then
           st { pericopes = A.filter (\q -> q.id /= rid) st.pericopes }
         else
           st
+      syncUrl
 
     P.DidStartDrag _ ->
       handle (StartDrag pid)
@@ -216,9 +221,10 @@ handle action = case action of
     P.DidReorder _ ->
       handle (DropOn pid)
 
-    P.DidUpdate updated ->
+    P.DidUpdate updated -> do
       H.modify_ \st -> st
         { pericopes = st.pericopes <#> \q -> if q.id == updated.id then updated else q }
+      syncUrl
 
     P.DidLoadCrossReference { source, address } -> do
       res <- H.liftAff $ fetchVerses address source
@@ -259,3 +265,9 @@ insertPericope address source verses = do
     { pericopes = A.snoc st.pericopes pericope
     , nextId = st.nextId + 1
     }
+  syncUrl
+
+syncUrl :: H.HalogenM AppState Action ChildSlots Void Aff Unit
+syncUrl = do
+  st <- H.get
+  H.liftEffect $ storeSeeds (pericopesToSeeds st.pericopes)
