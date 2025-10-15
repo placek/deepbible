@@ -18,7 +18,7 @@ upload-cross-references:
 	pgloader /tmp/pgloader.$*.load
 
 # uploads the merged SQLite3 database to the PostgreSQL database
-upload-%: $(merged_dir)/%.SQLite3
+upload-%: $(merged_dir)/%.SQLite3 upload-cross-references
 	@echo ">> uploading SQLite3 DB for language: $* (tables: $(upload_tables)) using $(DATABASE_URL)"
 	@SCHEMA="$*"; \
 	SQLITE_PATH="$$(realpath "$<")"; \
