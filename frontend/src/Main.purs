@@ -147,6 +147,7 @@ handle action = case action of
     urlSeeds <- H.liftEffect loadSeeds
     let defaultSeeds =
           [ { address: "J 3,16-17", source: "NVUL" }
+          , { address: "J 3,16-17", source: "NA28" }
           , { address: "J 3,16-17", source: "PAU" }
           ]
         seeds = if A.null urlSeeds then defaultSeeds else urlSeeds
