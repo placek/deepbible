@@ -52,6 +52,15 @@
     user-select: none;
     cursor: move;
   }
+  .margin {
+    padding: 1em;
+    min-width: 7em;
+    text-align: left;
+    user-select: none;
+  }
+  .margin.hidden {
+    display: none;
+  }
   .didascalia .address, .didascalia .source { cursor: pointer; }
   .didascalia .address.editing input:focus-visible,
   .didascalia .source.editing input:focus-visible {
@@ -106,6 +115,24 @@
     padding: 1em;
     background-color: #fdf6e3;
     flex: 1;
+  }
+  .cross-references {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+  }
+  .cross-reference {
+    color: var(--blue);
+    font-size: 0.7em;
+    cursor: pointer;
+  }
+  .cross-references-loading,
+  .cross-references-empty {
+    color: var(--base01);
+    font-size: 0.7em;
   }
   .verse::before {
     content: attr(data-verse);

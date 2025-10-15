@@ -20,6 +20,16 @@ newtype SourceInfo =
     }
 derive instance newtypeSourceInfo :: Newtype SourceInfo _
 
+newtype CrossReference =
+  CrossReference
+    { id :: String
+    , address :: Address
+    , reference :: String
+    , rate :: Int
+    }
+
+derive instance newtypeCrossReference :: Newtype CrossReference _
+
 -- A verse as returned by /rpc/verses_by_address
 newtype Verse =
   Verse
@@ -63,6 +73,15 @@ instance decodeSourceInfo :: DecodeJson SourceInfo where
     description_short <- obj .: "description_short"
     language <- obj .: "language"
     pure $ SourceInfo { name, description_short, language }
+
+instance decodeCrossReference :: DecodeJson CrossReference where
+  decodeJson j = do
+    obj <- decodeJson j
+    id <- obj .: "id"
+    address <- obj .: "address"
+    reference <- obj .: "reference"
+    rate <- obj .: "rate"
+    pure $ CrossReference { id, address, reference, rate }
 
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =
