@@ -54,7 +54,7 @@ $(helpers_dir)/sources.sql: $(helpers_dir)
 	@echo >> "$@"
 
 # combine helpers pieces
-$(helpers_dir)/_helpers.sql: $(helpers_dir)/all_verses.sql $(helpers_dir)/books.sql $(helpers_dir)/sources.sql $(helpers_dir)/errata.sql $(helpers_dir)/functions.sql $(helpers_dir)/postgrest.sql
+$(helpers_dir)/_helpers.sql: $(helpers_dir)/all_verses.sql $(helpers_dir)/books.sql $(helpers_dir)/sources.sql $(helpers_dir)/errata.sql $(helpers_dir)/functions.sql $(helpers_dir)/postgrest.sql $(helpers_dir)/cross_references.sql
 	@cat $^ > "$@"
 
 # apply (define helpers_sql if you use it)
