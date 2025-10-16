@@ -159,6 +159,8 @@ CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_source tex
   VOLATILE PARALLEL UNSAFE
   ROWS 1000
 AS $BODY$
+DECLARE
+  cleaned_address text := trim(regexp_replace(p_address, '[…]', '', 'g'));
 BEGIN
   RETURN QUERY
   WITH addresses AS (
@@ -166,7 +168,7 @@ BEGIN
       b.book_number::int AS book_number,
       a.chapter::int     AS chapter,
       a.verse            AS verse
-    FROM parse_address(p_address) a
+    FROM parse_address(cleaned_address) a
     JOIN public._all_books b
       ON a.book = b.short_name
   )

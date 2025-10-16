@@ -49,9 +49,7 @@ BEGIN
 
         -- different book and/or chapter with b2,c2,v2 -> Book1 C1.V1-Book2 C2.V2
         WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
-        THEN (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1
-              || '-' ||
-              COALESCE(b2.short_name,'') || ' ' || cr.c2 || ',' || cr.v2)
+        THEN (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1 || '…')
 
         -- only from reference -> Book1 C1.V1
         ELSE (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1)
