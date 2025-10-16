@@ -3,6 +3,7 @@ module Pericope (Query(..), Output(..), component) where
 import Prelude
 
 import Api (fetchCrossReferences, fetchSources, fetchVerses)
+import Control.Monad (when)
 import Data.Array (catMaybes)
 import Data.String (joinWith)
 import Data.Array as A
@@ -38,6 +39,7 @@ data Output
   | DidReorder { from :: PericopeId, to :: PericopeId }
   | DidUpdate Pericope
   | DidLoadCrossReference { source :: Source, address :: Address }
+  | DidCreatePericopeFromSelection { source :: Source, address :: Address }
 
 type State =
   { pericope :: Pericope
@@ -77,6 +79,7 @@ data Action
   = Noop
   | HandleAddressClick MouseEvent
   | HandleSourceClick MouseEvent
+  | HandleSelectedAddressClick MouseEvent
   | SwallowDidascaliaClick MouseEvent
   | ToggleSelect String -- verse_id
   | SetAddress String
@@ -98,16 +101,7 @@ data Action
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   let
-    selectedAddresses =
-      catMaybes $ st.pericope.verses <#> \(Verse v) ->
-        if Set.member v.verse_id st.pericope.selected then Just v else Nothing
-    addressText = joinWith "." (renderSelection (A.reverse selectedAddresses))
-      where
-        renderSelection arr =
-          case A.uncons arr of
-            Nothing -> []
-            Just { head: x, tail } | A.null tail -> [x.address]                       -- singleton case
-            Just { head: x, tail: xs } -> renderSelection xs <> [show x.verse]
+    addressText = selectedAddressText st.pericope
   in
   HH.div [ HP.class_ (HH.ClassName "pericope") ]
     [ HH.div
@@ -206,7 +200,9 @@ render st =
               ]
               [ HH.text st.pericope.source ]
         , HH.div
-            [ HP.class_ (HH.ClassName "selected-address") ]
+            [ HP.class_ (HH.ClassName "selected-address")
+            , HE.onClick HandleSelectedAddressClick
+            ]
             [ HH.text addressText ]
         ]
 
@@ -288,6 +284,13 @@ handle = case _ of
           case res of
             Left _ -> H.modify_ _ { sources = Just [] }
             Right srcs -> H.modify_ _ { sources = Just srcs }
+
+  HandleSelectedAddressClick ev -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    st <- H.get
+    let addressText = selectedAddressText st.pericope
+    when (addressText /= "") do
+      H.raise (DidCreatePericopeFromSelection { source: st.pericope.source, address: addressText })
 
   SwallowDidascaliaClick ev ->
     H.liftEffect $ stopPropagation (toEvent ev)
@@ -439,3 +442,19 @@ launchFetch address source = do
         }
       st' <- H.get
       H.raise (DidUpdate st'.pericope)
+
+selectedAddressText :: Pericope -> String
+selectedAddressText pericope =
+  let
+    selectedAddresses =
+      catMaybes $ pericope.verses <#> \(Verse v) ->
+        if Set.member v.verse_id pericope.selected then Just v else Nothing
+
+    renderSelection arr =
+      case A.uncons arr of
+        Nothing -> []
+        Just { head: x, tail }
+          | A.null tail -> [x.address]
+          | otherwise -> renderSelection tail <> [show x.verse]
+  in
+  joinWith "." (renderSelection (A.reverse selectedAddresses))

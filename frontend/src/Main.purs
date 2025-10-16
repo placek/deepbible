@@ -233,6 +233,12 @@ handle action = case action of
         Left _ -> pure unit
         Right verses -> insertPericope address source verses
 
+    P.DidCreatePericopeFromSelection { source, address } -> do
+      res <- H.liftAff $ fetchVerses address source
+      case res of
+        Left _ -> pure unit
+        Right verses -> insertPericope address source verses
+
 -- Reorder helper (total, no partial indexing)
 reorder :: PericopeId -> PericopeId -> Array Pericope -> Array Pericope
 reorder fromId toId arr =
