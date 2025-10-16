@@ -56,6 +56,20 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  echo "  text TEXT" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
 	  \
+	  echo "DROP TABLE IF EXISTS _commentaries;" >> $$tmp_sql; \
+	  echo "CREATE TABLE _commentaries (" >> $$tmp_sql; \
+	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  source_number TEXT," >> $$tmp_sql; \
+	  echo "  book_number NUMERIC," >> $$tmp_sql; \
+	  echo "  chapter_number_from NUMERIC," >> $$tmp_sql; \
+	  echo "  verse_number_from NUMERIC," >> $$tmp_sql; \
+	  echo "  chapter_number_to NUMERIC," >> $$tmp_sql; \
+	  echo "  verse_number_to NUMERIC," >> $$tmp_sql; \
+	  echo "  is_preceding NUMERIC," >> $$tmp_sql; \
+	  echo "  marker TEXT," >> $$tmp_sql; \
+	  echo "  text TEXT NOT NULL DEFAULT ''" >> $$tmp_sql; \
+	  echo ");" >> $$tmp_sql; \
+	  \
 	  idx=0; \
 	  dbs=$$(find "$<" -name '*.SQLite3' | sort); \
 	  for db in $$dbs; do \
@@ -102,6 +116,32 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    \
 	    echo "DETACH source;" >> $$tmp_sql; \
 	    idx=$$((idx+1)); \
+	  done; \
+	  \
+	  commentary_dbs=$$(find "$<" -type f -name '*.commentaries.SQLite3' | sort); \
+	  cidx=0; \
+	  for cdb in $$commentary_dbs; do \
+	    cname=$$(basename "$$cdb" .commentaries.SQLite3); \
+	    has_is_preceding=$$(sqlite3 "$$cdb" "SELECT 1 FROM pragma_table_info('commentaries') WHERE name='is_preceding' LIMIT 1;"); \
+	    if [ "$$has_is_preceding" = "1" ]; then isp_col="c.is_preceding"; else isp_col="NULL"; fi; \
+	    echo "ATTACH '$$cdb' AS commentary;" >> $$tmp_sql; \
+	    echo "INSERT INTO _commentaries (" >> $$tmp_sql; \
+	    echo "  language, source_number, book_number, chapter_number_from, verse_number_from," >> $$tmp_sql; \
+	    echo "  chapter_number_to, verse_number_to, is_preceding, marker, text)" >> $$tmp_sql; \
+	    echo "SELECT" >> $$tmp_sql; \
+	    echo "  '$*' AS language," >> $$tmp_sql; \
+	    echo "  COALESCE((SELECT CAST(value AS TEXT) FROM commentary.info WHERE name='source_number'), '$$cidx') AS source_number," >> $$tmp_sql; \
+	    echo "  c.book_number," >> $$tmp_sql; \
+	    echo "  c.chapter_number_from," >> $$tmp_sql; \
+	    echo "  c.verse_number_from," >> $$tmp_sql; \
+	    echo "  c.chapter_number_to," >> $$tmp_sql; \
+	    echo "  c.verse_number_to," >> $$tmp_sql; \
+	    echo "  $${isp_col}," >> $$tmp_sql; \
+	    echo "  c.marker," >> $$tmp_sql; \
+	    echo "  c.text" >> $$tmp_sql; \
+	    echo "FROM commentary.commentaries c;" >> $$tmp_sql; \
+	    echo "DETACH commentary;" >> $$tmp_sql; \
+	    cidx=$$((cidx+1)); \
 	  done; \
 	  \
 	  sqlite3 "$@" < "$$tmp_sql"; \
