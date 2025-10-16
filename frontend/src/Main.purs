@@ -127,7 +127,7 @@ renderHelpModal true =
               , HH.li_ [ HH.text "Click source name → type → Enter – change pericope source." ]
               , HH.li_ [ HH.text "Click source name → select from list – change pericope source." ]
               , HH.li_ [ HH.text "Ctrl + Click left margin – duplicate pericope." ]
-              , HH.li_ [ HH.text "Click left margin (not address/source) – delete pericope." ]
+              , HH.li_ [ HH.text "Click ✕ below the handle – delete pericope." ]
               , HH.li_ [ HH.text "Drag left margin – reorder pericopes." ]
               , HH.li_ [ HH.text "Click verse – highlight verse." ]
               , HH.li_ [ HH.text "With one verse highlighted → click address (right margin) – add verse as new pericope." ]

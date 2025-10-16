@@ -107,7 +107,6 @@ render st =
     [ HH.div
         [ HP.class_ (HH.ClassName "didascalia")
         , HP.draggable true
-        , HE.onClick \_ -> Remove
         , HE.onDragStart DragStart
         , HE.onDragLeave DragLeave
         , HE.onDragOver DragOver
@@ -138,8 +137,15 @@ render st =
                   [ HH.text st.pericope.address ]
           in
             HH.div [ HP.class_ (HH.ClassName "didascalia-header") ]
-              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
-                  [ HH.text "☰" ]
+              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
+                  [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
+                      [ HH.text "☰" ]
+                  , HH.button
+                      [ HP.class_ (HH.ClassName "didascalia-remove")
+                      , HE.onClick \_ -> Remove
+                      ]
+                      [ HH.text "✕" ]
+                  ]
               , addressNode
               ]
 
