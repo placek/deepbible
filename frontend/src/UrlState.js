@@ -21,7 +21,7 @@ export const loadSeeds = () => {
     }
     const [addressPart, sourcePart] = parts;
     try {
-      const address = decodeURIComponent(addressPart);
+      const address = decodeURIComponent(addressPart).replace(/_/gi, " ").replace(/\*/gi, ",");
       const source = decodeURIComponent(sourcePart);
       seeds.push({ address, source });
     } catch (_err) {
@@ -59,10 +59,10 @@ export const storeSeeds = seeds => () => {
       if (!seed) {
         continue;
       }
-      const address = typeof seed.address === "string" ? seed.address : "";
+      const address = typeof seed.address === "string" ? seed.address.replace(/\s/gi, "_").replace(/,/gi, "*") : "";
       const source = typeof seed.source === "string" ? seed.source : "";
       encoded.push(
-        encodeURIComponent(address) + "~" + encodeURIComponent(source)
+        (encodeURIComponent(address) + "~" + encodeURIComponent(source))
       );
     }
     if (encoded.length === 0) {
