@@ -9,8 +9,7 @@ sqls := $(helpers_dir)/01_all_verses.sql \
 				$(helpers_dir)/03_sources.sql \
 				$(helpers_dir)/11_errata.sql \
 				$(helpers_dir)/12_functions.sql \
-				$(helpers_dir)/13_cross_references.sql \
-				$(helpers_dir)/14_postgrest.sql
+				$(helpers_dir)/13_postgrest.sql
 
 .PHONY: clean-helpers apply-helpers
 

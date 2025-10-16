@@ -5833,7 +5833,7 @@ var decodeJson1 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decode
 var decodeJson22 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerse));
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCrossReferences = function(verseId) {
-  var url = baseUrl + "/rpc/get_cross_references";
+  var url = baseUrl + "/rpc/cross_references";
   var payload = extend4(assoc3("p_verse_id")(id(verseId)))(jsonEmptyObject);
   return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
     if (res instanceof Left) {

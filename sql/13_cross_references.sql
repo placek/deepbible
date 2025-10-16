@@ -1,5 +1,5 @@
-DROP FUNCTION IF EXISTS public.get_cross_references(text);
-CREATE OR REPLACE FUNCTION public.get_cross_references(p_verse_id text)
+DROP FUNCTION IF EXISTS public.gcross_references(text);
+CREATE OR REPLACE FUNCTION public.cross_references(p_verse_id text)
   RETURNS TABLE(id text, address text, reference text, rate bigint)
   LANGUAGE 'plpgsql'
   COST 100
@@ -49,7 +49,7 @@ BEGIN
 
         -- different book and/or chapter with b2,c2,v2 -> Book1 C1.V1-Book2 C2.V2
         WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
-        THEN (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1 || '…')
+        THEN (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1 || '-')
 
         -- only from reference -> Book1 C1.V1
         ELSE (COALESCE(b1.short_name,'') || ' ' || cr.c1 || ',' || cr.v1)

@@ -42,7 +42,7 @@ fetchSources = do
 fetchCrossReferences :: VerseId -> Aff (Either String (Array CrossReference))
 fetchCrossReferences verseId = do
   let
-    url = baseUrl <> "/rpc/get_cross_references"
+    url = baseUrl <> "/rpc/cross_references"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
   res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
