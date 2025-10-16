@@ -9784,7 +9784,7 @@ var selectedAddressText = function(pericope) {
       ;
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 454, column 7 - line 458, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 461, column 7 - line 465, column 64): " + [v.constructor.name]);
   };
   return joinWith(".")(renderSelection(reverse(selectedAddresses)));
 };
@@ -9793,22 +9793,25 @@ var render = function(st) {
   return div2([class_("pericope")])([div2([class_("didascalia"), draggable2(true), onClick(function(v) {
     return Remove.value;
   }), onDragStart(DragStart.create), onDragLeave(DragLeave.create), onDragOver(DragOver.create), onDrop(Drop.create)])([function() {
-    if (st.editingAddress) {
-      return div2([class_("address editing"), onClick(SwallowDidascaliaClick.create)])([input2([value14(st.pericope.address), onValueInput(SetAddress.create), onKeyDown(function(ke) {
-        var v = key(ke);
-        if (v === "Enter") {
-          return SubmitAddress.value;
-        }
-        ;
-        if (v === "Escape") {
-          return CancelAddressEdit.value;
-        }
-        ;
-        return Noop.value;
-      }), autofocus6(true)])]);
-    }
-    ;
-    return div2([class_("address"), onClick(HandleAddressClick.create)])([text5(st.pericope.address)]);
+    var addressNode = function() {
+      if (st.editingAddress) {
+        return div2([class_("address editing"), onClick(SwallowDidascaliaClick.create)])([input2([value14(st.pericope.address), onValueInput(SetAddress.create), onKeyDown(function(ke) {
+          var v = key(ke);
+          if (v === "Enter") {
+            return SubmitAddress.value;
+          }
+          ;
+          if (v === "Escape") {
+            return CancelAddressEdit.value;
+          }
+          ;
+          return Noop.value;
+        }), autofocus6(true)])]);
+      }
+      ;
+      return div2([class_("address"), onClick(HandleAddressClick.create)])([text5(st.pericope.address)]);
+    }();
+    return div2([class_("didascalia-header")])([div2([class_("didascalia-handle")])([text5("\u2630")]), addressNode]);
   }(), function() {
     if (st.editingSource) {
       var sourceList = function() {
@@ -9856,7 +9859,7 @@ var render = function(st) {
           return [div2([class_("source-list")])(map26(renderGroup)(sortedLanguages))];
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 141, column 28 - line 179, column 22): " + [st.sources.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 148, column 28 - line 186, column 22): " + [st.sources.constructor.name]);
       }();
       return div2([class_("source editing"), onClick(SwallowDidascaliaClick.create)])(append5([input2([value14(st.pericope.source), onValueInput(SetSource.create), autofocus6(true), onKeyDown(function(ke) {
         var v = key(ke);
@@ -9908,7 +9911,7 @@ var render = function(st) {
         return [ul([class_("cross-references")])(map26(renderRef)(st.crossRefs.value0))];
       }
       ;
-      throw new Error("Failed pattern match at Pericope (line 222, column 27 - line 240, column 16): " + [st.crossRefs.constructor.name]);
+      throw new Error("Failed pattern match at Pericope (line 229, column 27 - line 247, column 16): " + [st.crossRefs.constructor.name]);
     }();
     return div2([class_("margin")])(renderCrossRefs);
   }()]);
@@ -9954,7 +9957,7 @@ var launchFetch = function(dictMonadAff) {
           });
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 436, column 3 - line 444, column 39): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 443, column 3 - line 451, column 39): " + [res.constructor.name]);
       });
     };
   };
@@ -10056,11 +10059,11 @@ var handle = function(dictMonadAff) {
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Pericope (line 284, column 11 - line 286, column 62): " + [res.constructor.name]);
+                throw new Error("Failed pattern match at Pericope (line 291, column 11 - line 293, column 62): " + [res.constructor.name]);
               });
             }
             ;
-            throw new Error("Failed pattern match at Pericope (line 280, column 7 - line 286, column 62): " + [st.sources.constructor.name]);
+            throw new Error("Failed pattern match at Pericope (line 287, column 7 - line 293, column 62): " + [st.sources.constructor.name]);
           });
         });
       });
@@ -10231,7 +10234,7 @@ var handle = function(dictMonadAff) {
           return $166;
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 325, column 7 - line 336, column 14): " + [st.originalAddress.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 332, column 7 - line 343, column 14): " + [st.originalAddress.constructor.name]);
       });
     }
     ;
@@ -10277,7 +10280,7 @@ var handle = function(dictMonadAff) {
           return $177;
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 340, column 7 - line 351, column 14): " + [st.originalSource.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 347, column 7 - line 358, column 14): " + [st.originalSource.constructor.name]);
       });
     }
     ;
@@ -10391,7 +10394,7 @@ var handle = function(dictMonadAff) {
                     });
                   }
                   ;
-                  throw new Error("Failed pattern match at Pericope (line 383, column 13 - line 385, column 77): " + [res.constructor.name]);
+                  throw new Error("Failed pattern match at Pericope (line 390, column 13 - line 392, column 77): " + [res.constructor.name]);
                 }
                 ;
                 return pure14(unit);
@@ -10489,7 +10492,7 @@ var handle = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 252, column 10 - line 431, column 76): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 259, column 10 - line 438, column 76): " + [v.constructor.name]);
   };
 };
 var component = function(dictMonadAff) {

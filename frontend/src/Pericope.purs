@@ -113,28 +113,35 @@ render st =
         , HE.onDragOver DragOver
         , HE.onDrop Drop
         ]
-        [
-          if st.editingAddress then
-            HH.div
-              [ HP.class_ (HH.ClassName "address editing")
-              , HE.onClick SwallowDidascaliaClick
-              ]
-              [ HH.input
-                  [ HP.value st.pericope.address
-                  , HE.onValueInput SetAddress
-                  , HE.onKeyDown \ke -> case key ke of
-                      "Enter" -> SubmitAddress
-                      "Escape" -> CancelAddressEdit
-                      _ -> Noop
-                  , HP.autofocus true
+        [ let
+            addressNode =
+              if st.editingAddress then
+                HH.div
+                  [ HP.class_ (HH.ClassName "address editing")
+                  , HE.onClick SwallowDidascaliaClick
                   ]
+                  [ HH.input
+                      [ HP.value st.pericope.address
+                      , HE.onValueInput SetAddress
+                      , HE.onKeyDown \ke -> case key ke of
+                          "Enter" -> SubmitAddress
+                          "Escape" -> CancelAddressEdit
+                          _ -> Noop
+                      , HP.autofocus true
+                      ]
+                  ]
+              else
+                HH.div
+                  [ HP.class_ (HH.ClassName "address")
+                  , HE.onClick HandleAddressClick
+                  ]
+                  [ HH.text st.pericope.address ]
+          in
+            HH.div [ HP.class_ (HH.ClassName "didascalia-header") ]
+              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
+                  [ HH.text "☰" ]
+              , addressNode
               ]
-          else
-            HH.div
-              [ HP.class_ (HH.ClassName "address")
-              , HE.onClick HandleAddressClick
-              ]
-              [ HH.text st.pericope.address ]
 
         , if st.editingSource then
             let

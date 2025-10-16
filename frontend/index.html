@@ -56,7 +56,22 @@
     min-width: 7em;
     text-align: right;
     user-select: none;
-    cursor: move;
+    cursor: default;
+  }
+  .didascalia-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+  }
+  .didascalia-handle {
+    font-size: 1.2em;
+    cursor: grab;
+    user-select: none;
+    color: var(--base1);
+  }
+  .didascalia:active .didascalia-handle {
+    cursor: grabbing;
   }
   .margin {
     padding: 1em;
