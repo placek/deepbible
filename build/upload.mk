@@ -6,7 +6,7 @@ endif
 
 .PHONY: upload-% upload
 
-upload_tables ?= _sources _books _all_verses
+upload_tables ?= _sources _books _all_verses _commentaries
 
 upload-cross-references: $(cross_refs_db)
 	@echo ">> uploading cross-references"
