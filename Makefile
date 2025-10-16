@@ -1,5 +1,6 @@
 include build/download.mk
 include build/cross_references.mk
+include build/commentaries.mk
 include build/merge.mk
 include build/upload.mk
 include build/helpers.mk
@@ -8,5 +9,5 @@ include build/helpers.mk
 
 all: clean upload apply-helpers
 
-clean: clean-download clean-merged clean-helpers clean-cross-references
+clean: clean-download clean-merged clean-helpers clean-cross-references clean-commentaries
 	@echo ">> clean complete"

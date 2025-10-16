@@ -4,6 +4,7 @@ download_dir      := data/downloads
 extract_dir       := data/extracted
 grouped_dir       := data/grouped
 merged_dir        := data/merged
+commentaries_dir  := data/commentaries
 
 helpers_dir       := helpers
 sql_dir           := sql
