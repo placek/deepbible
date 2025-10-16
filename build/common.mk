@@ -8,7 +8,7 @@ merged_dir        := data/merged
 helpers_dir       := helpers
 sql_dir           := sql
 
-langs             ?= pl la grc en
+langs             ?= pl la grc en it es fr de
 
 cross_refs_url := https://a.openbible.info/data/cross-references.zip
 cross_refs_dir := data/openbible
