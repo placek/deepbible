@@ -262,3 +262,57 @@ BEGIN
 
 END;
 $BODY$;
+
+-- retrieves commentaries for a given verse_id
+DROP FUNCTION IF EXISTS public.commentaries(text);
+CREATE OR REPLACE FUNCTION public.commentaries(p_verse_id text)
+  RETURNS TABLE(marker text, text text)
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+  v_language          text;
+  v_source_number     public._all_commentaries.source_number%TYPE;
+  v_book_number_text  text;
+  v_chapter_text      text;
+  v_verse_text        text;
+  v_book_number       public._all_commentaries.book_number%TYPE;
+  v_chapter           integer;
+  v_verse             integer;
+  v_position          numeric;
+BEGIN
+  v_language      := NULLIF(split_part(p_verse_id, '/', 1), '');
+  v_source_number := NULLIF(split_part(p_verse_id, '/', 2), '');
+  v_book_number_text := NULLIF(split_part(p_verse_id, '/', 3), '');
+  v_chapter_text     := NULLIF(split_part(p_verse_id, '/', 4), '');
+  v_verse_text       := NULLIF(split_part(p_verse_id, '/', 5), '');
+
+  IF v_language IS NULL
+     OR v_source_number IS NULL
+     OR v_book_number_text IS NULL
+     OR v_chapter_text IS NULL
+     OR v_verse_text IS NULL THEN
+    RAISE EXCEPTION
+      'Invalid p_verse_id format. Expected <language>/<source_number>/<book_number>/<chapter>/<verse>, got: %',
+      p_verse_id;
+  END IF;
+
+  v_book_number := v_book_number_text::numeric;
+  v_chapter     := v_chapter_text::integer;
+  v_verse       := v_verse_text::integer;
+  v_position    := v_chapter::numeric * 1000 + v_verse::numeric;
+
+  RETURN QUERY
+  SELECT
+    ac.marker,
+    ac.text
+  FROM public._all_commentaries ac
+  WHERE ac.language      = v_language
+    AND ac.source_number = v_source_number
+    AND ac.book_number   = v_book_number
+    AND v_position BETWEEN (ac.chapter_number_from * 1000 + ac.verse_number_from)
+                       AND (ac.chapter_number_to   * 1000 + ac.verse_number_to)
+  ORDER BY ac.chapter_number_from, ac.verse_number_from, ac.marker;
+END;
+$BODY$;
