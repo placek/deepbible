@@ -4,9 +4,9 @@ import Prelude
 
 import Api (fetchCrossReferences, fetchSources, fetchVerses)
 import Data.Array (catMaybes)
+import Data.String (joinWith)
 import Data.Array as A
 import Data.Either (Either(..))
-import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Newtype (unwrap)
@@ -100,11 +100,14 @@ render st =
   let
     selectedAddresses =
       catMaybes $ st.pericope.verses <#> \(Verse v) ->
-        if Set.member v.verse_id st.pericope.selected then Just v.address else Nothing
-    addressText =
-      case selectedAddresses of
-        [] -> ""
-        xs -> intercalate "; " xs
+        if Set.member v.verse_id st.pericope.selected then Just v else Nothing
+    addressText = joinWith "." (renderSelection (A.reverse selectedAddresses))
+      where
+        renderSelection arr =
+          case A.uncons arr of
+            Nothing -> []
+            Just { head: x, tail } | A.null tail -> [x.address]                       -- singleton case
+            Just { head: x, tail: xs } -> renderSelection xs <> [show x.verse]
   in
   HH.div [ HP.class_ (HH.ClassName "pericope") ]
     [ HH.div
