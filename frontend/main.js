@@ -8281,11 +8281,15 @@ var input2 = function(props) {
   return element2("input")(props)([]);
 };
 var li = /* @__PURE__ */ element2("li");
-var li_ = /* @__PURE__ */ li([]);
 var ul = /* @__PURE__ */ element2("ul");
-var ul_ = /* @__PURE__ */ ul([]);
+var dt = /* @__PURE__ */ element2("dt");
+var dt_ = /* @__PURE__ */ dt([]);
+var dl = /* @__PURE__ */ element2("dl");
+var dl_ = /* @__PURE__ */ dl([]);
 var div2 = /* @__PURE__ */ element2("div");
 var div_ = /* @__PURE__ */ div2([]);
+var dd = /* @__PURE__ */ element2("dd");
+var dd_ = /* @__PURE__ */ dd([]);
 var button = /* @__PURE__ */ element2("button");
 var a = /* @__PURE__ */ element2("a");
 
@@ -10818,7 +10822,7 @@ var renderHelpModal = function(v) {
   }
   ;
   if (v) {
-    return [div2([class_("help-modal-backdrop")])([div2([class_("help-modal"), id3("help-modal"), ref2(helpModalRef), tabIndex2(0), onKeyDown(HandleHelpKey.create)])([h3_([text5("How to use deepbible")]), ul_([li_([text5("Click address \u2192 type \u2192 Enter \u2013 change pericope address.")]), li_([text5("Click source name \u2192 type \u2192 Enter \u2013 change pericope source.")]), li_([text5("Click source name \u2192 select from list \u2013 change pericope source.")]), li_([text5("Ctrl + Click left margin \u2013 duplicate pericope.")]), li_([text5("Click \u2715 below the handle \u2013 delete pericope.")]), li_([text5("Drag left margin \u2013 reorder pericopes.")]), li_([text5("Click verse \u2013 highlight verse.")]), li_([text5("With one verse highlighted \u2192 click address (right margin) \u2013 add verse as new pericope.")])]), button([class_("help-close"), onClick(function(v1) {
+    return [div2([class_("help-modal-backdrop")])([div2([class_("help-modal"), id3("help-modal"), ref2(helpModalRef), tabIndex2(0), onKeyDown(HandleHelpKey.create)])([h3_([text5("How to use deepbible")]), dl_([dt_([text5("Click address \u21E8 type \u21E8 Enter")]), dd_([text5("change pericope address")]), dt_([text5("Click source name \u21E8 type \u21E8 Enter")]), dd_([text5("change pericope source")]), dt_([text5("Click source name \u21E8 select from list")]), dd_([text5("change pericope source")]), dt_([text5("Ctrl + Click left margin")]), dd_([text5("duplicate pericope")]), dt_([text5("Click \u2715 ")]), dd_([text5("delete pericope")]), dt_([text5("Drag with \u2630")]), dd_([text5("reorder pericopes")]), dt_([text5("Click verse")]), dd_([text5("highlight verse")]), dt_([text5("With one verse highlighted \u21E8 click address (right margin)")]), dd_([text5("add verse as new pericope")]), dt_([text5("With any verse highlighted \u21E8 click selection address (left margin)")]), dd_([text5("add verse(s) as new pericope")])]), button([class_("help-close"), onClick(function(v1) {
       return CloseHelp.value;
     })])([text5("Close")])])])];
   }
@@ -10859,7 +10863,7 @@ var handle2 = function(action2) {
             return insertPericope(v.address)(v.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Main (line 156, column 7 - line 158, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 166, column 7 - line 168, column 61): " + [res.constructor.name]);
         });
       });
     });
@@ -10940,7 +10944,7 @@ var handle2 = function(action2) {
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 174, column 5 - line 179, column 16): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 184, column 5 - line 189, column 16): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -11004,11 +11008,11 @@ var handle2 = function(action2) {
               return insertPericope(v.value0.address)(v.value0.source)(res.value0);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 201, column 11 - line 203, column 51): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 211, column 11 - line 213, column 51): " + [res.constructor.name]);
           });
         }
         ;
-        throw new Error("Failed pattern match at Main (line 195, column 7 - line 203, column 51): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 205, column 7 - line 213, column 51): " + [v.constructor.name]);
       });
     }
     ;
@@ -11086,7 +11090,7 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 232, column 7 - line 234, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 242, column 7 - line 244, column 61): " + [res.constructor.name]);
       });
     }
     ;
@@ -11100,14 +11104,14 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 238, column 7 - line 240, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 248, column 7 - line 250, column 61): " + [res.constructor.name]);
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 192, column 23 - line 240, column 61): " + [action2.value1.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 202, column 23 - line 250, column 61): " + [action2.value1.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at Main (line 145, column 17 - line 240, column 61): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 155, column 17 - line 250, column 61): " + [action2.constructor.name]);
 };
 var component2 = /* @__PURE__ */ function() {
   return mkComponent({
