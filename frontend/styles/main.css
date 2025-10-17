@@ -1,0 +1,115 @@
+body {
+  background-image: url(./logo.svg);
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 40em;
+  background-attachment: fixed;
+}
+
+.pericope + .pericope {
+  border-top-width: 1px;
+  border-top-style: dashed;
+}
+
+.didascalia {
+  user-select: none;
+  cursor: default;
+}
+
+.didascalia-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.didascalia-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.didascalia:active .didascalia-handle {
+  cursor: grabbing;
+}
+
+.margin {
+  user-select: none;
+}
+
+.didascalia .address, .didascalia .source {
+  cursor: pointer;
+}
+
+.didascalia .address.editing input:focus-visible,
+.didascalia .source.editing input:focus-visible {
+  outline: none;
+}
+
+.didascalia .address.editing input,
+.didascalia .source.editing input {
+  border: none;
+}
+
+.didascalia .selected-address {
+  cursor: pointer;
+}
+
+.source-list {
+  border-top-width: 1px;
+  border-top-style: dashed;
+  overflow: auto;
+}
+
+.source-language {
+  cursor: default;
+}
+
+.source-option {
+  cursor: pointer;
+}
+
+.textus {
+  flex: 1;
+}
+
+.cross-references {
+  list-style: none;
+}
+
+.cross-reference {
+  cursor: pointer;
+}
+
+.commentaries {
+  list-style: none;
+}
+
+.commentary-text a {
+  pointer-events: none;
+}
+
+.verse::before {
+  content: attr(data-verse);
+}
+
+.help-link {
+  cursor: pointer;
+}
+
+.help-modal-backdrop {
+  background-color: rgba(0, 43, 54, 0.7);
+}
+
+.help-modal {
+  box-shadow: 0 0 1.5em rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+.help-modal h3 {
+  margin-top: 0;
+}
+
+.help-close {
+  border: none;
+  border-radius: 0.3em;
+  cursor: pointer;
+}

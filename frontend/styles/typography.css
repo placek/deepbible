@@ -1,0 +1,148 @@
+:root {
+  --font: 'Arial', sans-serif;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 1.1rem;
+}
+
+h2 {
+  text-align: center;
+}
+
+.didascalia {
+  text-align: right;
+}
+
+.didascalia-handle {
+  font-size: 1.2em;
+  font-size: smaller;
+}
+
+.didascalia-remove {
+  font-size: smaller;
+  line-height: 1;
+}
+
+.margin {
+  text-align: left;
+}
+
+.didascalia .address, .didascalia .source {
+  white-space: normal;     /* allow wrapping */
+  word-break: keep-all;    /* don't break inside words */
+  overflow-wrap: normal;   /* no emergency breaking */
+  hyphens: none;           /* no auto-hyphenation */ 
+}
+
+.didascalia .address.editing input,
+.didascalia .source.editing input {
+  font-size: 1em;
+}
+
+.didascalia .selected-address {
+  font-size: x-small;
+}
+
+.source {
+  font-size: x-small;
+}
+
+.source-language {
+  font-weight: bold;
+  text-align: left;
+}
+
+.source-options {
+  text-align: left;
+  list-style: none;
+}
+
+.textus {
+  text-align: justify;
+}
+
+.cross-references {
+  list-style: none;
+}
+
+.cross-reference {
+  font-size: x-small;
+}
+
+.cross-references-loading,
+.cross-references-empty {
+  font-size: x-small;
+}
+
+.commentaries {
+  list-style: none;
+}
+
+.commentary {
+  font-size: x-small;
+}
+
+.commentary-marker {
+  font-weight: bold;
+}
+
+.commentary-text .rdgtxt {
+  font-weight: bold;
+}
+
+.commentary-text a {
+  text-decoration: none;
+}
+
+.commentary-text .sup {
+  vertical-align: super;
+  font-size: smaller;
+}
+
+.verse::before {
+  font-size: x-small;
+  vertical-align: super;
+}
+
+.verse e {
+  font-style: italic;
+  text-shadow: none;
+}
+
+.verse s {
+  font-size: xx-small;
+  text-decoration: none;
+  text-shadow: none;
+}
+
+.verse m {
+  font-size: xx-small;
+  text-shadow: none;
+}
+
+.verse n {
+  font-size: xx-small;
+  text-shadow: none;
+}
+
+.verse f {
+  text-shadow: none;
+}
+
+.help-footer {
+  text-align: center;
+}
+
+.help-link {
+  text-decoration: none;
+}
+
+.help-link:hover {
+  text-decoration: underline;
+}
+
+.help-close {
+  font-size: 1em;
+}
