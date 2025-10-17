@@ -130,7 +130,6 @@
     background-color: var(--base3);
     border: 1px dashed var(--base1);
     max-height: 30em;
-    /*max-width: 30em;*/
     overflow: auto;
   }
   .source-language {
@@ -278,6 +277,16 @@
   }
   .help-close:hover {
     background-color: var(--cyan);
+  }
+  @media (max-width: 570px) {
+    .didascalia, .margin { max-width: 3em; padding: 1em 0.2em; }
+    .didascalia .didascalia-header { flex-direction: column; }
+    .didascalia-handle-group { flex-direction: row; gap: 0.5em; }
+    .didascalia .address, .didascalia .source, .didascalia .selected-address { font-size: x-small; text-align: center; }
+    .didascalia .address.editing input,
+    .didascalia .source.editing input {
+      max-width: 100%;
+    }
   }
 </style>
 </head>
