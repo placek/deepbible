@@ -2,7 +2,7 @@ module Pericope (Query(..), Output(..), component) where
 
 import Prelude
 
-import Api (fetchCrossReferences, fetchSources, fetchVerses)
+import Api (fetchCommentaries, fetchCrossReferences, fetchSources, fetchVerses)
 import Control.Monad (when)
 import Data.Array (catMaybes)
 import Data.String (joinWith)
@@ -22,7 +22,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Effect.Aff.Class (class MonadAff)
 
-import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, CrossReference(..), VerseId)
+import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, CrossReference(..), Commentary(..), VerseId)
 
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 
@@ -54,7 +54,7 @@ type State =
 data CrossRefState
   = CrossRefsIdle
   | CrossRefsLoading
-  | CrossRefsLoaded (Array CrossReference)
+  | CrossRefsLoaded { references :: Array CrossReference, commentaries :: Array Commentary }
 
 component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
@@ -234,29 +234,49 @@ render st =
     , let
         renderCrossRefs = case st.crossRefs of
           CrossRefsIdle ->
-              [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
-                  [  ]
-              ]
+            [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
+                [ ]
+            ]
 
           CrossRefsLoading ->
             [ HH.div [ HP.class_ (HH.ClassName "cross-references-loading") ]
                 [ HH.text "Loading cross references..." ]
             ]
-          CrossRefsLoaded refs ->
-            if A.null refs then
-              [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
-                  [  ]
-              ]
-            else
-              [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
-                  (renderRef <$> refs)
-              ]
+          CrossRefsLoaded payload ->
+            let
+              crossReferenceNodes =
+                if A.null payload.references then
+                  [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
+                      [ ]
+                  ]
+                else
+                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
+                      (renderRef <$> payload.references)
+                  ]
+              commentaryNodes =
+                if A.null payload.commentaries then
+                  []
+                else
+                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries") ]
+                      (renderCommentary <$> payload.commentaries)
+                  ]
+            in
+              crossReferenceNodes <> commentaryNodes
         renderRef (CrossReference ref) =
           HH.li
             [ HP.class_ (HH.ClassName "cross-reference")
             , HE.onClick \_ -> OpenCrossReference ref.reference
             ]
             [ HH.text ref.reference ]
+        renderCommentary (Commentary commentary) =
+          HH.li
+            [ HP.class_ (HH.ClassName "commentary")
+            ]
+            [ HH.span [ HP.class_ (HH.ClassName "commentary-marker") ]
+                [ HH.text commentary.marker ]
+            , HH.span [ HP.class_ (HH.ClassName "commentary-text") ]
+                [ HH.text commentary.text ]
+            ]
       in
       HH.div [ HP.class_ (HH.ClassName "margin") ] renderCrossRefs
     ]
@@ -390,14 +410,26 @@ handle = case _ of
           selectedIds = Set.toUnfoldable st.pericope.selected
       case selectedIds of
         [only] -> do
-          res <- H.liftAff $ fetchCrossReferences only
-          st' <- H.get
-          if Set.size st'.pericope.selected == 1 && Set.member only st'.pericope.selected then
-            case res of
-              Left _ -> H.modify_ _ { crossRefs = CrossRefsLoaded [] }
-              Right refs -> H.modify_ _ { crossRefs = CrossRefsLoaded refs }
-          else
-            pure unit
+          let
+            stillSelected verse = do
+              st' <- H.get
+              pure (Set.size st'.pericope.selected == 1 && Set.member verse st'.pericope.selected)
+          refsRes <- H.liftAff $ fetchCrossReferences only
+          stillAfterRefs <- stillSelected only
+          when stillAfterRefs do
+            commRes <- H.liftAff $ fetchCommentaries only
+            stillAfterCommentaries <- stillSelected only
+            when stillAfterCommentaries do
+              let
+                refs = case refsRes of
+                  Left _ -> []
+                  Right fetchedRefs -> fetchedRefs
+                commentaries = case commRes of
+                  Left _ -> []
+                  Right fetchedCommentaries -> fetchedCommentaries
+              H.modify_ _
+                { crossRefs = CrossRefsLoaded { references: refs, commentaries }
+                }
         _ -> pure unit
 
   Remove -> do

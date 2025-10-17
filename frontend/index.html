@@ -53,7 +53,7 @@
   }
   .didascalia {
     padding: 1em;
-    min-width: 7em;
+    width: 6em;
     text-align: right;
     user-select: none;
     cursor: default;
@@ -95,7 +95,7 @@
   }
   .margin {
     padding: 1em;
-    min-width: 7em;
+    width: 6em;
     text-align: left;
     user-select: none;
   }
@@ -181,6 +181,26 @@
   .cross-references-empty {
     color: var(--base01);
     font-size: x-small;
+  }
+  .commentaries {
+    list-style: none;
+    padding: 0;
+    margin: 0.6em 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+  }
+  .commentary {
+    font-size: x-small;
+    color: var(--base01);
+  }
+  .commentary-marker {
+    color: var(--magenta);
+    font-weight: bold;
+    margin-right: 0.3em;
+  }
+  .commentary-text {
+    color: var(--base01);
   }
   .verse::before {
     content: attr(data-verse);

@@ -12,7 +12,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference)
+import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
@@ -50,3 +50,15 @@ fetchCrossReferences verseId = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left $ "Failed to fetch cross references: " <> verseId
       Right refs -> pure $ Right refs
+
+fetchCommentaries :: VerseId -> Aff (Either String (Array Commentary))
+fetchCommentaries verseId = do
+  let
+    url = baseUrl <> "/rpc/commentaries"
+    payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
+  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left $ "Failed to fetch commentaries: " <> verseId
+      Right commentaries -> pure $ Right commentaries

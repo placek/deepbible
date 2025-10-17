@@ -30,6 +30,14 @@ newtype CrossReference =
 
 derive instance newtypeCrossReference :: Newtype CrossReference _
 
+newtype Commentary =
+  Commentary
+    { marker :: String
+    , text :: String
+    }
+
+derive instance newtypeCommentary :: Newtype Commentary _
+
 -- A verse as returned by /rpc/verses_by_address
 newtype Verse =
   Verse
@@ -82,6 +90,13 @@ instance decodeCrossReference :: DecodeJson CrossReference where
     reference <- obj .: "reference"
     rate <- obj .: "rate"
     pure $ CrossReference { id, address, reference, rate }
+
+instance decodeCommentary :: DecodeJson Commentary where
+  decodeJson j = do
+    obj <- decodeJson j
+    marker <- obj .: "marker"
+    text <- obj .: "text"
+    pure $ Commentary { marker, text }
 
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =
