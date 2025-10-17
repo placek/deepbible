@@ -167,15 +167,13 @@
   .cross-references {
     list-style: none;
     padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4em;
+    margin: 0 0 1em 0;
   }
   .cross-reference {
     color: var(--blue);
     font-size: x-small;
     cursor: pointer;
+    margin: 0.3em 0;
   }
   .cross-references-loading,
   .cross-references-empty {
@@ -185,10 +183,7 @@
   .commentaries {
     list-style: none;
     padding: 0;
-    margin: 0.6em 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4em;
+    margin: 0;
   }
   .commentary {
     font-size: x-small;
@@ -202,6 +197,17 @@
   .commentary-text {
     color: var(--base01);
   }
+  .commentary-text .verseid,
+  .commentary-text .appHeadEm,
+  .commentary-text .appHeadInfoLinks,
+  .commentary-text .vuid,
+  .commentary-text .vudesc,
+  .commentary-text .versetext,
+  .commentary-text .rdgtype
+    { display: none; }
+  .commentary-text .rdgtxt { font-weight: bold; }
+  .commentary-text a { pointer-events: none; color: var(--base1); text-decoration: none; }
+  .commentary-text .sup { vertical-align: super; font-size: smaller; }
   .verse::before {
     content: attr(data-verse);
     color: var(--red);

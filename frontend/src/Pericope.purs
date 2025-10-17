@@ -274,8 +274,11 @@ render st =
             ]
             [ HH.span [ HP.class_ (HH.ClassName "commentary-marker") ]
                 [ HH.text commentary.marker ]
-            , HH.span [ HP.class_ (HH.ClassName "commentary-text") ]
-                [ HH.text commentary.text ]
+            , HH.span
+                [ HP.class_ (HH.ClassName "commentary-text")
+                , HP.prop (HH.PropName "innerHTML") commentary.text
+                ]
+                []
             ]
       in
       HH.div [ HP.class_ (HH.ClassName "margin") ] renderCrossRefs
