@@ -28,13 +28,18 @@ $(helpers_dir)/%.sql: $(sql_dir)/%.sql | $(helpers_dir)
 # generates the all_verses.sql file with materialized view for all languages
 $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
 	@echo "-- all verses for public schema" > "$@"
+	@echo "DROP INDEX IF EXISTS public.idx__all_verses_text_search;" >> "$@"
 	@echo "DROP MATERIALIZED VIEW IF EXISTS public._all_verses;" >> "$@"
 	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" >> "$@"
 	@$(foreach lang,$(langs), \
-		printf "SELECT * FROM $(lang)._all_verses" >> "$@"; \
-		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
+		printf "SELECT id, language, source, book, book_name, address,\n" >> "$@"; \
+		printf "       source_number, book_number, chapter, verse, text,\n" >> "$@"; \
+		printf "       to_tsvector('simple', COALESCE(text, '')) AS text_search\n" >> "$@"; \
+		printf "FROM $(lang)._all_verses" >> "$@"; \
+		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; else printf "\n" >> "$@"; fi; \
 	)
 	@echo ";" >> "$@"
+	@echo "CREATE INDEX idx__all_verses_text_search ON public._all_verses USING GIN (text_search);" >> "$@"
 	@echo >> "$@"
 
 # generates the books.sql file with view for all languages
