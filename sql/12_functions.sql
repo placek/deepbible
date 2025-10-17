@@ -116,9 +116,9 @@ DECLARE
   end_verse INT;
   v INT;
 BEGIN
-  m := regexp_match(trim(address), '^(\d?\s*[[:alpha:]żźćńółęąśŻŹĆĄŚĘŁÓŃ]+)\s+(\d+),\s*([\d\.\-]+)$');
+  m := regexp_match(trim(address), '^(.+)\s+(\d+),\s*([\d\.\-]+)$');
   IF m IS NOT NULL THEN
-    book    := trim(regexp_replace(m[1], '\s+', ' ', 'g'));
+    book    := m[1];
     chapter := m[2]::INT;
     FOR part IN SELECT unnest(string_to_array(m[3], '.')) LOOP
       IF position('-' IN part) > 0 THEN
@@ -141,7 +141,7 @@ BEGIN
     END LOOP;
     RETURN;
   END IF;
-  m := regexp_match(trim(address), '^(\d?\s*[[:alpha:]żźćńółęąśŻŹĆĄŚĘŁÓŃ]+)\s+(\d+)$');
+  m := regexp_match(trim(address), '^(.+)\s+(\d+)$');
   IF m IS NOT NULL THEN
     book    := trim(regexp_replace(m[1], '\s+', ' ', 'g'));
     chapter := m[2]::INT;
