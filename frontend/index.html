@@ -99,7 +99,13 @@
     text-align: left;
     user-select: none;
   }
-  .didascalia .address, .didascalia .source { cursor: pointer; }
+  .didascalia .address, .didascalia .source {
+    cursor: pointer;
+    white-space: normal;     /* allow wrapping */
+    word-break: keep-all;    /* don't break inside words */
+    overflow-wrap: normal;   /* no emergency breaking */
+    hyphens: none;           /* no auto-hyphenation */ 
+  }
   .didascalia .address.editing input:focus-visible,
   .didascalia .source.editing input:focus-visible {
     outline: none;
