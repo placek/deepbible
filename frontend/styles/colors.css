@@ -63,7 +63,7 @@ h2,
   color: var(--base00);
 }
 
-.didascalia .selected-address, .verse .selected {
+.didascalia .selected-address, .verse.selected {
   color: var(--green);
 }
 
