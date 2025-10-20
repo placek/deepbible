@@ -12,6 +12,14 @@ type Source = String
 type VerseId = String
 type PericopeId = Int
 
+newtype VerseSearchResult =
+  VerseSearchResult
+    { address :: Address
+    , source :: Source
+    , text :: String
+    }
+derive instance newtypeVerseSearchResult :: Newtype VerseSearchResult _
+
 newtype SourceInfo =
   SourceInfo
     { name :: String
@@ -98,6 +106,14 @@ instance decodeCommentary :: DecodeJson Commentary where
     text <- obj .: "text"
     pure $ Commentary { marker, text }
 
+instance decodeVerseSearchResult :: DecodeJson VerseSearchResult where
+  decodeJson j = do
+    obj <- decodeJson j
+    address <- obj .: "address"
+    source <- obj .: "source"
+    text <- obj .: "text"
+    pure $ VerseSearchResult { address, source, text }
+
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =
     "Verse { verse_id: " <> show verse_id <> ", text: " <> show text <> " }"
@@ -119,4 +135,10 @@ type AppState =
   , droppingOver :: Maybe PericopeId
   , nextId :: Int
   , helpOpen :: Boolean
+  , searchInput :: String
+  , searchResults :: Array VerseSearchResult
+  , searchOpen :: Boolean
+  , searchPerformed :: Boolean
+  , searchLoading :: Boolean
+  , searchError :: Maybe String
   }

@@ -12,7 +12,8 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary)
+import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary, VerseSearchResult)
+import Query (encodeURIComponent)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
@@ -62,3 +63,15 @@ fetchCommentaries verseId = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left $ "Failed to fetch commentaries: " <> verseId
       Right commentaries -> pure $ Right commentaries
+
+searchVerses :: String -> Aff (Either String (Array VerseSearchResult))
+searchVerses query = do
+  let
+    encoded = encodeURIComponent query
+    url = baseUrl <> "/_all_verses?text_search=phfts.%22" <> encoded <> "%22"
+  res <- AX.get driver RF.json url
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left "Failed to search verses"
+      Right verses -> pure $ Right verses

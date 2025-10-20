@@ -2,15 +2,17 @@ module Main where
 
 import Prelude
 
-import Api (fetchVerses)
+import Api (fetchVerses, searchVerses)
 import Control.Monad (when)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Void (Void)
 import Data.Const (Const)
+import Data.String.Common (trim)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen as H
@@ -23,7 +25,7 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
-import Types (AppState, Pericope, PericopeId, Verse)
+import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult(..))
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
 import Web.HTML.HTMLElement (focus)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
@@ -64,6 +66,13 @@ data Action
   | OpenHelp
   | CloseHelp
   | HandleHelpKey KeyboardEvent
+  | UpdateSearchInput String
+  | SubmitSearch
+  | ReceiveSearchResults (Either String (Array VerseSearchResult))
+  | SelectSearchResult VerseSearchResult
+  | FocusSearchInput
+  | CloseSearchResults
+  | HandleSearchKey KeyboardEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -72,6 +81,12 @@ initialState _ =
   , droppingOver: Nothing
   , nextId: 1
   , helpOpen: false
+  , searchInput: ""
+  , searchResults: []
+  , searchOpen: false
+  , searchPerformed: false
+  , searchLoading: false
+  , searchError: Nothing
   }
 
 helpModalRef :: H.RefLabel
@@ -80,11 +95,80 @@ helpModalRef = H.RefLabel "help-modal"
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div_
-    ( [ HH.div_
+    ( [ renderSearchSection st
+      , HH.div_
           (renderPericope <$> st.pericopes)
       , renderHelpLink st.helpOpen
       ] <> renderHelpModal st.helpOpen
     )
+
+renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
+renderSearchSection st =
+  HH.div
+    [ HP.class_ (HH.ClassName "search-section") ]
+    ( [ HH.div
+          [ HP.class_ (HH.ClassName "search-input-group") ]
+          [ HH.input
+              [ HP.attr (HH.AttrName "type") "text"
+              , HP.placeholder "Search verses"
+              , HP.value st.searchInput
+              , HE.onValueInput UpdateSearchInput
+              , HE.onFocus \_ -> FocusSearchInput
+              , HE.onClick \_ -> FocusSearchInput
+              , HE.onKeyDown HandleSearchKey
+              ]
+          , HH.button
+              [ HP.attr (HH.AttrName "type") "button"
+              , HE.onClick \_ -> SubmitSearch
+              ]
+              [ HH.text "Search" ]
+          ]
+      ]
+        <> renderSearchFeedback st
+        <> renderSearchResults st
+    )
+
+renderSearchFeedback :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderSearchFeedback st =
+  let
+    baseAttrs = [ HP.class_ (HH.ClassName "search-status") ]
+  in case st.searchLoading, st.searchError of
+       true, _ ->
+         [ HH.div baseAttrs [ HH.text "Searching…" ] ]
+       false, Just err ->
+         [ HH.div baseAttrs [ HH.text err ] ]
+       false, Nothing ->
+         if st.searchPerformed && A.null st.searchResults then
+           [ HH.div baseAttrs [ HH.text "No results" ] ]
+         else
+           []
+
+renderSearchResults :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderSearchResults st =
+  if not st.searchOpen || A.null st.searchResults then
+    []
+  else
+    [ HH.ul
+        [ HP.class_ (HH.ClassName "search-results") ]
+        (st.searchResults <#> renderSearchResult)
+    ]
+
+renderSearchResult :: VerseSearchResult -> H.ComponentHTML Action ChildSlots Aff
+renderSearchResult result =
+  let
+    details = unwrap result
+  in
+  HH.li
+    [ HP.class_ (HH.ClassName "search-result")
+    , HE.onClick \_ -> SelectSearchResult result
+    ]
+    [ HH.div
+        [ HP.class_ (HH.ClassName "search-result-address") ]
+        [ HH.text (details.source <> " – " <> details.address) ]
+    , HH.div
+        [ HP.class_ (HH.ClassName "search-result-text") ]
+        [ HH.text details.text ]
+    ]
 
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
@@ -169,6 +253,66 @@ handle action = case action of
 
   AddPericope addr src verses ->
     insertPericope addr src verses
+
+  UpdateSearchInput value ->
+    H.modify_ \st -> st { searchInput = value }
+
+  SubmitSearch -> do
+    st <- H.get
+    let query = trim st.searchInput
+    if query == "" then
+      pure unit
+    else do
+      H.modify_ \st -> st
+        { searchInput = query
+        , searchLoading = true
+        , searchError = Nothing
+        , searchOpen = true
+        , searchPerformed = true
+        , searchResults = []
+        }
+      res <- H.liftAff $ searchVerses query
+      handle (ReceiveSearchResults res)
+
+  ReceiveSearchResults res -> case res of
+    Left err ->
+      H.modify_ \st -> st
+        { searchLoading = false
+        , searchError = Just err
+        , searchResults = []
+        }
+    Right results ->
+      H.modify_ \st -> st
+        { searchLoading = false
+        , searchError = Nothing
+        , searchResults = results
+        , searchOpen = true
+        }
+
+  SelectSearchResult result -> do
+    let details = unwrap result
+    H.modify_ \st -> st { searchOpen = false }
+    res <- H.liftAff $ fetchVerses details.address details.source
+    case res of
+      Left _ -> pure unit
+      Right verses -> insertPericope details.address details.source verses
+
+  FocusSearchInput ->
+    H.modify_ \st ->
+      if st.searchPerformed || st.searchLoading || (case st.searchError of
+            Just _ -> true
+            Nothing -> false
+         )
+      then st { searchOpen = true }
+      else st
+
+  CloseSearchResults ->
+    H.modify_ \st -> st { searchOpen = false }
+
+  HandleSearchKey ev -> case key ev of
+    "Enter" -> handle SubmitSearch
+    "Escape" -> handle CloseSearchResults
+    _ -> pure unit
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
