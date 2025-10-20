@@ -11,7 +11,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Set as Set
 import Data.Newtype (unwrap)
-import Web.UIEvent.MouseEvent (MouseEvent, ctrlKey, toEvent)
+import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent as DragEv
 import Web.Event.Event (preventDefault, stopPropagation)
@@ -91,6 +91,7 @@ data Action
   | CloseSourceList
   | SelectSource Source
   | Remove
+  | Duplicate
   | DragStart DragEvent
   | DragOver DragEvent
   | DragLeave DragEvent
@@ -140,6 +141,12 @@ render st =
               [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
                   [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
                       [ HH.text "☰" ]
+                  , HH.button
+                      [ HP.class_ (HH.ClassName "didascalia-duplicate")
+                      , HP.title "Duplicate pericope"
+                      , HE.onClick \_ -> Duplicate
+                      ]
+                      [ HH.text "⧉" ]
                   , HH.button
                       [ HP.class_ (HH.ClassName "didascalia-remove")
                       , HE.onClick \_ -> Remove
@@ -291,35 +298,27 @@ handle = case _ of
 
   HandleAddressClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
-    if ctrlKey ev then do
-      st <- H.get
-      H.raise (DidDuplicate { id: st.pericope.id })
-    else
-      H.modify_ \st ->
-        st
-          { editingAddress = true
-          , originalAddress = Just st.pericope.address
-          }
+    H.modify_ \st ->
+      st
+        { editingAddress = true
+        , originalAddress = Just st.pericope.address
+        }
 
   HandleSourceClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
-    if ctrlKey ev then do
-      st <- H.get
-      H.raise (DidDuplicate { id: st.pericope.id })
-    else do
-      H.modify_ \st ->
-        st
-          { editingSource = true
-          , originalSource = Just st.pericope.source
-          }
-      st <- H.get
-      case st.sources of
-        Just _ -> pure unit
-        Nothing -> do
-          res <- H.liftAff fetchSources
-          case res of
-            Left _ -> H.modify_ _ { sources = Just [] }
-            Right srcs -> H.modify_ _ { sources = Just srcs }
+    H.modify_ \st ->
+      st
+        { editingSource = true
+        , originalSource = Just st.pericope.source
+        }
+    st <- H.get
+    case st.sources of
+      Just _ -> pure unit
+      Nothing -> do
+        res <- H.liftAff fetchSources
+        case res of
+          Left _ -> H.modify_ _ { sources = Just [] }
+          Right srcs -> H.modify_ _ { sources = Just srcs }
 
   HandleSelectedAddressClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
@@ -438,6 +437,10 @@ handle = case _ of
   Remove -> do
     st <- H.get
     H.raise (DidRemove st.pericope.id)
+
+  Duplicate -> do
+    st <- H.get
+    H.raise (DidDuplicate { id: st.pericope.id })
 
   DragStart ev -> do
     H.liftEffect $ stopPropagation (DragEv.toEvent ev)

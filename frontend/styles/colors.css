@@ -48,6 +48,15 @@ h2,
 }
 
 
+.didascalia-duplicate {
+  color: var(--blue);
+}
+
+.didascalia-duplicate:hover,
+.didascalia-duplicate:focus-visible {
+  color: var(--cyan);
+}
+
 .didascalia-remove {
   color: var(--red);
 }

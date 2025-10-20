@@ -129,7 +129,7 @@ renderHelpModal true =
               , HH.dd_ [ HH.text "change pericope source" ]
               , HH.dt_ [ HH.text "Click source name ⇨ select from list" ]
               , HH.dd_ [ HH.text "change pericope source" ]
-              , HH.dt_ [ HH.text "Ctrl + Click left margin" ]
+              , HH.dt_ [ HH.text "Click ⧉" ]
               , HH.dd_ [ HH.text "duplicate pericope" ]
               , HH.dt_ [ HH.text "Click ✕ " ]
               , HH.dd_ [ HH.text "delete pericope" ]

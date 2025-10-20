@@ -20,7 +20,8 @@ h2 {
   font-size: smaller;
 }
 
-.didascalia-remove {
+.didascalia-remove,
+.didascalia-duplicate {
   font-size: smaller;
   line-height: 1;
 }

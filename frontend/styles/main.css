@@ -21,7 +21,8 @@ body {
   user-select: none;
 }
 
-.didascalia-remove {
+.didascalia-remove,
+.didascalia-duplicate {
   border: none;
   background: transparent;
   cursor: pointer;
