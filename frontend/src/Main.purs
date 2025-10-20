@@ -3,14 +3,12 @@ module Main where
 import Prelude
 
 import Api (fetchVerses, searchVerses)
-import Control.Monad (when)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Set as Set
-import Data.Void (Void)
 import Data.Const (Const)
 import Data.String.Common (trim)
 import Effect (Effect)
@@ -25,7 +23,7 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
-import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult(..))
+import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
 import Web.HTML.HTMLElement (focus)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
@@ -258,7 +256,7 @@ handle action = case action of
     if query == "" then
       pure unit
     else do
-      H.modify_ \st -> st
+      H.modify_ \state -> state
         { searchInput = query
         , searchLoading = true
         , searchError = Nothing

@@ -3,7 +3,6 @@ module Pericope (Query(..), Output(..), component) where
 import Prelude
 
 import Api (fetchCommentaries, fetchCrossReferences, fetchSources, fetchVerses)
-import Control.Monad (when)
 import Data.Array (catMaybes)
 import Data.String (joinWith)
 import Data.Array as A
@@ -143,12 +142,13 @@ render st =
                       [ HH.text "☰" ]
                   , HH.button
                       [ HP.class_ (HH.ClassName "didascalia-duplicate")
-                      , HP.title "Duplicate pericope"
+                      , HP.title "duplicate pericope"
                       , HE.onClick \_ -> Duplicate
                       ]
                       [ HH.text "⧉" ]
                   , HH.button
                       [ HP.class_ (HH.ClassName "didascalia-remove")
+                      , HP.title "remove pericope"
                       , HE.onClick \_ -> Remove
                       ]
                       [ HH.text "✕" ]
