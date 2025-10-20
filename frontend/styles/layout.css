@@ -40,7 +40,7 @@ h2 {
 }
 
 .margin {
-  padding: 1em;
+  padding: 1em 0;
   width: 6em;
 }
 
@@ -77,6 +77,10 @@ h2 {
   border-top: 1px solid var(--base2);
 }
 
+.selected-address {
+  padding: 0 1em;
+}
+
 .source-option {
   padding: 0.5em;
 }
@@ -86,8 +90,9 @@ h2 {
   flex: 1;
 }
 
+
 .cross-references {
-  padding: 0;
+  padding: 0 0.5em;
   margin: 0;
 }
 
@@ -97,7 +102,7 @@ h2 {
 }
 
 .commentaries {
-  padding: 0;
+  padding: 0 0.5em;
   margin: 0;
 }
 
