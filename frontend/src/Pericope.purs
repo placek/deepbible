@@ -219,11 +219,6 @@ render st =
               , HE.onClick HandleSourceClick
               ]
               [ HH.text st.pericope.source ]
-        , HH.div
-            [ HP.class_ (HH.ClassName "selected-address")
-            , HE.onClick HandleSelectedAddressClick
-            ]
-            [ HH.text addressText ]
         ]
 
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
@@ -239,6 +234,14 @@ render st =
             []
         )
     , let
+        renderSelectedAddress =
+          [ HH.div
+            [ HP.class_ (HH.ClassName "selected-address")
+            , HE.onClick HandleSelectedAddressClick
+            ]
+            [ HH.text addressText ]
+          ]
+
         renderCrossRefs = case st.crossRefs of
           CrossRefsIdle ->
             [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
@@ -288,7 +291,7 @@ render st =
                 []
             ]
       in
-      HH.div [ HP.class_ (HH.ClassName "margin") ] renderCrossRefs
+      HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs)
     ]
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit

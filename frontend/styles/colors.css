@@ -43,36 +43,35 @@ h2,
 .commentary-text a,
 .verse e,
 .verse n,
-.verse f {
+.verse f,
+.didascalia-duplicate,
+.didascalia-remove {
   color: var(--base1);
 }
 
-
-.didascalia-duplicate {
-  color: var(--blue);
+.didascalia-handle:hover,
+.didascalia-handle:focus-visible {
+  color: var(--cyan);
 }
 
 .didascalia-duplicate:hover,
 .didascalia-duplicate:focus-visible {
-  color: var(--cyan);
-}
-
-.didascalia-remove {
-  color: var(--red);
+  color: var(--blue);
 }
 
 .didascalia-remove:hover,
 .didascalia-remove:focus-visible {
-  color: var(--orange);
+  color: var(--red);
 }
 
+.search-input-group input,
 .didascalia .address.editing input,
 .didascalia .source.editing input {
   background-color: var(--base3);
   color: var(--base00);
 }
 
-.didascalia .selected-address, .verse.selected {
+.margin .selected-address, .verse.selected {
   color: var(--green);
 }
 
@@ -86,7 +85,8 @@ h2,
 }
 
 .source-language {
-  color: var(--base00);
+  color: var(--base0);
+  background-color: var(--base2);
 }
 
 .source-option:hover {

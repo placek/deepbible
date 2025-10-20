@@ -37,12 +37,13 @@ h2 {
   hyphens: none;           /* no auto-hyphenation */ 
 }
 
+.search-input-group input,
 .didascalia .address.editing input,
 .didascalia .source.editing input {
   font-size: 1em;
 }
 
-.didascalia .selected-address {
+.margin .selected-address {
   font-size: x-small;
 }
 
@@ -52,7 +53,7 @@ h2 {
 
 .source-language {
   font-weight: bold;
-  text-align: left;
+  text-align: center;
 }
 
 .source-options {

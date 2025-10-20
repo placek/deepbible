@@ -117,11 +117,6 @@ renderSearchSection st =
               , HE.onClick \_ -> FocusSearchInput
               , HE.onKeyDown HandleSearchKey
               ]
-          , HH.button
-              [ HP.attr (HH.AttrName "type") "button"
-              , HE.onClick \_ -> SubmitSearch
-              ]
-              [ HH.text "Search" ]
           ]
       ]
         <> renderSearchFeedback st

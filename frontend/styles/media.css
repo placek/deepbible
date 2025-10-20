@@ -13,7 +13,7 @@
     gap: 0.5em;
   }
 
-  .didascalia .address, .didascalia .source, .didascalia .selected-address {
+  .didascalia .address, .didascalia .source, .margin .selected-address {
     font-size: x-small;
     text-align: center;
   }
