@@ -2717,6 +2717,9 @@ var jsonParser = function(j) {
 };
 
 // output/Data.String.Common/foreign.js
+var toLower = function(s) {
+  return s.toLowerCase();
+};
 var trim = function(s) {
   return s.trim();
 };
@@ -4506,6 +4509,29 @@ var fromNumberImpl = function(just) {
 var fromNumber = /* @__PURE__ */ function() {
   return fromNumberImpl(Just.create)(Nothing.value);
 }();
+
+// output/Data.String.CodeUnits/foreign.js
+var _indexOf = function(just) {
+  return function(nothing) {
+    return function(x) {
+      return function(s) {
+        var i2 = s.indexOf(x);
+        return i2 === -1 ? nothing : just(i2);
+      };
+    };
+  };
+};
+
+// output/Data.String.CodeUnits/index.js
+var indexOf = /* @__PURE__ */ function() {
+  return _indexOf(Just.create)(Nothing.value);
+}();
+var contains = function(pat) {
+  var $23 = indexOf(pat);
+  return function($24) {
+    return isJust($23($24));
+  };
+};
 
 // output/Foreign/index.js
 var show2 = /* @__PURE__ */ show(showString);
@@ -9891,8 +9917,8 @@ var OpenCrossReference = /* @__PURE__ */ function() {
 }();
 var selectedAddressText = function(pericope) {
   var selectedAddresses = catMaybes(mapFlipped3(pericope.verses)(function(v) {
-    var $91 = member3(v.verse_id)(pericope.selected);
-    if ($91) {
+    var $92 = member3(v.verse_id)(pericope.selected);
+    if ($92) {
       return new Just(v);
     }
     ;
@@ -9915,7 +9941,7 @@ var selectedAddressText = function(pericope) {
       ;
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 539, column 7 - line 543, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 555, column 7 - line 559, column 64): " + [v.constructor.name]);
   };
   return joinWith(".")(renderSelection(reverse(selectedAddresses)));
 };
@@ -9953,9 +9979,21 @@ var render = function(st) {
         }
         ;
         if (st.sources instanceof Just) {
-          var $100 = $$null(st.sources.value0);
-          if ($100) {
+          var $101 = $$null(st.sources.value0);
+          if ($101) {
             return [div2([class_("source-empty")])([text5("Unable to load sources.")])];
+          }
+          ;
+          var filterValue = toLower(st.pericope.source);
+          var matchesFilter = function(infoRec) {
+            var info2 = unwrap6(infoRec);
+            var haystack = toLower(info2.name) + (" " + toLower(info2.description_short));
+            return filterValue === "" || contains(filterValue)(haystack);
+          };
+          var filteredInfos = filter(matchesFilter)(st.sources.value0);
+          var $102 = $$null(filteredInfos);
+          if ($102) {
+            return [div2([class_("source-empty")])([text5("No sources match your search.")])];
           }
           ;
           var renderOption = function(infoRec) {
@@ -9975,24 +10013,24 @@ var render = function(st) {
           var renderGroup = function(lang2) {
             var entries = filter(function(infoRec) {
               return unwrap6(infoRec).language === lang2;
-            })(st.sources.value0);
-            var sorted = sortBy(comparing2(function($235) {
+            })(filteredInfos);
+            var sorted = sortBy(comparing2(function($237) {
               return function(v) {
                 return v.name;
-              }(unwrap6($235));
+              }(unwrap6($237));
             }))(entries);
             return div2([class_("source-language-group")])([h4([class_("source-language")])([text5(lang2)]), ul([class_("source-options")])(map26(renderOption)(sorted))]);
           };
-          var languages2 = toUnfoldable5(fromFoldable6(mapFlipped3(st.sources.value0)(function($236) {
+          var languages2 = toUnfoldable5(fromFoldable6(mapFlipped3(filteredInfos)(function($238) {
             return function(v) {
               return v.language;
-            }(unwrap6($236));
+            }(unwrap6($238));
           })));
           var sortedLanguages = sort2(languages2);
           return [div2([class_("source-list")])(map26(renderGroup)(sortedLanguages))];
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 164, column 28 - line 202, column 22): " + [st.sources.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 164, column 28 - line 218, column 24): " + [st.sources.constructor.name]);
       }();
       return div2([class_("source editing"), onClick(SwallowDidascaliaClick.create)])(append5([input2([value14(st.pericope.source), onValueInput(SetSource.create), autofocus6(true), onKeyDown(function(ke) {
         var v = key(ke);
@@ -10041,16 +10079,16 @@ var render = function(st) {
       ;
       if (st.crossRefs instanceof CrossRefsLoaded) {
         var crossReferenceNodes = function() {
-          var $109 = $$null(st.crossRefs.value0.references);
-          if ($109) {
+          var $111 = $$null(st.crossRefs.value0.references);
+          if ($111) {
             return [div2([class_("cross-references-empty")])([])];
           }
           ;
           return [ul([class_("cross-references")])(map26(renderRef)(st.crossRefs.value0.references))];
         }();
         var commentaryNodes = function() {
-          var $110 = $$null(st.crossRefs.value0.commentaries);
-          if ($110) {
+          var $112 = $$null(st.crossRefs.value0.commentaries);
+          if ($112) {
             return [];
           }
           ;
@@ -10059,7 +10097,7 @@ var render = function(st) {
         return append5(crossReferenceNodes)(commentaryNodes);
       }
       ;
-      throw new Error("Failed pattern match at Pericope (line 248, column 27 - line 277, column 53): " + [st.crossRefs.constructor.name]);
+      throw new Error("Failed pattern match at Pericope (line 264, column 27 - line 293, column 53): " + [st.crossRefs.constructor.name]);
     }();
     return div2([class_("margin")])(append5(renderSelectedAddress)(renderCrossRefs));
   }()]);
@@ -10075,29 +10113,29 @@ var launchFetch = function(dictMonadAff) {
         ;
         if (res instanceof Right) {
           return discard12(modify_3(function(st) {
-            var $117 = {};
-            for (var $118 in st) {
-              if ({}.hasOwnProperty.call(st, $118)) {
-                $117[$118] = st[$118];
+            var $119 = {};
+            for (var $120 in st) {
+              if ({}.hasOwnProperty.call(st, $120)) {
+                $119[$120] = st[$120];
               }
               ;
             }
             ;
-            $117.pericope = function() {
-              var $114 = {};
-              for (var $115 in st.pericope) {
-                if ({}.hasOwnProperty.call(st.pericope, $115)) {
-                  $114[$115] = st["pericope"][$115];
+            $119.pericope = function() {
+              var $116 = {};
+              for (var $117 in st.pericope) {
+                if ({}.hasOwnProperty.call(st.pericope, $117)) {
+                  $116[$117] = st["pericope"][$117];
                 }
                 ;
               }
               ;
-              $114.verses = res.value0;
-              $114.selected = empty4;
-              return $114;
+              $116.verses = res.value0;
+              $116.selected = empty4;
+              return $116;
             }();
-            $117.crossRefs = CrossRefsIdle.value;
-            return $117;
+            $119.crossRefs = CrossRefsIdle.value;
+            return $119;
           }))(function() {
             return bind7(get4)(function(st$prime) {
               return raise(new DidUpdate(st$prime.pericope));
@@ -10105,7 +10143,7 @@ var launchFetch = function(dictMonadAff) {
           });
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 521, column 3 - line 529, column 39): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 537, column 3 - line 545, column 39): " + [res.constructor.name]);
       });
     };
   };
@@ -10126,17 +10164,17 @@ var handle = function(dictMonadAff) {
     if (v instanceof HandleAddressClick) {
       return discard12(liftEffect8(stopPropagation(toEvent2(v.value0))))(function() {
         return modify_3(function(st) {
-          var $123 = {};
-          for (var $124 in st) {
-            if ({}.hasOwnProperty.call(st, $124)) {
-              $123[$124] = st[$124];
+          var $125 = {};
+          for (var $126 in st) {
+            if ({}.hasOwnProperty.call(st, $126)) {
+              $125[$126] = st[$126];
             }
             ;
           }
           ;
-          $123.editingAddress = true;
-          $123.originalAddress = new Just(st.pericope.address);
-          return $123;
+          $125.editingAddress = true;
+          $125.originalAddress = new Just(st.pericope.address);
+          return $125;
         });
       });
     }
@@ -10144,17 +10182,17 @@ var handle = function(dictMonadAff) {
     if (v instanceof HandleSourceClick) {
       return discard12(liftEffect8(stopPropagation(toEvent2(v.value0))))(function() {
         return discard12(modify_3(function(st) {
-          var $127 = {};
-          for (var $128 in st) {
-            if ({}.hasOwnProperty.call(st, $128)) {
-              $127[$128] = st[$128];
+          var $129 = {};
+          for (var $130 in st) {
+            if ({}.hasOwnProperty.call(st, $130)) {
+              $129[$130] = st[$130];
             }
             ;
           }
           ;
-          $127.editingSource = true;
-          $127.originalSource = new Just(st.pericope.source);
-          return $127;
+          $129.editingSource = true;
+          $129.originalSource = new Just(st.pericope.source);
+          return $129;
         }))(function() {
           return bind7(get4)(function(st) {
             if (st.sources instanceof Just) {
@@ -10165,39 +10203,39 @@ var handle = function(dictMonadAff) {
               return bind7(liftAff3(fetchSources))(function(res) {
                 if (res instanceof Left) {
                   return modify_3(function(v1) {
-                    var $133 = {};
-                    for (var $134 in v1) {
-                      if ({}.hasOwnProperty.call(v1, $134)) {
-                        $133[$134] = v1[$134];
+                    var $135 = {};
+                    for (var $136 in v1) {
+                      if ({}.hasOwnProperty.call(v1, $136)) {
+                        $135[$136] = v1[$136];
                       }
                       ;
                     }
                     ;
-                    $133.sources = new Just([]);
-                    return $133;
+                    $135.sources = new Just([]);
+                    return $135;
                   });
                 }
                 ;
                 if (res instanceof Right) {
                   return modify_3(function(v1) {
-                    var $137 = {};
-                    for (var $138 in v1) {
-                      if ({}.hasOwnProperty.call(v1, $138)) {
-                        $137[$138] = v1[$138];
+                    var $139 = {};
+                    for (var $140 in v1) {
+                      if ({}.hasOwnProperty.call(v1, $140)) {
+                        $139[$140] = v1[$140];
                       }
                       ;
                     }
                     ;
-                    $137.sources = new Just(res.value0);
-                    return $137;
+                    $139.sources = new Just(res.value0);
+                    return $139;
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Pericope (line 328, column 9 - line 330, column 60): " + [res.constructor.name]);
+                throw new Error("Failed pattern match at Pericope (line 344, column 9 - line 346, column 60): " + [res.constructor.name]);
               });
             }
             ;
-            throw new Error("Failed pattern match at Pericope (line 324, column 5 - line 330, column 60): " + [st.sources.constructor.name]);
+            throw new Error("Failed pattern match at Pericope (line 340, column 5 - line 346, column 60): " + [st.sources.constructor.name]);
           });
         });
       });
@@ -10221,70 +10259,70 @@ var handle = function(dictMonadAff) {
     ;
     if (v instanceof SetAddress) {
       return modify_3(function(st) {
-        var $147 = {};
-        for (var $148 in st) {
-          if ({}.hasOwnProperty.call(st, $148)) {
-            $147[$148] = st[$148];
+        var $149 = {};
+        for (var $150 in st) {
+          if ({}.hasOwnProperty.call(st, $150)) {
+            $149[$150] = st[$150];
           }
           ;
         }
         ;
-        $147.pericope = function() {
-          var $144 = {};
-          for (var $145 in st.pericope) {
-            if ({}.hasOwnProperty.call(st.pericope, $145)) {
-              $144[$145] = st["pericope"][$145];
+        $149.pericope = function() {
+          var $146 = {};
+          for (var $147 in st.pericope) {
+            if ({}.hasOwnProperty.call(st.pericope, $147)) {
+              $146[$147] = st["pericope"][$147];
             }
             ;
           }
           ;
-          $144.address = v.value0;
-          return $144;
+          $146.address = v.value0;
+          return $146;
         }();
-        return $147;
+        return $149;
       });
     }
     ;
     if (v instanceof SetSource) {
       return modify_3(function(st) {
-        var $154 = {};
-        for (var $155 in st) {
-          if ({}.hasOwnProperty.call(st, $155)) {
-            $154[$155] = st[$155];
+        var $156 = {};
+        for (var $157 in st) {
+          if ({}.hasOwnProperty.call(st, $157)) {
+            $156[$157] = st[$157];
           }
           ;
         }
         ;
-        $154.pericope = function() {
-          var $151 = {};
-          for (var $152 in st.pericope) {
-            if ({}.hasOwnProperty.call(st.pericope, $152)) {
-              $151[$152] = st["pericope"][$152];
+        $156.pericope = function() {
+          var $153 = {};
+          for (var $154 in st.pericope) {
+            if ({}.hasOwnProperty.call(st.pericope, $154)) {
+              $153[$154] = st["pericope"][$154];
             }
             ;
           }
           ;
-          $151.source = v.value0;
-          return $151;
+          $153.source = v.value0;
+          return $153;
         }();
-        return $154;
+        return $156;
       });
     }
     ;
     if (v instanceof SubmitAddress) {
       return bind7(get4)(function(st) {
         return discard12(modify_3(function(v1) {
-          var $158 = {};
-          for (var $159 in v1) {
-            if ({}.hasOwnProperty.call(v1, $159)) {
-              $158[$159] = v1[$159];
+          var $160 = {};
+          for (var $161 in v1) {
+            if ({}.hasOwnProperty.call(v1, $161)) {
+              $160[$161] = v1[$161];
             }
             ;
           }
           ;
-          $158.editingAddress = false;
-          $158.originalAddress = Nothing.value;
-          return $158;
+          $160.editingAddress = false;
+          $160.originalAddress = Nothing.value;
+          return $160;
         }))(function() {
           return launchFetch1(st.pericope.address)(st.pericope.source);
         });
@@ -10293,33 +10331,33 @@ var handle = function(dictMonadAff) {
     ;
     if (v instanceof CloseSourceList) {
       return modify_3(function(v1) {
-        var $161 = {};
-        for (var $162 in v1) {
-          if ({}.hasOwnProperty.call(v1, $162)) {
-            $161[$162] = v1[$162];
+        var $163 = {};
+        for (var $164 in v1) {
+          if ({}.hasOwnProperty.call(v1, $164)) {
+            $163[$164] = v1[$164];
           }
           ;
         }
         ;
-        $161.editingSource = false;
-        return $161;
+        $163.editingSource = false;
+        return $163;
       });
     }
     ;
     if (v instanceof SubmitSource) {
       return bind7(get4)(function(st) {
         return discard12(modify_3(function(v1) {
-          var $164 = {};
-          for (var $165 in v1) {
-            if ({}.hasOwnProperty.call(v1, $165)) {
-              $164[$165] = v1[$165];
+          var $166 = {};
+          for (var $167 in v1) {
+            if ({}.hasOwnProperty.call(v1, $167)) {
+              $166[$167] = v1[$167];
             }
             ;
           }
           ;
-          $164.editingSource = false;
-          $164.originalSource = Nothing.value;
-          return $164;
+          $166.editingSource = false;
+          $166.originalSource = Nothing.value;
+          return $166;
         }))(function() {
           return launchFetch1(st.pericope.address)(st.pericope.source);
         });
@@ -10329,120 +10367,120 @@ var handle = function(dictMonadAff) {
     if (v instanceof CancelAddressEdit) {
       return modify_3(function(st) {
         if (st.originalAddress instanceof Just) {
-          var $171 = {};
-          for (var $172 in st) {
-            if ({}.hasOwnProperty.call(st, $172)) {
-              $171[$172] = st[$172];
+          var $173 = {};
+          for (var $174 in st) {
+            if ({}.hasOwnProperty.call(st, $174)) {
+              $173[$174] = st[$174];
             }
             ;
           }
           ;
-          $171.editingAddress = false;
-          $171.originalAddress = Nothing.value;
-          $171.pericope = function() {
-            var $168 = {};
-            for (var $169 in st.pericope) {
-              if ({}.hasOwnProperty.call(st.pericope, $169)) {
-                $168[$169] = st["pericope"][$169];
+          $173.editingAddress = false;
+          $173.originalAddress = Nothing.value;
+          $173.pericope = function() {
+            var $170 = {};
+            for (var $171 in st.pericope) {
+              if ({}.hasOwnProperty.call(st.pericope, $171)) {
+                $170[$171] = st["pericope"][$171];
               }
               ;
             }
             ;
-            $168.address = st.originalAddress.value0;
-            return $168;
+            $170.address = st.originalAddress.value0;
+            return $170;
           }();
-          return $171;
+          return $173;
         }
         ;
         if (st.originalAddress instanceof Nothing) {
-          var $175 = {};
-          for (var $176 in st) {
-            if ({}.hasOwnProperty.call(st, $176)) {
-              $175[$176] = st[$176];
+          var $177 = {};
+          for (var $178 in st) {
+            if ({}.hasOwnProperty.call(st, $178)) {
+              $177[$178] = st[$178];
             }
             ;
           }
           ;
-          $175.editingAddress = false;
-          $175.originalAddress = Nothing.value;
-          return $175;
+          $177.editingAddress = false;
+          $177.originalAddress = Nothing.value;
+          return $177;
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 369, column 7 - line 380, column 14): " + [st.originalAddress.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 385, column 7 - line 396, column 14): " + [st.originalAddress.constructor.name]);
       });
     }
     ;
     if (v instanceof CancelSourceEdit) {
       return modify_3(function(st) {
         if (st.originalSource instanceof Just) {
-          var $182 = {};
-          for (var $183 in st) {
-            if ({}.hasOwnProperty.call(st, $183)) {
-              $182[$183] = st[$183];
+          var $184 = {};
+          for (var $185 in st) {
+            if ({}.hasOwnProperty.call(st, $185)) {
+              $184[$185] = st[$185];
             }
             ;
           }
           ;
-          $182.editingSource = false;
-          $182.originalSource = Nothing.value;
-          $182.pericope = function() {
-            var $179 = {};
-            for (var $180 in st.pericope) {
-              if ({}.hasOwnProperty.call(st.pericope, $180)) {
-                $179[$180] = st["pericope"][$180];
+          $184.editingSource = false;
+          $184.originalSource = Nothing.value;
+          $184.pericope = function() {
+            var $181 = {};
+            for (var $182 in st.pericope) {
+              if ({}.hasOwnProperty.call(st.pericope, $182)) {
+                $181[$182] = st["pericope"][$182];
               }
               ;
             }
             ;
-            $179.source = st.originalSource.value0;
-            return $179;
+            $181.source = st.originalSource.value0;
+            return $181;
           }();
-          return $182;
+          return $184;
         }
         ;
         if (st.originalSource instanceof Nothing) {
-          var $186 = {};
-          for (var $187 in st) {
-            if ({}.hasOwnProperty.call(st, $187)) {
-              $186[$187] = st[$187];
+          var $188 = {};
+          for (var $189 in st) {
+            if ({}.hasOwnProperty.call(st, $189)) {
+              $188[$189] = st[$189];
             }
             ;
           }
           ;
-          $186.editingSource = false;
-          $186.originalSource = Nothing.value;
-          return $186;
+          $188.editingSource = false;
+          $188.originalSource = Nothing.value;
+          return $188;
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 384, column 7 - line 395, column 14): " + [st.originalSource.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 400, column 7 - line 411, column 14): " + [st.originalSource.constructor.name]);
       });
     }
     ;
     if (v instanceof SelectSource) {
       return discard12(modify_3(function(st) {
-        var $192 = {};
-        for (var $193 in st) {
-          if ({}.hasOwnProperty.call(st, $193)) {
-            $192[$193] = st[$193];
+        var $194 = {};
+        for (var $195 in st) {
+          if ({}.hasOwnProperty.call(st, $195)) {
+            $194[$195] = st[$195];
           }
           ;
         }
         ;
-        $192.pericope = function() {
-          var $189 = {};
-          for (var $190 in st.pericope) {
-            if ({}.hasOwnProperty.call(st.pericope, $190)) {
-              $189[$190] = st["pericope"][$190];
+        $194.pericope = function() {
+          var $191 = {};
+          for (var $192 in st.pericope) {
+            if ({}.hasOwnProperty.call(st.pericope, $192)) {
+              $191[$192] = st["pericope"][$192];
             }
             ;
           }
           ;
-          $189.source = v.value0;
-          return $189;
+          $191.source = v.value0;
+          return $191;
         }();
-        $192.editingSource = false;
-        $192.originalSource = Nothing.value;
-        return $192;
+        $194.editingSource = false;
+        $194.originalSource = Nothing.value;
+        return $194;
       }))(function() {
         return bind7(get4)(function(st) {
           return launchFetch1(st.pericope.address)(v.value0);
@@ -10453,43 +10491,43 @@ var handle = function(dictMonadAff) {
     if (v instanceof ToggleSelect) {
       return discard12(modify_3(function(st) {
         var sel1 = function() {
-          var $196 = member3(v.value0)(st.pericope.selected);
-          if ($196) {
+          var $198 = member3(v.value0)(st.pericope.selected);
+          if ($198) {
             return $$delete6(v.value0)(st.pericope.selected);
           }
           ;
           return insert9(v.value0)(st.pericope.selected);
         }();
         var nextCrossRefState = function() {
-          var $197 = size3(sel1) === 1;
-          if ($197) {
+          var $199 = size3(sel1) === 1;
+          if ($199) {
             return CrossRefsLoading.value;
           }
           ;
           return CrossRefsIdle.value;
         }();
-        var $201 = {};
-        for (var $202 in st) {
-          if ({}.hasOwnProperty.call(st, $202)) {
-            $201[$202] = st[$202];
+        var $203 = {};
+        for (var $204 in st) {
+          if ({}.hasOwnProperty.call(st, $204)) {
+            $203[$204] = st[$204];
           }
           ;
         }
         ;
-        $201.pericope = function() {
-          var $198 = {};
-          for (var $199 in st.pericope) {
-            if ({}.hasOwnProperty.call(st.pericope, $199)) {
-              $198[$199] = st["pericope"][$199];
+        $203.pericope = function() {
+          var $200 = {};
+          for (var $201 in st.pericope) {
+            if ({}.hasOwnProperty.call(st.pericope, $201)) {
+              $200[$201] = st["pericope"][$201];
             }
             ;
           }
           ;
-          $198.selected = sel1;
-          return $198;
+          $200.selected = sel1;
+          return $200;
         }();
-        $201.crossRefs = nextCrossRefState;
-        return $201;
+        $203.crossRefs = nextCrossRefState;
+        return $203;
       }))(function() {
         return bind7(get4)(function(st) {
           var selectedIds = toUnfoldable5(st.pericope.selected);
@@ -10513,7 +10551,7 @@ var handle = function(dictMonadAff) {
                           return refsRes.value0;
                         }
                         ;
-                        throw new Error("Failed pattern match at Pericope (line 435, column 24 - line 437, column 51): " + [refsRes.constructor.name]);
+                        throw new Error("Failed pattern match at Pericope (line 451, column 24 - line 453, column 51): " + [refsRes.constructor.name]);
                       }();
                       var commentaries = function() {
                         if (commRes instanceof Left) {
@@ -10524,22 +10562,22 @@ var handle = function(dictMonadAff) {
                           return commRes.value0;
                         }
                         ;
-                        throw new Error("Failed pattern match at Pericope (line 438, column 32 - line 440, column 67): " + [commRes.constructor.name]);
+                        throw new Error("Failed pattern match at Pericope (line 454, column 32 - line 456, column 67): " + [commRes.constructor.name]);
                       }();
                       return modify_3(function(v1) {
-                        var $211 = {};
-                        for (var $212 in v1) {
-                          if ({}.hasOwnProperty.call(v1, $212)) {
-                            $211[$212] = v1[$212];
+                        var $213 = {};
+                        for (var $214 in v1) {
+                          if ({}.hasOwnProperty.call(v1, $214)) {
+                            $213[$214] = v1[$214];
                           }
                           ;
                         }
                         ;
-                        $211.crossRefs = new CrossRefsLoaded({
+                        $213.crossRefs = new CrossRefsLoaded({
                           references: refs,
                           commentaries
                         });
-                        return $211;
+                        return $213;
                       });
                     }());
                   });
@@ -10609,31 +10647,31 @@ var handle = function(dictMonadAff) {
     if (v instanceof Receive2) {
       return modify_3(function(st) {
         var shouldCloseSource = st.editingSource && v.value0.source === st.pericope.source;
-        var $222 = {};
-        for (var $223 in st) {
-          if ({}.hasOwnProperty.call(st, $223)) {
-            $222[$223] = st[$223];
+        var $224 = {};
+        for (var $225 in st) {
+          if ({}.hasOwnProperty.call(st, $225)) {
+            $224[$225] = st[$225];
           }
           ;
         }
         ;
-        $222.pericope = v.value0;
-        $222.crossRefs = CrossRefsIdle.value;
-        $222.editingSource = function() {
+        $224.pericope = v.value0;
+        $224.crossRefs = CrossRefsIdle.value;
+        $224.editingSource = function() {
           if (shouldCloseSource) {
             return false;
           }
           ;
           return st.editingSource;
         }();
-        $222.originalSource = function() {
+        $224.originalSource = function() {
           if (shouldCloseSource) {
             return Nothing.value;
           }
           ;
           return st.originalSource;
         }();
-        return $222;
+        return $224;
       });
     }
     ;
@@ -10646,7 +10684,7 @@ var handle = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 301, column 10 - line 491, column 76): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 317, column 10 - line 507, column 76): " + [v.constructor.name]);
   };
 };
 var cancelEdits = function(dictMonadAff) {
@@ -10662,16 +10700,16 @@ var handleQuery = function(dictMonadAff) {
   return function(v) {
     if (v instanceof SetData) {
       return discard12(modify_3(function(v1) {
-        var $228 = {};
-        for (var $229 in v1) {
-          if ({}.hasOwnProperty.call(v1, $229)) {
-            $228[$229] = v1[$229];
+        var $230 = {};
+        for (var $231 in v1) {
+          if ({}.hasOwnProperty.call(v1, $231)) {
+            $230[$231] = v1[$231];
           }
           ;
         }
         ;
-        $228.pericope = v.value0;
-        return $228;
+        $230.pericope = v.value0;
+        return $230;
       }))(function() {
         return pure14(new Just(v.value1));
       });
@@ -10691,7 +10729,7 @@ var handleQuery = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 498, column 15 - line 508, column 18): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 514, column 15 - line 524, column 18): " + [v.constructor.name]);
   };
 };
 var component = function(dictMonadAff) {
@@ -10713,8 +10751,8 @@ var component = function(dictMonadAff) {
       finalize: defaultEval.finalize,
       handleAction: handle(dictMonadAff),
       handleQuery: handleQuery(dictMonadAff),
-      receive: function($237) {
-        return Just.create(Receive2.create($237));
+      receive: function($239) {
+        return Just.create(Receive2.create($239));
       }
     })
   });

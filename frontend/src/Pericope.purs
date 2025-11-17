@@ -4,7 +4,7 @@ import Prelude
 
 import Api (fetchCommentaries, fetchCrossReferences, fetchSources, fetchVerses)
 import Data.Array (catMaybes)
-import Data.String (joinWith)
+import Data.String (Pattern(..), contains, joinWith, toLower)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -173,33 +173,49 @@ render st =
                     ]
                   else
                     let
-                      languages = Set.toUnfoldable (Set.fromFoldable (infos <#> (unwrap >>> _.language))) :: Array String
-                      renderOption infoRec =
+                      filterValue = toLower st.pericope.source
+                      filterPattern = Pattern filterValue
+                      matchesFilter infoRec =
                         let
                           info = unwrap infoRec
-                          isActive = info.name == st.pericope.source
-                          cls = "source-option" <> if isActive then " active" else ""
+                          haystack = toLower info.name <> " " <> toLower info.description_short
                         in
-                        HH.li
-                          [ HP.class_ (HH.ClassName cls)
-                          , HE.onClick \_ -> SelectSource info.name
-                          ]
-                          [ HH.div [ HP.class_ (HH.ClassName "source-option-name") ] [ HH.text info.name ]
-                          , HH.div [ HP.class_ (HH.ClassName "source-option-description") ] [ HH.text info.description_short ]
-                          ]
-                      renderGroup lang =
-                        let
-                          entries = infos # A.filter (\infoRec -> (unwrap infoRec).language == lang)
-                          sorted = A.sortBy (comparing (unwrap >>> _.name)) entries
-                        in
-                        HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
-                          [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
-                          , HH.ul [ HP.class_ (HH.ClassName "source-options") ] (renderOption <$> sorted)
-                          ]
-                      sortedLanguages = A.sort languages
+                        filterValue == "" || contains filterPattern haystack
+                      filteredInfos = infos # A.filter matchesFilter
                     in
-                    [ HH.div [ HP.class_ (HH.ClassName "source-list") ] (renderGroup <$> sortedLanguages)
-                    ]
+                    if A.null filteredInfos then
+                      [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
+                          [ HH.text "No sources match your search." ]
+                      ]
+                    else
+                      let
+                        languages = Set.toUnfoldable (Set.fromFoldable (filteredInfos <#> (unwrap >>> _.language))) :: Array String
+                        renderOption infoRec =
+                          let
+                            info = unwrap infoRec
+                            isActive = info.name == st.pericope.source
+                            cls = "source-option" <> if isActive then " active" else ""
+                          in
+                          HH.li
+                            [ HP.class_ (HH.ClassName cls)
+                            , HE.onClick \_ -> SelectSource info.name
+                            ]
+                            [ HH.div [ HP.class_ (HH.ClassName "source-option-name") ] [ HH.text info.name ]
+                            , HH.div [ HP.class_ (HH.ClassName "source-option-description") ] [ HH.text info.description_short ]
+                            ]
+                        renderGroup lang =
+                          let
+                            entries = filteredInfos # A.filter (\infoRec -> (unwrap infoRec).language == lang)
+                            sorted = A.sortBy (comparing (unwrap >>> _.name)) entries
+                          in
+                          HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
+                            [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
+                            , HH.ul [ HP.class_ (HH.ClassName "source-options") ] (renderOption <$> sorted)
+                            ]
+                        sortedLanguages = A.sort languages
+                      in
+                      [ HH.div [ HP.class_ (HH.ClassName "source-list") ] (renderGroup <$> sortedLanguages)
+                      ]
             in
             HH.div
               [ HP.class_ (HH.ClassName "source editing")
