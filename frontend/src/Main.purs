@@ -26,7 +26,9 @@ import Type.Proxy (Proxy(..))
 import Pericope as P
 import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
+import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
+import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -70,6 +72,8 @@ data Action
   | CloseSearchResults
   | HandleSearchKey KeyboardEvent
   | HandleDocumentClick
+  | SearchInputClick MouseEvent
+  | SearchResultsClick MouseEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -101,17 +105,17 @@ renderSearchSection st =
     [ HP.class_ (HH.ClassName "search-section") ]
     ( [ HH.div
           [ HP.class_ (HH.ClassName "search-input-group") ]
-          [ HH.input
-              [ HP.attr (HH.AttrName "type") "text"
-              , HP.placeholder "Search verses"
-              , HP.value st.searchInput
-              , HE.onValueInput UpdateSearchInput
-              , HE.onFocus \_ -> FocusSearchInput
-              , HE.onClick \_ -> FocusSearchInput
-              , HE.onKeyDown HandleSearchKey
+              [ HH.input
+                  [ HP.attr (HH.AttrName "type") "text"
+                  , HP.placeholder "Search verses"
+                  , HP.value st.searchInput
+                  , HE.onValueInput UpdateSearchInput
+                  , HE.onFocus \_ -> FocusSearchInput
+                  , HE.onClick SearchInputClick
+                  , HE.onKeyDown HandleSearchKey
+                  ]
               ]
           ]
-      ]
         <> renderSearchFeedback st
         <> renderSearchResults st
     )
@@ -137,7 +141,9 @@ renderSearchResults st =
     []
   else
     [ HH.ul
-        [ HP.class_ (HH.ClassName "search-results") ]
+        [ HP.class_ (HH.ClassName "search-results")
+        , HE.onClick SearchResultsClick
+        ]
         (st.searchResults <#> renderSearchResult)
     ]
 
@@ -267,8 +273,16 @@ handle action = case action of
     _ -> pure unit
 
   HandleDocumentClick -> do
+    H.modify_ \st -> st { searchOpen = false }
     st <- H.get
     for_ st.pericopes cancelEditing
+
+  SearchInputClick ev -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    handle FocusSearchInput
+
+  SearchResultsClick ev ->
+    H.liftEffect $ stopPropagation (toEvent ev)
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
