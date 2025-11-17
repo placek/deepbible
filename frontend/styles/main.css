@@ -86,29 +86,6 @@ body {
   content: attr(data-verse);
 }
 
-.help-link {
-  cursor: pointer;
-}
-
-.help-modal-backdrop {
-  background-color: rgba(0, 43, 54, 0.7);
-}
-
-.help-modal {
-  box-shadow: 0 0 1.5em rgba(0, 0, 0, 0.35);
-  outline: none;
-}
-
-.help-modal h3 {
-  margin-top: 0;
-}
-
-.help-close {
-  border: none;
-  border-radius: 0.3em;
-  cursor: pointer;
-}
-
 .search-section {
   max-width: 70em;
   margin: 1em auto;

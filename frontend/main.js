@@ -1157,24 +1157,24 @@ var _new = function(val) {
     return { value: val };
   };
 };
-var read = function(ref3) {
+var read = function(ref2) {
   return function() {
-    return ref3.value;
+    return ref2.value;
   };
 };
 var modifyImpl = function(f) {
-  return function(ref3) {
+  return function(ref2) {
     return function() {
-      var t = f(ref3.value);
-      ref3.value = t.state;
+      var t = f(ref2.value);
+      ref2.value = t.state;
       return t.value;
     };
   };
 };
 var write = function(val) {
-  return function(ref3) {
+  return function(ref2) {
     return function() {
-      ref3.value = val;
+      ref2.value = val;
     };
   };
 };
@@ -5802,12 +5802,12 @@ var decodeSourceInfo = {
 var decodeCrossReference = {
   decodeJson: function(j) {
     return bind2(decodeJson2(j))(function(obj) {
-      return bind2(getField3(obj)("id"))(function(id4) {
+      return bind2(getField3(obj)("id"))(function(id3) {
         return bind2(getField3(obj)("address"))(function(address2) {
           return bind2(getField3(obj)("reference"))(function(reference) {
             return bind2(getField1(obj)("rate"))(function(rate) {
               return pure4({
-                id: id4,
+                id: id3,
                 address: address2,
                 reference,
                 rate
@@ -6110,11 +6110,6 @@ function _read(nothing, just, value16) {
   } else {
     return nothing;
   }
-}
-function focus(elt) {
-  return function() {
-    return elt.focus();
-  };
 }
 
 // output/Web.HTML.HTMLElement/index.js
@@ -7107,7 +7102,6 @@ var propToStrKey = function(v) {
   throw new Error("Failed pattern match at Halogen.VDom.DOM.Prop (line 182, column 16 - line 187, column 16): " + [v.constructor.name]);
 };
 var propFromString = unsafeCoerce2;
-var propFromInt = unsafeCoerce2;
 var propFromBoolean = unsafeCoerce2;
 var buildProp = function(emit) {
   return function(el) {
@@ -7210,14 +7204,14 @@ var buildProp = function(emit) {
             return v2;
           }
           ;
-          var ref3 = $$new(v2.value1)();
+          var ref2 = $$new(v2.value1)();
           var listener = eventListener(function(ev) {
             return function __do2() {
-              var f$prime = read(ref3)();
+              var f$prime = read(ref2)();
               return mbEmit(f$prime(ev));
             };
           })();
-          pokeMutMap(v2.value0, new Tuple(listener, ref3), events);
+          pokeMutMap(v2.value0, new Tuple(listener, ref2), events);
           addEventListener2(v2.value0, listener, el);
           return v2;
         }
@@ -7271,21 +7265,6 @@ var toPropValue = function(dict) {
 var text5 = function($29) {
   return HTML(Text.create($29));
 };
-var ref = function(f) {
-  return new Ref(function($30) {
-    return f(function(v) {
-      if (v instanceof Created) {
-        return new Just(v.value0);
-      }
-      ;
-      if (v instanceof Removed) {
-        return Nothing.value;
-      }
-      ;
-      throw new Error("Failed pattern match at Halogen.HTML.Core (line 109, column 21 - line 111, column 23): " + [v.constructor.name]);
-    }($30));
-  });
-};
 var prop = function(dictIsProp) {
   var toPropValue1 = toPropValue(dictIsProp);
   return function(v) {
@@ -7297,9 +7276,6 @@ var prop = function(dictIsProp) {
 };
 var isPropString = {
   toPropValue: propFromString
-};
-var isPropInt = {
-  toPropValue: propFromInt
 };
 var isPropBoolean = {
   toPropValue: propFromBoolean
@@ -7955,7 +7931,6 @@ var create3 = function __do() {
 };
 
 // output/Halogen.Query.HalogenM/index.js
-var identity10 = /* @__PURE__ */ identity(categoryFn);
 var SubscriptionId = function(x) {
   return x;
 };
@@ -8136,9 +8111,6 @@ var monadAffHalogenM = function(dictMonadAff) {
       return monadEffectHalogenM1;
     }
   };
-};
-var getRef = function(p2) {
-  return liftF(new GetRef(p2, identity10));
 };
 var functorHalogenM = freeFunctor;
 var bindHalogenM = freeBind;
@@ -8363,8 +8335,6 @@ var componentSlot = function() {
 var element2 = /* @__PURE__ */ function() {
   return element(Nothing.value);
 }();
-var h3 = /* @__PURE__ */ element2("h3");
-var h3_ = /* @__PURE__ */ h3([]);
 var h4 = /* @__PURE__ */ element2("h4");
 var input2 = function(props) {
   return element2("input")(props)([]);
@@ -8372,42 +8342,23 @@ var input2 = function(props) {
 var li = /* @__PURE__ */ element2("li");
 var span4 = /* @__PURE__ */ element2("span");
 var ul = /* @__PURE__ */ element2("ul");
-var dt = /* @__PURE__ */ element2("dt");
-var dt_ = /* @__PURE__ */ dt([]);
-var dl = /* @__PURE__ */ element2("dl");
-var dl_ = /* @__PURE__ */ dl([]);
 var div2 = /* @__PURE__ */ element2("div");
 var div_ = /* @__PURE__ */ div2([]);
-var dd = /* @__PURE__ */ element2("dd");
-var dd_ = /* @__PURE__ */ dd([]);
 var button = /* @__PURE__ */ element2("button");
 var a = /* @__PURE__ */ element2("a");
 
 // output/Halogen.HTML.Properties/index.js
 var unwrap4 = /* @__PURE__ */ unwrap();
-var ref2 = /* @__PURE__ */ function() {
-  var go2 = function(p2) {
-    return function(mel) {
-      return new Just(new RefUpdate(p2, mel));
-    };
-  };
-  return function($29) {
-    return ref(go2($29));
-  };
-}();
 var prop2 = function(dictIsProp) {
   return prop(dictIsProp);
 };
 var prop1 = /* @__PURE__ */ prop2(isPropBoolean);
 var prop22 = /* @__PURE__ */ prop2(isPropString);
-var prop3 = /* @__PURE__ */ prop2(isPropInt);
-var tabIndex2 = /* @__PURE__ */ prop3("tabIndex");
 var title2 = /* @__PURE__ */ prop22("title");
 var value13 = function(dictIsProp) {
   return prop2(dictIsProp)("value");
 };
 var placeholder3 = /* @__PURE__ */ prop22("placeholder");
-var id3 = /* @__PURE__ */ prop22("id");
 var href4 = /* @__PURE__ */ prop22("href");
 var draggable2 = /* @__PURE__ */ prop1("draggable");
 var class_ = /* @__PURE__ */ function() {
@@ -8566,11 +8517,11 @@ var onDrop = /* @__PURE__ */ function() {
   };
 }();
 var addForeignPropHandler = function(key2) {
-  return function(prop5) {
+  return function(prop4) {
     return function(reader) {
       return function(f) {
         var go2 = function(a2) {
-          return composeKleisliFlipped5(reader)(readProp2(prop5))(unsafeToForeign(a2));
+          return composeKleisliFlipped5(reader)(readProp2(prop4))(unsafeToForeign(a2));
         };
         return handler$prime(key2)(composeKleisli2(currentTarget)(function(e) {
           return either($$const(Nothing.value))(function($85) {
@@ -8582,20 +8533,6 @@ var addForeignPropHandler = function(key2) {
   };
 };
 var onValueInput = /* @__PURE__ */ addForeignPropHandler(input)("value")(readString2);
-
-// output/Halogen.HTML.Properties.ARIA/index.js
-var role = /* @__PURE__ */ attr2("role");
-
-// output/Halogen.Query/index.js
-var bindFlipped7 = /* @__PURE__ */ bindFlipped(bindMaybe);
-var getHTMLElementRef = /* @__PURE__ */ function() {
-  var $24 = map(functorHalogenM)(function(v) {
-    return bindFlipped7(fromElement)(v);
-  });
-  return function($25) {
-    return $24(getRef($25));
-  };
-}();
 
 // output/Control.Monad.Fork.Class/index.js
 var monadForkAff = {
@@ -8609,7 +8546,7 @@ var monadForkAff = {
     return functorFiber;
   }
 };
-var fork2 = function(dict) {
+var fork = function(dict) {
   return dict.fork;
 };
 
@@ -8688,7 +8625,7 @@ var initDriverState = function(component3) {
 
 // output/Halogen.Aff.Driver.Eval/index.js
 var traverse_4 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableMaybe);
-var bindFlipped8 = /* @__PURE__ */ bindFlipped(bindMaybe);
+var bindFlipped7 = /* @__PURE__ */ bindFlipped(bindMaybe);
 var lookup5 = /* @__PURE__ */ lookup2(ordSubscriptionId);
 var bind12 = /* @__PURE__ */ bind(bindAff);
 var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
@@ -8696,7 +8633,7 @@ var discard3 = /* @__PURE__ */ discard(discardUnit);
 var discard1 = /* @__PURE__ */ discard3(bindAff);
 var traverse_12 = /* @__PURE__ */ traverse_(applicativeAff);
 var traverse_22 = /* @__PURE__ */ traverse_12(foldableList);
-var fork3 = /* @__PURE__ */ fork2(monadForkAff);
+var fork3 = /* @__PURE__ */ fork(monadForkAff);
 var parSequence_2 = /* @__PURE__ */ parSequence_(parallelAff)(applicativeParAff)(foldableList);
 var pure9 = /* @__PURE__ */ pure(applicativeAff);
 var map21 = /* @__PURE__ */ map(functorCoyoneda);
@@ -8715,23 +8652,23 @@ var lookup22 = /* @__PURE__ */ lookup2(ordString);
 var foldFree2 = /* @__PURE__ */ foldFree(monadRecAff);
 var alter2 = /* @__PURE__ */ alter(ordString);
 var unsubscribe3 = function(sid) {
-  return function(ref3) {
+  return function(ref2) {
     return function __do2() {
-      var v = read(ref3)();
+      var v = read(ref2)();
       var subs = read(v.subscriptions)();
-      return traverse_4(unsubscribe)(bindFlipped8(lookup5(sid))(subs))();
+      return traverse_4(unsubscribe)(bindFlipped7(lookup5(sid))(subs))();
     };
   };
 };
-var queueOrRun = function(ref3) {
+var queueOrRun = function(ref2) {
   return function(au) {
-    return bind12(liftEffect4(read(ref3)))(function(v) {
+    return bind12(liftEffect4(read(ref2)))(function(v) {
       if (v instanceof Nothing) {
         return au;
       }
       ;
       if (v instanceof Just) {
-        return liftEffect4(write(new Just(new Cons(au, v.value0)))(ref3));
+        return liftEffect4(write(new Just(new Cons(au, v.value0)))(ref2));
       }
       ;
       throw new Error("Failed pattern match at Halogen.Aff.Driver.Eval (line 188, column 33 - line 190, column 57): " + [v.constructor.name]);
@@ -8758,8 +8695,8 @@ var handleLifecycle = function(lchs) {
 };
 var handleAff = /* @__PURE__ */ runAff_(/* @__PURE__ */ either(throwException)(/* @__PURE__ */ $$const(/* @__PURE__ */ pure(applicativeEffect)(unit))));
 var fresh = function(f) {
-  return function(ref3) {
-    return bind12(liftEffect4(read(ref3)))(function(v) {
+  return function(ref2) {
+    return bind12(liftEffect4(read(ref2)))(function(v) {
       return liftEffect4(modify$prime(function(i2) {
         return {
           state: i2 + 1 | 0,
@@ -8770,10 +8707,10 @@ var fresh = function(f) {
   };
 };
 var evalQ = function(render3) {
-  return function(ref3) {
+  return function(ref2) {
     return function(q2) {
-      return bind12(liftEffect4(read(ref3)))(function(v) {
-        return evalM(render3)(ref3)(v["component"]["eval"](new Query(map21(Just.create)(liftCoyoneda(q2)), $$const(Nothing.value))));
+      return bind12(liftEffect4(read(ref2)))(function(v) {
+        return evalM(render3)(ref2)(v["component"]["eval"](new Query(map21(Just.create)(liftCoyoneda(q2)), $$const(Nothing.value))));
       });
     };
   };
@@ -8781,9 +8718,9 @@ var evalQ = function(render3) {
 var evalM = function(render3) {
   return function(initRef) {
     return function(v) {
-      var evalChildQuery = function(ref3) {
+      var evalChildQuery = function(ref2) {
         return function(cqb) {
-          return bind12(liftEffect4(read(ref3)))(function(v1) {
+          return bind12(liftEffect4(read(ref2)))(function(v1) {
             return unChildQueryBox(function(v2) {
               var evalChild = function(v3) {
                 return parallel3(bind12(liftEffect4(read(v3)))(function(dsx) {
@@ -8797,10 +8734,10 @@ var evalM = function(render3) {
           });
         };
       };
-      var go2 = function(ref3) {
+      var go2 = function(ref2) {
         return function(v1) {
           if (v1 instanceof State) {
-            return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(liftEffect4(read(ref2)))(function(v2) {
               var v3 = v1.value0(v2.state);
               if (unsafeRefEq(v2.state)(v3.value1)) {
                 return pure9(v3.value0);
@@ -8824,8 +8761,8 @@ var evalM = function(render3) {
                   forks: v2.forks,
                   lifecycleHandlers: v2.lifecycleHandlers,
                   state: v3.value1
-                })(ref3)))(function() {
-                  return discard1(handleLifecycle(v2.lifecycleHandlers)(render3(v2.lifecycleHandlers)(ref3)))(function() {
+                })(ref2)))(function() {
+                  return discard1(handleLifecycle(v2.lifecycleHandlers)(render3(v2.lifecycleHandlers)(ref2)))(function() {
                     return pure9(v3.value0);
                   });
                 });
@@ -8836,11 +8773,11 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof Subscribe) {
-            return bind12(fresh(SubscriptionId)(ref3))(function(sid) {
+            return bind12(fresh(SubscriptionId)(ref2))(function(sid) {
               return bind12(liftEffect4(subscribe(v1.value0(sid))(function(act) {
-                return handleAff(evalF(render3)(ref3)(new Action(act)));
+                return handleAff(evalF(render3)(ref2)(new Action(act)));
               })))(function(finalize) {
-                return bind12(liftEffect4(read(ref3)))(function(v2) {
+                return bind12(liftEffect4(read(ref2)))(function(v2) {
                   return discard1(liftEffect4(modify_(map22(insert8(sid)(finalize)))(v2.subscriptions)))(function() {
                     return pure9(v1.value1(sid));
                   });
@@ -8850,7 +8787,7 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof Unsubscribe) {
-            return discard1(liftEffect4(unsubscribe3(v1.value0)(ref3)))(function() {
+            return discard1(liftEffect4(unsubscribe3(v1.value0)(ref2)))(function() {
               return pure9(v1.value1);
             });
           }
@@ -8860,11 +8797,11 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof ChildQuery2) {
-            return evalChildQuery(ref3)(v1.value0);
+            return evalChildQuery(ref2)(v1.value0);
           }
           ;
           if (v1 instanceof Raise) {
-            return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(liftEffect4(read(ref2)))(function(v2) {
               return bind12(liftEffect4(read(v2.handlerRef)))(function(handler3) {
                 return discard1(queueOrRun(v2.pendingOuts)(handler3(v1.value0)))(function() {
                   return pure9(v1.value1);
@@ -8875,7 +8812,7 @@ var evalM = function(render3) {
           ;
           if (v1 instanceof Par) {
             return sequential2(retractFreeAp2(hoistFreeAp(function() {
-              var $119 = evalM(render3)(ref3);
+              var $119 = evalM(render3)(ref2);
               return function($120) {
                 return parallel3($119($120));
               };
@@ -8883,13 +8820,13 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof Fork) {
-            return bind12(fresh(ForkId)(ref3))(function(fid) {
-              return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(fresh(ForkId)(ref2))(function(fid) {
+              return bind12(liftEffect4(read(ref2)))(function(v2) {
                 return bind12(liftEffect4($$new(false)))(function(doneRef) {
                   return bind12(fork3($$finally(liftEffect4(function __do2() {
                     modify_($$delete5(fid))(v2.forks)();
                     return write(true)(doneRef)();
-                  }))(evalM(render3)(ref3)(v1.value0))))(function(fiber) {
+                  }))(evalM(render3)(ref2)(v1.value0))))(function(fiber) {
                     return discard1(liftEffect4(unlessM2(read(doneRef))(modify_(insert12(fid)(fiber))(v2.forks))))(function() {
                       return pure9(v1.value1(fid));
                     });
@@ -8900,7 +8837,7 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof Join) {
-            return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(liftEffect4(read(ref2)))(function(v2) {
               return bind12(liftEffect4(read(v2.forks)))(function(forkMap) {
                 return discard1(traverse_32(joinFiber)(lookup12(v1.value0)(forkMap)))(function() {
                   return pure9(v1.value1);
@@ -8910,7 +8847,7 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof Kill) {
-            return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(liftEffect4(read(ref2)))(function(v2) {
               return bind12(liftEffect4(read(v2.forks)))(function(forkMap) {
                 return discard1(traverse_32(killFiber(error("Cancelled")))(lookup12(v1.value0)(forkMap)))(function() {
                   return pure9(v1.value1);
@@ -8920,7 +8857,7 @@ var evalM = function(render3) {
           }
           ;
           if (v1 instanceof GetRef) {
-            return bind12(liftEffect4(read(ref3)))(function(v2) {
+            return bind12(liftEffect4(read(ref2)))(function(v2) {
               return pure9(v1.value1(lookup22(v1.value0)(v2.refs)));
             });
           }
@@ -8933,10 +8870,10 @@ var evalM = function(render3) {
   };
 };
 var evalF = function(render3) {
-  return function(ref3) {
+  return function(ref2) {
     return function(v) {
       if (v instanceof RefUpdate) {
-        return liftEffect4(flip(modify_)(ref3)(mapDriverState(function(st) {
+        return liftEffect4(flip(modify_)(ref2)(mapDriverState(function(st) {
           return {
             component: st.component,
             state: st.state,
@@ -8959,8 +8896,8 @@ var evalF = function(render3) {
       }
       ;
       if (v instanceof Action) {
-        return bind12(liftEffect4(read(ref3)))(function(v1) {
-          return evalM(render3)(ref3)(v1["component"]["eval"](new Action2(v.value0, unit)));
+        return bind12(liftEffect4(read(ref2)))(function(v1) {
+          return evalM(render3)(ref2)(v1["component"]["eval"](new Action2(v.value0, unit)));
         });
       }
       ;
@@ -8974,8 +8911,8 @@ var bind6 = /* @__PURE__ */ bind(bindEffect);
 var discard4 = /* @__PURE__ */ discard(discardUnit);
 var for_2 = /* @__PURE__ */ for_(applicativeEffect)(foldableMaybe);
 var traverse_5 = /* @__PURE__ */ traverse_(applicativeAff)(foldableList);
-var fork4 = /* @__PURE__ */ fork2(monadForkAff);
-var bindFlipped9 = /* @__PURE__ */ bindFlipped(bindEffect);
+var fork4 = /* @__PURE__ */ fork(monadForkAff);
+var bindFlipped8 = /* @__PURE__ */ bindFlipped(bindEffect);
 var traverse_13 = /* @__PURE__ */ traverse_(applicativeEffect);
 var traverse_23 = /* @__PURE__ */ traverse_13(foldableMaybe);
 var traverse_33 = /* @__PURE__ */ traverse_13(foldableMap);
@@ -9000,10 +8937,10 @@ var newLifecycleHandlers = /* @__PURE__ */ function() {
     finalizers: Nil.value
   });
 }();
-var handlePending = function(ref3) {
+var handlePending = function(ref2) {
   return function __do2() {
-    var queue = read(ref3)();
-    write(Nothing.value)(ref3)();
+    var queue = read(ref2)();
+    write(Nothing.value)(ref2)();
     return for_2(queue)(function() {
       var $59 = traverse_5(fork4);
       return function($60) {
@@ -9014,9 +8951,9 @@ var handlePending = function(ref3) {
 };
 var cleanupSubscriptionsAndForks = function(v) {
   return function __do2() {
-    bindFlipped9(traverse_23(traverse_33(unsubscribe)))(read(v.subscriptions))();
+    bindFlipped8(traverse_23(traverse_33(unsubscribe)))(read(v.subscriptions))();
     write(Nothing.value)(v.subscriptions)();
-    bindFlipped9(traverse_33(function() {
+    bindFlipped8(traverse_33(function() {
       var $61 = killFiber(error("finalized"));
       return function($62) {
         return handleAff($61($62));
@@ -9060,7 +8997,7 @@ var runUI = function(renderSpec2) {
                   initializers: Nil.value,
                   finalizers: pre2.finalizers
                 })(lchs)();
-                bindFlipped9(unDriverStateX(function() {
+                bindFlipped8(unDriverStateX(function() {
                   var $63 = render3(lchs);
                   return function($64) {
                     return $63(function(v) {
@@ -9068,7 +9005,7 @@ var runUI = function(renderSpec2) {
                     }($64));
                   };
                 }()))(read($$var2))();
-                bindFlipped9(squashChildInitializers(lchs)(pre2.initializers))(read($$var2))();
+                bindFlipped8(squashChildInitializers(lchs)(pre2.initializers))(read($$var2))();
                 return $$var2;
               };
             });
@@ -9229,14 +9166,14 @@ var runUI = function(renderSpec2) {
         });
       };
       var evalDriver = function(disposed) {
-        return function(ref3) {
+        return function(ref2) {
           return function(q2) {
             return bind13(liftEffect5(read(disposed)))(function(v) {
               if (v) {
                 return pure13(Nothing.value);
               }
               ;
-              return evalQ(render3)(ref3)(q2);
+              return evalQ(render3)(ref2)(q2);
             });
           };
         };
@@ -9266,7 +9203,7 @@ var runUI = function(renderSpec2) {
         return bind13(liftEffect5($$new(false)))(function(disposed) {
           return handleLifecycle(lchs)(function __do2() {
             var sio = create3();
-            var dsx = bindFlipped9(read)(runComponent(lchs)(function() {
+            var dsx = bindFlipped8(read)(runComponent(lchs)(function() {
               var $78 = notify(sio.listener);
               return function($79) {
                 return liftEffect5($78($79));
@@ -9365,11 +9302,11 @@ var traverse_6 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableMaybe);
 var unwrap5 = /* @__PURE__ */ unwrap();
 var when3 = /* @__PURE__ */ when(applicativeEffect);
 var not2 = /* @__PURE__ */ not(/* @__PURE__ */ heytingAlgebraFunction(/* @__PURE__ */ heytingAlgebraFunction(heytingAlgebraBoolean)));
-var identity11 = /* @__PURE__ */ identity(categoryFn);
+var identity10 = /* @__PURE__ */ identity(categoryFn);
 var bind14 = /* @__PURE__ */ bind(bindAff);
 var liftEffect6 = /* @__PURE__ */ liftEffect(monadEffectAff);
 var map25 = /* @__PURE__ */ map(functorEffect);
-var bindFlipped10 = /* @__PURE__ */ bindFlipped(bindEffect);
+var bindFlipped9 = /* @__PURE__ */ bindFlipped(bindEffect);
 var substInParent = function(v) {
   return function(v1) {
     return function(v2) {
@@ -9507,7 +9444,7 @@ var renderSpec = function(document2) {
     };
     return {
       render: render3,
-      renderChild: identity11,
+      renderChild: identity10,
       removeChild: removeChild3,
       dispose: removeChild3
     };
@@ -9516,7 +9453,7 @@ var renderSpec = function(document2) {
 var runUI2 = function(component3) {
   return function(i2) {
     return function(element3) {
-      return bind14(liftEffect6(map25(toDocument)(bindFlipped10(document)(windowImpl))))(function(document2) {
+      return bind14(liftEffect6(map25(toDocument)(bindFlipped9(document)(windowImpl))))(function(document2) {
         return runUI(renderSpec(document2)(element3))(component3)(i2);
       });
     };
@@ -9546,7 +9483,7 @@ var map26 = /* @__PURE__ */ map(functorArray);
 var toUnfoldable5 = /* @__PURE__ */ toUnfoldable3(unfoldableArray);
 var fromFoldable6 = /* @__PURE__ */ fromFoldable3(foldableArray)(ordString);
 var sort2 = /* @__PURE__ */ sort(ordString);
-var prop4 = /* @__PURE__ */ prop2(isPropString);
+var prop3 = /* @__PURE__ */ prop2(isPropString);
 var bind7 = /* @__PURE__ */ bind(bindHalogenM);
 var pure14 = /* @__PURE__ */ pure(applicativeHalogenM);
 var discard5 = /* @__PURE__ */ discard(discardUnit);
@@ -9994,7 +9931,7 @@ var render = function(st) {
       }
       ;
       return "";
-    }()), attr2("data-chapter")(show3(v.chapter)), attr2("data-verse")(show3(v.verse)), prop4("innerHTML")(v.text), onClick(function(v2) {
+    }()), attr2("data-chapter")(show3(v.chapter)), attr2("data-verse")(show3(v.verse)), prop3("innerHTML")(v.text), onClick(function(v2) {
       return new ToggleSelect(v.verse_id);
     })])([]);
   })), function() {
@@ -10005,7 +9942,7 @@ var render = function(st) {
       })])([text5(v.reference)]);
     };
     var renderCommentary = function(v) {
-      return li([class_("commentary")])([span4([class_("commentary-marker")])([text5(v.marker)]), span4([class_("commentary-text"), prop4("innerHTML")(v.text)])([])]);
+      return li([class_("commentary")])([span4([class_("commentary-marker")])([text5(v.marker)]), span4([class_("commentary-text"), prop3("innerHTML")(v.text)])([])]);
     };
     var renderCrossRefs = function() {
       if (st.crossRefs instanceof CrossRefsIdle) {
@@ -10747,16 +10684,13 @@ var slot2 = /* @__PURE__ */ slot()({
   }
 })(ordInt);
 var component1 = /* @__PURE__ */ component(monadAffAff);
+var map28 = /* @__PURE__ */ map(functorArray);
 var discard6 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
-var map28 = /* @__PURE__ */ map(functorArray);
-var for_3 = /* @__PURE__ */ for_(applicativeHalogenM);
-var for_1 = /* @__PURE__ */ for_3(foldableArray);
+var for_3 = /* @__PURE__ */ for_(applicativeHalogenM)(foldableArray);
 var liftAff2 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
 var pure15 = /* @__PURE__ */ pure(applicativeHalogenM);
 var modify_4 = /* @__PURE__ */ modify_2(monadStateHalogenM);
-var for_22 = /* @__PURE__ */ for_3(foldableMaybe);
-var when5 = /* @__PURE__ */ when(applicativeHalogenM);
 var Initialize2 = /* @__PURE__ */ function() {
   function Initialize3() {
   }
@@ -10832,30 +10766,6 @@ var DropOn = /* @__PURE__ */ function() {
     return new DropOn2(value0);
   };
   return DropOn2;
-}();
-var OpenHelp = /* @__PURE__ */ function() {
-  function OpenHelp2() {
-  }
-  ;
-  OpenHelp2.value = new OpenHelp2();
-  return OpenHelp2;
-}();
-var CloseHelp = /* @__PURE__ */ function() {
-  function CloseHelp2() {
-  }
-  ;
-  CloseHelp2.value = new CloseHelp2();
-  return CloseHelp2;
-}();
-var HandleHelpKey = /* @__PURE__ */ function() {
-  function HandleHelpKey2(value0) {
-    this.value0 = value0;
-  }
-  ;
-  HandleHelpKey2.create = function(value0) {
-    return new HandleHelpKey2(value0);
-  };
-  return HandleHelpKey2;
 }();
 var UpdateSearchInput = /* @__PURE__ */ function() {
   function UpdateSearchInput2(value0) {
@@ -10951,8 +10861,8 @@ var renderSearchResult = function(result) {
   })])([div2([class_("search-result-address")])([text5(details2.source + (" \u2013 " + details2.address))]), div2([class_("search-result-text")])([text5(details2.text)])]);
 };
 var renderSearchResults = function(st) {
-  var $73 = !st.searchOpen || $$null(st.searchResults);
-  if ($73) {
+  var $65 = !st.searchOpen || $$null(st.searchResults);
+  if ($65) {
     return [];
   }
   ;
@@ -10969,15 +10879,15 @@ var renderSearchFeedback = function(st) {
   }
   ;
   if (!st.searchLoading && st.searchError instanceof Nothing) {
-    var $77 = st.searchPerformed && $$null(st.searchResults);
-    if ($77) {
+    var $69 = st.searchPerformed && $$null(st.searchResults);
+    if ($69) {
       return [div2(baseAttrs)([text5("No results")])];
     }
     ;
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Main (line 128, column 6 - line 137, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 118, column 6 - line 127, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
 };
 var renderSearchSection = function(st) {
   return div2([class_("search-section")])(append12([div2([class_("search-input-group")])([input2([attr2("type")("text"), placeholder3("Search verses"), value15(st.searchInput), onValueInput(UpdateSearchInput.create), onFocus(function(v) {
@@ -10986,23 +10896,15 @@ var renderSearchSection = function(st) {
     return FocusSearchInput.value;
   }), onKeyDown(HandleSearchKey.create)])])])(append12(renderSearchFeedback(st))(renderSearchResults(st))));
 };
-var renderHelpLink = function(isOpen) {
-  var attrs = [class_("help-footer")];
-  return div2(attrs)([a([href4("#help"), class_("help-link"), role("button"), attr2("aria-expanded")(function() {
-    if (isOpen) {
-      return "true";
-    }
-    ;
-    return "false";
-  }()), onClick(function(v) {
-    return OpenHelp.value;
-  })])([text5("help")])]);
-};
+var renderFooter = /* @__PURE__ */ div2([/* @__PURE__ */ class_("app-footer")])([/* @__PURE__ */ a([/* @__PURE__ */ href4("https://github.com/placek/deepbible"), /* @__PURE__ */ attr2("target")("_blank"), /* @__PURE__ */ attr2("rel")("noreferrer")])([/* @__PURE__ */ text5("github")])]);
 var pericopeSlot = /* @__PURE__ */ function() {
   return $$Proxy.value;
 }();
 var renderPericope = function(p2) {
   return slot2(pericopeSlot)(p2.id)(component1)(p2)(ChildMsg.create(p2.id));
+};
+var render2 = function(st) {
+  return div_([renderSearchSection(st), div_(map28(renderPericope)(st.pericopes)), renderFooter]);
 };
 var insertPericope = function(address2) {
   return function(source2) {
@@ -11016,17 +10918,17 @@ var insertPericope = function(address2) {
           selected: empty4
         };
         return discard6(put3(function() {
-          var $79 = {};
-          for (var $80 in st) {
-            if ({}.hasOwnProperty.call(st, $80)) {
-              $79[$80] = st[$80];
+          var $70 = {};
+          for (var $71 in st) {
+            if ({}.hasOwnProperty.call(st, $71)) {
+              $70[$71] = st[$71];
             }
             ;
           }
           ;
-          $79.pericopes = snoc(st.pericopes)(pericope);
-          $79.nextId = st.nextId + 1 | 0;
-          return $79;
+          $70.pericopes = snoc(st.pericopes)(pericope);
+          $70.nextId = st.nextId + 1 | 0;
+          return $70;
         }()))(function() {
           return syncUrl;
         });
@@ -11040,7 +10942,6 @@ var initialState = function(v) {
     dragging: Nothing.value,
     droppingOver: Nothing.value,
     nextId: 1,
-    helpOpen: false,
     searchInput: "",
     searchResults: [],
     searchOpen: false,
@@ -11048,23 +10949,6 @@ var initialState = function(v) {
     searchLoading: false,
     searchError: Nothing.value
   };
-};
-var helpModalRef = "help-modal";
-var renderHelpModal = function(v) {
-  if (!v) {
-    return [];
-  }
-  ;
-  if (v) {
-    return [div2([class_("help-modal-backdrop")])([div2([class_("help-modal"), id3("help-modal"), ref2(helpModalRef), tabIndex2(0), onKeyDown(HandleHelpKey.create)])([h3_([text5("How to use deepbible")]), dl_([dt_([text5("Click address \u21E8 type \u21E8 Enter")]), dd_([text5("change pericope address")]), dt_([text5("Click source name \u21E8 type \u21E8 Enter")]), dd_([text5("change pericope source")]), dt_([text5("Click source name \u21E8 select from list")]), dd_([text5("change pericope source")]), dt_([text5("Click \u29C9")]), dd_([text5("duplicate pericope")]), dt_([text5("Click \u2715 ")]), dd_([text5("delete pericope")]), dt_([text5("Drag with \u2630")]), dd_([text5("reorder pericopes")]), dt_([text5("Click verse")]), dd_([text5("highlight verse")]), dt_([text5("With one verse highlighted \u21E8 click address (right margin)")]), dd_([text5("add verse as new pericope")]), dt_([text5("With any verse highlighted \u21E8 click selection address (left margin)")]), dd_([text5("add verse(s) as new pericope")])]), button([class_("help-close"), onClick(function(v1) {
-      return CloseHelp.value;
-    })])([text5("Close")])])])];
-  }
-  ;
-  throw new Error("Failed pattern match at Main (line 188, column 1 - line 188, column 76): " + [v.constructor.name]);
-};
-var render2 = function(st) {
-  return div_(append12([renderSearchSection(st), div_(map28(renderPericope)(st.pericopes)), renderHelpLink(st.helpOpen)])(renderHelpModal(st.helpOpen)));
 };
 var handle2 = function(action2) {
   if (action2 instanceof Initialize2) {
@@ -11080,14 +10964,14 @@ var handle2 = function(action2) {
         source: "PAU"
       }];
       var seeds = function() {
-        var $84 = $$null(urlSeeds);
-        if ($84) {
+        var $74 = $$null(urlSeeds);
+        if ($74) {
           return defaultSeeds;
         }
         ;
         return urlSeeds;
       }();
-      return for_1(seeds)(function(v2) {
+      return for_3(seeds)(function(v2) {
         return bind8(liftAff2(fetchVerses(v2.address)(v2.source)))(function(res) {
           if (res instanceof Left) {
             return pure15(unit);
@@ -11097,7 +10981,7 @@ var handle2 = function(action2) {
             return insertPericope(v2.address)(v2.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Main (line 243, column 7 - line 245, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 184, column 7 - line 186, column 61): " + [res.constructor.name]);
         });
       });
     });
@@ -11109,43 +10993,43 @@ var handle2 = function(action2) {
   ;
   if (action2 instanceof UpdateSearchInput) {
     return modify_4(function(st) {
-      var $94 = {};
-      for (var $95 in st) {
-        if ({}.hasOwnProperty.call(st, $95)) {
-          $94[$95] = st[$95];
+      var $84 = {};
+      for (var $85 in st) {
+        if ({}.hasOwnProperty.call(st, $85)) {
+          $84[$85] = st[$85];
         }
         ;
       }
       ;
-      $94.searchInput = action2.value0;
-      return $94;
+      $84.searchInput = action2.value0;
+      return $84;
     });
   }
   ;
   if (action2 instanceof SubmitSearch) {
     return bind8(get5)(function(st) {
       var query2 = trim(st.searchInput);
-      var $98 = query2 === "";
-      if ($98) {
+      var $88 = query2 === "";
+      if ($88) {
         return pure15(unit);
       }
       ;
       return discard6(modify_4(function(state3) {
-        var $99 = {};
-        for (var $100 in state3) {
-          if ({}.hasOwnProperty.call(state3, $100)) {
-            $99[$100] = state3[$100];
+        var $89 = {};
+        for (var $90 in state3) {
+          if ({}.hasOwnProperty.call(state3, $90)) {
+            $89[$90] = state3[$90];
           }
           ;
         }
         ;
-        $99.searchInput = query2;
-        $99.searchLoading = true;
-        $99.searchError = Nothing.value;
-        $99.searchOpen = true;
-        $99.searchPerformed = true;
-        $99.searchResults = [];
-        return $99;
+        $89.searchInput = query2;
+        $89.searchLoading = true;
+        $89.searchError = Nothing.value;
+        $89.searchOpen = true;
+        $89.searchPerformed = true;
+        $89.searchResults = [];
+        return $89;
       }))(function() {
         return bind8(liftAff2(searchVerses(query2)))(function(res) {
           return handle2(new ReceiveSearchResults(res));
@@ -11157,55 +11041,55 @@ var handle2 = function(action2) {
   if (action2 instanceof ReceiveSearchResults) {
     if (action2.value0 instanceof Left) {
       return modify_4(function(st) {
-        var $103 = {};
-        for (var $104 in st) {
-          if ({}.hasOwnProperty.call(st, $104)) {
-            $103[$104] = st[$104];
+        var $93 = {};
+        for (var $94 in st) {
+          if ({}.hasOwnProperty.call(st, $94)) {
+            $93[$94] = st[$94];
           }
           ;
         }
         ;
-        $103.searchLoading = false;
-        $103.searchError = new Just(action2.value0.value0);
-        $103.searchResults = [];
-        return $103;
+        $93.searchLoading = false;
+        $93.searchError = new Just(action2.value0.value0);
+        $93.searchResults = [];
+        return $93;
       });
     }
     ;
     if (action2.value0 instanceof Right) {
       return modify_4(function(st) {
-        var $107 = {};
-        for (var $108 in st) {
-          if ({}.hasOwnProperty.call(st, $108)) {
-            $107[$108] = st[$108];
+        var $97 = {};
+        for (var $98 in st) {
+          if ({}.hasOwnProperty.call(st, $98)) {
+            $97[$98] = st[$98];
           }
           ;
         }
         ;
-        $107.searchLoading = false;
-        $107.searchError = Nothing.value;
-        $107.searchResults = action2.value0.value0;
-        $107.searchOpen = true;
-        return $107;
+        $97.searchLoading = false;
+        $97.searchError = Nothing.value;
+        $97.searchResults = action2.value0.value0;
+        $97.searchOpen = true;
+        return $97;
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 270, column 31 - line 283, column 10): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 211, column 31 - line 224, column 10): " + [action2.value0.constructor.name]);
   }
   ;
   if (action2 instanceof SelectSearchResult) {
     var details2 = unwrap7(action2.value0);
     return discard6(modify_4(function(st) {
-      var $112 = {};
-      for (var $113 in st) {
-        if ({}.hasOwnProperty.call(st, $113)) {
-          $112[$113] = st[$113];
+      var $102 = {};
+      for (var $103 in st) {
+        if ({}.hasOwnProperty.call(st, $103)) {
+          $102[$103] = st[$103];
         }
         ;
       }
       ;
-      $112.searchOpen = false;
-      return $112;
+      $102.searchOpen = false;
+      return $102;
     }))(function() {
       return bind8(liftAff2(fetchVerses(details2.address)(details2.source)))(function(res) {
         if (res instanceof Left) {
@@ -11216,14 +11100,14 @@ var handle2 = function(action2) {
           return insertPericope(details2.address)(details2.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 289, column 5 - line 291, column 75): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 230, column 5 - line 232, column 75): " + [res.constructor.name]);
       });
     });
   }
   ;
   if (action2 instanceof FocusSearchInput) {
     return modify_4(function(st) {
-      var $121 = st.searchPerformed || (st.searchLoading || function() {
+      var $111 = st.searchPerformed || (st.searchLoading || function() {
         if (st.searchError instanceof Just) {
           return true;
         }
@@ -11232,19 +11116,19 @@ var handle2 = function(action2) {
           return false;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 295, column 53 - line 297, column 29): " + [st.searchError.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 236, column 53 - line 238, column 29): " + [st.searchError.constructor.name]);
       }());
-      if ($121) {
-        var $122 = {};
-        for (var $123 in st) {
-          if ({}.hasOwnProperty.call(st, $123)) {
-            $122[$123] = st[$123];
+      if ($111) {
+        var $112 = {};
+        for (var $113 in st) {
+          if ({}.hasOwnProperty.call(st, $113)) {
+            $112[$113] = st[$113];
           }
           ;
         }
         ;
-        $122.searchOpen = true;
-        return $122;
+        $112.searchOpen = true;
+        return $112;
       }
       ;
       return st;
@@ -11253,16 +11137,16 @@ var handle2 = function(action2) {
   ;
   if (action2 instanceof CloseSearchResults) {
     return modify_4(function(st) {
-      var $125 = {};
-      for (var $126 in st) {
-        if ({}.hasOwnProperty.call(st, $126)) {
-          $125[$126] = st[$126];
+      var $115 = {};
+      for (var $116 in st) {
+        if ({}.hasOwnProperty.call(st, $116)) {
+          $115[$116] = st[$116];
         }
         ;
       }
       ;
-      $125.searchOpen = false;
-      return $125;
+      $115.searchOpen = false;
+      return $115;
     });
   }
   ;
@@ -11281,46 +11165,46 @@ var handle2 = function(action2) {
   ;
   if (action2 instanceof StartDrag) {
     return modify_4(function(st) {
-      var $130 = {};
-      for (var $131 in st) {
-        if ({}.hasOwnProperty.call(st, $131)) {
-          $130[$131] = st[$131];
+      var $120 = {};
+      for (var $121 in st) {
+        if ({}.hasOwnProperty.call(st, $121)) {
+          $120[$121] = st[$121];
         }
         ;
       }
       ;
-      $130.dragging = new Just(action2.value0);
-      return $130;
+      $120.dragging = new Just(action2.value0);
+      return $120;
     });
   }
   ;
   if (action2 instanceof OverDrag) {
     return modify_4(function(st) {
-      var $134 = {};
-      for (var $135 in st) {
-        if ({}.hasOwnProperty.call(st, $135)) {
-          $134[$135] = st[$135];
+      var $124 = {};
+      for (var $125 in st) {
+        if ({}.hasOwnProperty.call(st, $125)) {
+          $124[$125] = st[$125];
         }
         ;
       }
       ;
-      $134.droppingOver = new Just(action2.value0);
-      return $134;
+      $124.droppingOver = new Just(action2.value0);
+      return $124;
     });
   }
   ;
   if (action2 instanceof LeaveDrag) {
     return modify_4(function(st) {
-      var $138 = {};
-      for (var $139 in st) {
-        if ({}.hasOwnProperty.call(st, $139)) {
-          $138[$139] = st[$139];
+      var $128 = {};
+      for (var $129 in st) {
+        if ({}.hasOwnProperty.call(st, $129)) {
+          $128[$129] = st[$129];
         }
         ;
       }
       ;
-      $138.droppingOver = Nothing.value;
-      return $138;
+      $128.droppingOver = Nothing.value;
+      return $128;
     });
   }
   ;
@@ -11333,65 +11217,25 @@ var handle2 = function(action2) {
       if (st.dragging instanceof Just) {
         var ps = reorder(st.dragging.value0)(action2.value0)(st.pericopes);
         return discard6(put3(function() {
-          var $143 = {};
-          for (var $144 in st) {
-            if ({}.hasOwnProperty.call(st, $144)) {
-              $143[$144] = st[$144];
+          var $133 = {};
+          for (var $134 in st) {
+            if ({}.hasOwnProperty.call(st, $134)) {
+              $133[$134] = st[$134];
             }
             ;
           }
           ;
-          $143.pericopes = ps;
-          $143.dragging = Nothing.value;
-          $143.droppingOver = Nothing.value;
-          return $143;
+          $133.pericopes = ps;
+          $133.dragging = Nothing.value;
+          $133.droppingOver = Nothing.value;
+          return $133;
         }()))(function() {
           return syncUrl;
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 321, column 5 - line 326, column 16): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 262, column 5 - line 267, column 16): " + [st.dragging.constructor.name]);
     });
-  }
-  ;
-  if (action2 instanceof OpenHelp) {
-    return discard6(modify_4(function(st) {
-      var $148 = {};
-      for (var $149 in st) {
-        if ({}.hasOwnProperty.call(st, $149)) {
-          $148[$149] = st[$149];
-        }
-        ;
-      }
-      ;
-      $148.helpOpen = true;
-      return $148;
-    }))(function() {
-      return bind8(getHTMLElementRef(helpModalRef))(function(mEl) {
-        return for_22(mEl)(function($191) {
-          return liftEffect7(focus($191));
-        });
-      });
-    });
-  }
-  ;
-  if (action2 instanceof CloseHelp) {
-    return modify_4(function(st) {
-      var $151 = {};
-      for (var $152 in st) {
-        if ({}.hasOwnProperty.call(st, $152)) {
-          $151[$152] = st[$152];
-        }
-        ;
-      }
-      ;
-      $151.helpOpen = false;
-      return $151;
-    });
-  }
-  ;
-  if (action2 instanceof HandleHelpKey) {
-    return when5(key(action2.value0) === "Escape")(handle2(CloseHelp.value));
   }
   ;
   if (action2 instanceof ChildMsg) {
@@ -11414,30 +11258,30 @@ var handle2 = function(action2) {
               return insertPericope(v2.value0.address)(v2.value0.source)(res.value0);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 348, column 11 - line 350, column 51): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 278, column 11 - line 280, column 51): " + [res.constructor.name]);
           });
         }
         ;
-        throw new Error("Failed pattern match at Main (line 342, column 7 - line 350, column 51): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 272, column 7 - line 280, column 51): " + [v2.constructor.name]);
       });
     }
     ;
     if (action2.value1 instanceof DidRemove) {
       return discard6(modify_4(function(st) {
-        var $163 = length(st.pericopes) > 1;
-        if ($163) {
-          var $164 = {};
-          for (var $165 in st) {
-            if ({}.hasOwnProperty.call(st, $165)) {
-              $164[$165] = st[$165];
+        var $146 = length(st.pericopes) > 1;
+        if ($146) {
+          var $147 = {};
+          for (var $148 in st) {
+            if ({}.hasOwnProperty.call(st, $148)) {
+              $147[$148] = st[$148];
             }
             ;
           }
           ;
-          $164.pericopes = filter(function(q2) {
+          $147.pericopes = filter(function(q2) {
             return q2.id !== action2.value1.value0;
           })(st.pericopes);
-          return $164;
+          return $147;
         }
         ;
         return st;
@@ -11464,23 +11308,23 @@ var handle2 = function(action2) {
     ;
     if (action2.value1 instanceof DidUpdate) {
       return discard6(modify_4(function(st) {
-        var $173 = {};
-        for (var $174 in st) {
-          if ({}.hasOwnProperty.call(st, $174)) {
-            $173[$174] = st[$174];
+        var $156 = {};
+        for (var $157 in st) {
+          if ({}.hasOwnProperty.call(st, $157)) {
+            $156[$157] = st[$157];
           }
           ;
         }
         ;
-        $173.pericopes = mapFlipped4(st.pericopes)(function(q2) {
-          var $172 = q2.id === action2.value1.value0.id;
-          if ($172) {
+        $156.pericopes = mapFlipped4(st.pericopes)(function(q2) {
+          var $155 = q2.id === action2.value1.value0.id;
+          if ($155) {
             return action2.value1.value0;
           }
           ;
           return q2;
         });
-        return $173;
+        return $156;
       }))(function() {
         return syncUrl;
       });
@@ -11496,7 +11340,7 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 379, column 7 - line 381, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 309, column 7 - line 311, column 61): " + [res.constructor.name]);
       });
     }
     ;
@@ -11510,14 +11354,14 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 385, column 7 - line 387, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 315, column 7 - line 317, column 61): " + [res.constructor.name]);
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 339, column 23 - line 387, column 61): " + [action2.value1.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 269, column 23 - line 317, column 61): " + [action2.value1.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at Main (line 232, column 17 - line 387, column 61): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 173, column 17 - line 317, column 61): " + [action2.constructor.name]);
 };
 var component2 = /* @__PURE__ */ function() {
   return mkComponent({

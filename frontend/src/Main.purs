@@ -18,14 +18,12 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.HTML.Properties.ARIA as HPA
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
 import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
-import Web.HTML.HTMLElement (focus)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 
 main :: Effect Unit
@@ -61,9 +59,6 @@ data Action
   | OverDrag PericopeId
   | LeaveDrag PericopeId
   | DropOn PericopeId
-  | OpenHelp
-  | CloseHelp
-  | HandleHelpKey KeyboardEvent
   | UpdateSearchInput String
   | SubmitSearch
   | ReceiveSearchResults (Either String (Array VerseSearchResult))
@@ -78,7 +73,6 @@ initialState _ =
   , dragging: Nothing
   , droppingOver: Nothing
   , nextId: 1
-  , helpOpen: false
   , searchInput: ""
   , searchResults: []
   , searchOpen: false
@@ -87,18 +81,14 @@ initialState _ =
   , searchError: Nothing
   }
 
-helpModalRef :: H.RefLabel
-helpModalRef = H.RefLabel "help-modal"
-
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div_
-    ( [ renderSearchSection st
-      , HH.div_
-          (renderPericope <$> st.pericopes)
-      , renderHelpLink st.helpOpen
-      ] <> renderHelpModal st.helpOpen
-    )
+    [ renderSearchSection st
+    , HH.div_
+        (renderPericope <$> st.pericopes)
+    , renderFooter
+    ]
 
 renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
 renderSearchSection st =
@@ -167,66 +157,17 @@ renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
   HH.slot pericopeSlot p.id P.component p (ChildMsg p.id)
 
-renderHelpLink :: Boolean -> H.ComponentHTML Action ChildSlots Aff
-renderHelpLink isOpen =
-  let
-    attrs =
-      [ HP.class_ (HH.ClassName "help-footer")
-      ]
-  in
-  HH.div attrs
+renderFooter :: H.ComponentHTML Action ChildSlots Aff
+renderFooter =
+  HH.div
+    [ HP.class_ (HH.ClassName "app-footer") ]
     [ HH.a
-        [ HP.href "#help"
-        , HP.class_ (HH.ClassName "help-link")
-        , HPA.role "button"
-        , HP.attr (HH.AttrName "aria-expanded") (if isOpen then "true" else "false")
-        , HE.onClick \_ -> OpenHelp
+        [ HP.href "https://github.com/placek/deepbible"
+        , HP.attr (HH.AttrName "target") "_blank"
+        , HP.attr (HH.AttrName "rel") "noreferrer"
         ]
-        [ HH.text "help" ]
+        [ HH.text "github" ]
     ]
-
-renderHelpModal :: Boolean -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderHelpModal false = []
-renderHelpModal true =
-  [ HH.div
-      [ HP.class_ (HH.ClassName "help-modal-backdrop")
-      ]
-      [ HH.div
-          [ HP.class_ (HH.ClassName "help-modal")
-          , HP.id "help-modal"
-          , HP.ref helpModalRef
-          , HP.tabIndex 0
-          , HE.onKeyDown HandleHelpKey
-          ]
-          [ HH.h3_ [ HH.text "How to use deepbible" ]
-          , HH.dl_
-              [ HH.dt_ [ HH.text "Click address ⇨ type ⇨ Enter" ]
-              , HH.dd_ [ HH.text "change pericope address" ]
-              , HH.dt_ [ HH.text "Click source name ⇨ type ⇨ Enter" ]
-              , HH.dd_ [ HH.text "change pericope source" ]
-              , HH.dt_ [ HH.text "Click source name ⇨ select from list" ]
-              , HH.dd_ [ HH.text "change pericope source" ]
-              , HH.dt_ [ HH.text "Click ⧉" ]
-              , HH.dd_ [ HH.text "duplicate pericope" ]
-              , HH.dt_ [ HH.text "Click ✕ " ]
-              , HH.dd_ [ HH.text "delete pericope" ]
-              , HH.dt_ [ HH.text "Drag with ☰" ]
-              , HH.dd_ [ HH.text "reorder pericopes" ]
-              , HH.dt_ [ HH.text "Click verse" ]
-              , HH.dd_ [ HH.text "highlight verse" ]
-              , HH.dt_ [ HH.text "With one verse highlighted ⇨ click address (right margin)" ]
-              , HH.dd_ [ HH.text "add verse as new pericope" ]
-              , HH.dt_ [ HH.text "With any verse highlighted ⇨ click selection address (left margin)" ]
-              , HH.dd_ [ HH.text "add verse(s) as new pericope" ]
-              ]
-          , HH.button
-              [ HP.class_ (HH.ClassName "help-close")
-              , HE.onClick \_ -> CloseHelp
-              ]
-              [ HH.text "Close" ]
-          ]
-      ]
-  ]
 
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
@@ -324,17 +265,6 @@ handle action = case action of
         let ps = reorder fromId targetId st.pericopes
         H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
         syncUrl
-
-  OpenHelp -> do
-    H.modify_ \st -> st { helpOpen = true }
-    mEl <- H.getHTMLElementRef helpModalRef
-    for_ mEl (H.liftEffect <<< focus)
-
-  CloseHelp ->
-    H.modify_ \st -> st { helpOpen = false }
-
-  HandleHelpKey ev ->
-    when (key ev == "Escape") (handle CloseHelp)
 
   ChildMsg pid out -> case out of
     P.DidDuplicate { id: baseId } -> do

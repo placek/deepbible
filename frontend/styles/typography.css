@@ -133,18 +133,14 @@ h2 {
   text-shadow: none;
 }
 
-.help-footer {
+.app-footer {
   text-align: center;
 }
 
-.help-link {
+.app-footer a {
   text-decoration: none;
 }
 
-.help-link:hover {
+.app-footer a:hover {
   text-decoration: underline;
-}
-
-.help-close {
-  font-size: 1em;
 }

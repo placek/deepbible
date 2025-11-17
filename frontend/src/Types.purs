@@ -134,7 +134,6 @@ type AppState =
   , dragging :: Maybe PericopeId
   , droppingOver :: Maybe PericopeId
   , nextId :: Int
-  , helpOpen :: Boolean
   , searchInput :: String
   , searchResults :: Array VerseSearchResult
   , searchOpen :: Boolean
