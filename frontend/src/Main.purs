@@ -10,6 +10,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Const (Const)
+import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.Common (trim)
 import Data.Functor (void)
 import Effect (Effect)
@@ -154,8 +155,21 @@ renderSearchResult result =
         [ HH.text (details.source <> " – " <> details.address) ]
     , HH.div
         [ HP.class_ (HH.ClassName "search-result-text") ]
-        [ HH.text details.text ]
+        [ HH.text (stripTags details.text) ]
     ]
+
+stripTags :: String -> String
+stripTags = fromCharArray <<< go false <<< toCharArray
+  where
+  go :: Boolean -> Array Char -> Array Char
+  go insideTag chars =
+    case A.uncons chars of
+      Nothing -> []
+      Just { head: c, tail: cs }
+        | c == '<' -> go true cs
+        | c == '>' -> go false cs
+        | insideTag -> go insideTag cs
+        | otherwise -> A.cons c (go insideTag cs)
 
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
