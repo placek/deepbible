@@ -11,6 +11,7 @@ import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Const (Const)
 import Data.String.Common (trim)
+import Data.Functor (void)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen as H
@@ -37,6 +38,7 @@ type ChildSlots =
 pericopeSlot :: Proxy "pericope"
 pericopeSlot = Proxy
 
+type RootQuery :: Type -> Type
 type RootQuery = Const Void
 
 component :: H.Component RootQuery Unit Void Aff
@@ -66,6 +68,7 @@ data Action
   | FocusSearchInput
   | CloseSearchResults
   | HandleSearchKey KeyboardEvent
+  | HandleDocumentClick
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -83,7 +86,8 @@ initialState _ =
 
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
-  HH.div_
+  HH.div
+    [ HE.onClick \_ -> HandleDocumentClick ]
     [ renderSearchSection st
     , HH.div_
         (renderPericope <$> st.pericopes)
@@ -248,6 +252,10 @@ handle action = case action of
     "Escape" -> handle CloseSearchResults
     _ -> pure unit
 
+  HandleDocumentClick -> do
+    st <- H.get
+    for_ st.pericopes cancelEditing
+
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
 
@@ -315,6 +323,13 @@ handle action = case action of
       case res of
         Left _ -> pure unit
         Right verses -> insertPericope address source verses
+
+  where
+  cancelEditing
+    :: Pericope
+    -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+  cancelEditing p =
+    void $ H.query pericopeSlot p.id (P.CancelEditing unit)
 
 -- Reorder helper (total, no partial indexing)
 reorder :: PericopeId -> PericopeId -> Array Pericope -> Array Pericope

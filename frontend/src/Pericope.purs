@@ -28,6 +28,7 @@ import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, Cros
 data Query a
   = SetData Pericope a
   | Refresh a
+  | CancelEditing a
 
 data Output
   = DidDuplicate { id :: PericopeId }
@@ -69,6 +70,7 @@ component = H.mkComponent
   , render
   , eval: H.mkEval $ H.defaultEval
       { handleAction = handle
+      , handleQuery = handleQuery
       , receive = Just <<< Receive
       }
   }
@@ -76,6 +78,7 @@ component = H.mkComponent
 -- Local actions
 data Action
   = Noop
+  | HandlePericopeClick MouseEvent
   | HandleAddressClick MouseEvent
   | HandleSourceClick MouseEvent
   | HandleSelectedAddressClick MouseEvent
@@ -103,7 +106,7 @@ render st =
   let
     addressText = selectedAddressText st.pericope
   in
-  HH.div [ HP.class_ (HH.ClassName "pericope") ]
+  HH.div [ HP.class_ (HH.ClassName "pericope"), HE.onClick HandlePericopeClick ]
     [ HH.div
         [ HP.class_ (HH.ClassName "didascalia")
         , HP.draggable true
@@ -299,6 +302,9 @@ handle = case _ of
   Noop ->
     pure unit
 
+  HandlePericopeClick _ -> do
+    cancelEdits
+
   HandleAddressClick ev -> do
     H.liftEffect $ stopPropagation (toEvent ev)
     H.modify_ \st ->
@@ -483,6 +489,31 @@ handle = case _ of
   OpenCrossReference address -> do
     st <- H.get
     H.raise (DidLoadCrossReference { source: st.pericope.source, address })
+
+handleQuery
+  :: forall a m
+   . MonadAff m
+  => Query a
+  -> H.HalogenM State Action () Output m (Maybe a)
+handleQuery = case _ of
+  SetData p a -> do
+    H.modify_ _ { pericope = p }
+    pure (Just a)
+  Refresh a -> do
+    st <- H.get
+    launchFetch st.pericope.address st.pericope.source
+    pure (Just a)
+  CancelEditing a -> do
+    cancelEdits
+    pure (Just a)
+
+cancelEdits :: forall m. MonadAff m => H.HalogenM State Action () Output m Unit
+cancelEdits = do
+  st <- H.get
+  when st.editingAddress do
+    handle CancelAddressEdit
+  when st.editingSource do
+    handle CancelSourceEdit
 
 launchFetch :: forall m. MonadAff m => Address -> Source -> H.HalogenM State Action () Output m Unit
 launchFetch address source = do
