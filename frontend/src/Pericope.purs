@@ -433,6 +433,7 @@ handle = case _ of
           , crossRefs = nextCrossRefState
           }
       st <- H.get
+      H.raise (DidUpdate st.pericope)
       let selectedIds :: Array VerseId
           selectedIds = Set.toUnfoldable st.pericope.selected
       case selectedIds of

@@ -9953,7 +9953,7 @@ var selectedAddressText = function(pericope) {
       ;
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 555, column 7 - line 559, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 556, column 7 - line 560, column 64): " + [v.constructor.name]);
   };
   return joinWith(".")(renderSelection(reverse(selectedAddresses)));
 };
@@ -10155,7 +10155,7 @@ var launchFetch = function(dictMonadAff) {
           });
         }
         ;
-        throw new Error("Failed pattern match at Pericope (line 537, column 3 - line 545, column 39): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Pericope (line 538, column 3 - line 546, column 39): " + [res.constructor.name]);
       });
     };
   };
@@ -10542,63 +10542,65 @@ var handle = function(dictMonadAff) {
         return $203;
       }))(function() {
         return bind7(get4)(function(st) {
-          var selectedIds = toUnfoldable5(st.pericope.selected);
-          if (selectedIds.length === 1) {
-            var stillSelected = function(verse) {
-              return bind7(get4)(function(st$prime) {
-                return pure14(size3(st$prime.pericope.selected) === 1 && member3(verse)(st$prime.pericope.selected));
-              });
-            };
-            return bind7(liftAff3(fetchCrossReferences(selectedIds[0])))(function(refsRes) {
-              return bind7(stillSelected(selectedIds[0]))(function(stillAfterRefs) {
-                return when4(stillAfterRefs)(bind7(liftAff3(fetchCommentaries(selectedIds[0])))(function(commRes) {
-                  return bind7(stillSelected(selectedIds[0]))(function(stillAfterCommentaries) {
-                    return when4(stillAfterCommentaries)(function() {
-                      var refs = function() {
-                        if (refsRes instanceof Left) {
-                          return [];
-                        }
-                        ;
-                        if (refsRes instanceof Right) {
-                          return refsRes.value0;
-                        }
-                        ;
-                        throw new Error("Failed pattern match at Pericope (line 451, column 24 - line 453, column 51): " + [refsRes.constructor.name]);
-                      }();
-                      var commentaries = function() {
-                        if (commRes instanceof Left) {
-                          return [];
-                        }
-                        ;
-                        if (commRes instanceof Right) {
-                          return commRes.value0;
-                        }
-                        ;
-                        throw new Error("Failed pattern match at Pericope (line 454, column 32 - line 456, column 67): " + [commRes.constructor.name]);
-                      }();
-                      return modify_3(function(v1) {
-                        var $213 = {};
-                        for (var $214 in v1) {
-                          if ({}.hasOwnProperty.call(v1, $214)) {
-                            $213[$214] = v1[$214];
+          return discard12(raise(new DidUpdate(st.pericope)))(function() {
+            var selectedIds = toUnfoldable5(st.pericope.selected);
+            if (selectedIds.length === 1) {
+              var stillSelected = function(verse) {
+                return bind7(get4)(function(st$prime) {
+                  return pure14(size3(st$prime.pericope.selected) === 1 && member3(verse)(st$prime.pericope.selected));
+                });
+              };
+              return bind7(liftAff3(fetchCrossReferences(selectedIds[0])))(function(refsRes) {
+                return bind7(stillSelected(selectedIds[0]))(function(stillAfterRefs) {
+                  return when4(stillAfterRefs)(bind7(liftAff3(fetchCommentaries(selectedIds[0])))(function(commRes) {
+                    return bind7(stillSelected(selectedIds[0]))(function(stillAfterCommentaries) {
+                      return when4(stillAfterCommentaries)(function() {
+                        var refs = function() {
+                          if (refsRes instanceof Left) {
+                            return [];
                           }
                           ;
-                        }
-                        ;
-                        $213.crossRefs = new CrossRefsLoaded({
-                          references: refs,
-                          commentaries
+                          if (refsRes instanceof Right) {
+                            return refsRes.value0;
+                          }
+                          ;
+                          throw new Error("Failed pattern match at Pericope (line 452, column 24 - line 454, column 51): " + [refsRes.constructor.name]);
+                        }();
+                        var commentaries = function() {
+                          if (commRes instanceof Left) {
+                            return [];
+                          }
+                          ;
+                          if (commRes instanceof Right) {
+                            return commRes.value0;
+                          }
+                          ;
+                          throw new Error("Failed pattern match at Pericope (line 455, column 32 - line 457, column 67): " + [commRes.constructor.name]);
+                        }();
+                        return modify_3(function(v1) {
+                          var $213 = {};
+                          for (var $214 in v1) {
+                            if ({}.hasOwnProperty.call(v1, $214)) {
+                              $213[$214] = v1[$214];
+                            }
+                            ;
+                          }
+                          ;
+                          $213.crossRefs = new CrossRefsLoaded({
+                            references: refs,
+                            commentaries
+                          });
+                          return $213;
                         });
-                        return $213;
-                      });
-                    }());
-                  });
-                }));
+                      }());
+                    });
+                  }));
+                });
               });
-            });
-          }
-          ;
-          return pure14(unit);
+            }
+            ;
+            return pure14(unit);
+          });
         });
       });
     }
@@ -10696,7 +10698,7 @@ var handle = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 317, column 10 - line 507, column 76): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 317, column 10 - line 508, column 76): " + [v.constructor.name]);
   };
 };
 var cancelEdits = function(dictMonadAff) {
@@ -10741,7 +10743,7 @@ var handleQuery = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Pericope (line 514, column 15 - line 524, column 18): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Pericope (line 515, column 15 - line 525, column 18): " + [v.constructor.name]);
   };
 };
 var component = function(dictMonadAff) {
