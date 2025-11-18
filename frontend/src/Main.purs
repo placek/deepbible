@@ -93,11 +93,26 @@ render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
-    [ renderSearchSection st
-    , HH.div_
-        (renderPericope <$> st.pericopes)
-    , renderFooter
-    ]
+    ( renderSelectionRibbon st
+        <> [ renderSearchSection st
+           , HH.div_
+               (renderPericope <$> st.pericopes)
+           , renderFooter
+           ]
+    )
+
+renderSelectionRibbon :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderSelectionRibbon st =
+  let
+    pericopesWithSelection =
+      st.pericopes
+        # A.filter (\p -> Set.size p.selected > 0)
+        # A.length
+  in
+    if pericopesWithSelection == 2 then
+      [ HH.div [ HP.class_ (HH.ClassName "selection-ribbon") ] [] ]
+    else
+      []
 
 renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
 renderSearchSection st =

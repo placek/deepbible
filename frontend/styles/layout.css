@@ -7,17 +7,6 @@ h2 {
   margin-bottom: 0;
 }
 
-.selection-ribbon {
-  position: absolute;
-  top: 0;
-  left: 75%;
-  background-color: var(--violet);
-  border-radius: 0 0 1.2em 1.2em;
-  width: 2.4em;
-  height: 4em;
-  box-shadow: 0 0.75em 1.5em rgba(0, 0, 0, 0.35);
-}
-
 .pericope {
   display: flex;
   max-width: 70em;
