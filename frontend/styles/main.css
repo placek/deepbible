@@ -12,9 +12,17 @@ body {
   left: 75%;
   background-color: var(--violet);
   border-radius: 0 0 1.2em 1.2em;
-  width: 2.4em;
-  height: 4em;
+  width: 1.4em;
+  height: 2em;
   box-shadow: 0 0.75em 1.5em rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--base3);
+  font-size: 1.5em;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
 }
 
 .pericope + .pericope {

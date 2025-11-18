@@ -75,3 +75,13 @@ searchVerses query = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left "Failed to search verses"
       Right verses -> pure $ Right verses
+
+postLocalReferences :: String -> String -> Aff (Either String Unit)
+postLocalReferences first second = do
+  let
+    url = baseUrl <> "/local_references"
+    payload = ("first" := fromString first) ~> ("second" := fromString second) ~> jsonEmptyObject
+  res <- AX.post driver RF.ignore url $ Just (RB.json payload)
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right _ -> pure $ Right unit

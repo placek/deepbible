@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 
-import Api (fetchVerses, searchVerses)
+import Api (fetchVerses, postLocalReferences, searchVerses)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
@@ -12,6 +12,7 @@ import Data.Set as Set
 import Data.Const (Const)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.Common (trim)
+import Data.String (joinWith)
 import Data.Functor (void)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -24,7 +25,7 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
-import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
+import Types (AppState, Pericope, PericopeId, Verse(..), VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
 import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
@@ -74,6 +75,7 @@ data Action
   | HandleDocumentClick
   | SearchInputClick MouseEvent
   | SearchResultsClick MouseEvent
+  | SelectionRibbonClick MouseEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -103,15 +105,15 @@ render st =
 
 renderSelectionRibbon :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
 renderSelectionRibbon st =
-  let
-    pericopesWithSelection =
-      st.pericopes
-        # A.filter (\p -> Set.size p.selected > 0)
-        # A.length
-  in
-    if pericopesWithSelection == 2 then
-      [ HH.div [ HP.class_ (HH.ClassName "selection-ribbon") ] [] ]
-    else
+  case selectedPericopeAddresses st.pericopes of
+    Just _ ->
+      [ HH.div
+          [ HP.class_ (HH.ClassName "selection-ribbon")
+          , HE.onClick SelectionRibbonClick
+          ]
+          [ HH.text "+" ]
+      ]
+    Nothing ->
       []
 
 renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
@@ -299,6 +301,14 @@ handle action = case action of
   SearchResultsClick ev ->
     H.liftEffect $ stopPropagation (toEvent ev)
 
+  SelectionRibbonClick ev -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    st <- H.get
+    case selectedPericopeAddresses st.pericopes of
+      Nothing -> pure unit
+      Just { first, second } -> do
+        void $ H.liftAff $ postLocalReferences first second
+
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
 
@@ -413,3 +423,32 @@ syncUrl :: H.HalogenM AppState Action ChildSlots Void Aff Unit
 syncUrl = do
   st <- H.get
   H.liftEffect $ storeSeeds (pericopesToSeeds st.pericopes)
+
+selectedPericopeAddresses :: Array Pericope -> Maybe { first :: String, second :: String }
+selectedPericopeAddresses pericopes =
+  case pericopesWithSelection of
+    [first, second] -> Just { first, second }
+    _ -> Nothing
+  where
+  pericopesWithSelection =
+    pericopes
+      # A.filter (\p -> Set.size p.selected > 0)
+      <#> selectedAddressText
+
+selectedAddressText :: Pericope -> String
+selectedAddressText pericope =
+  joinWith "." (renderSelection (A.reverse selectedVerses))
+  where
+  selectedVerses =
+    pericope.verses
+      # A.mapMaybe \(Verse v) ->
+          if Set.member v.verse_id pericope.selected then Just v else Nothing
+
+  renderSelection arr =
+    case A.uncons arr of
+      Nothing -> []
+      Just { head: x, tail } ->
+        if A.null tail then
+          [ x.address ]
+        else
+          renderSelection tail <> [ show x.verse ]
