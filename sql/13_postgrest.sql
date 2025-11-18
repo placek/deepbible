@@ -14,6 +14,7 @@ GRANT SELECT ON public._all_books TO web_anon;
 GRANT SELECT ON public._all_verses TO web_anon;
 GRANT SELECT ON public._all_commentaries TO web_anon;
 GRANT SELECT ON public.cross_references TO web_anon;
+GRANT INSERT ON public.cross_references TO web_anon;
 GRANT EXECUTE ON FUNCTION public.parse_address(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.verses_by_address(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.cross_references(text) TO web_anon;
