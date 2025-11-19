@@ -10,7 +10,9 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Const (Const)
+import Data.String (Pattern(..), contains, lastIndexOf, split)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
+import Data.String.CodeUnits as CU
 import Data.String.Common (trim)
 import Data.Functor (void)
 import Effect (Effect)
@@ -40,6 +42,11 @@ type ChildSlots =
 
 pericopeSlot :: Proxy "pericope"
 pericopeSlot = Proxy
+
+type SelectedAddress =
+  { text :: String
+  , groups :: Array String
+  }
 
 type RootQuery :: Type -> Type
 type RootQuery = Const Void
@@ -105,15 +112,37 @@ render st =
 renderSelectionRibbon :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
 renderSelectionRibbon st =
   case selectedPericopeAddresses st.pericopes of
-    Just _ ->
+    Just selections ->
       [ HH.div
           [ HP.class_ (HH.ClassName "selection-ribbon")
           , HE.onClick SelectionRibbonClick
           ]
-          [ HH.text "+" ]
+          [ HH.div
+              [ HP.class_ (HH.ClassName "selection-ribbon-addresses") ]
+              [ renderSelectionColumn selections.first.groups
+              , HH.div [ HP.class_ (HH.ClassName "selection-ribbon-plus") ] [ HH.text "+" ]
+              , renderSelectionColumn selections.second.groups
+              ]
+          ]
       ]
     Nothing ->
       []
+  where
+  renderSelectionColumn :: Array String -> H.ComponentHTML Action ChildSlots Aff
+  renderSelectionColumn groups =
+    HH.ul
+      [ HP.class_ (HH.ClassName "selection-ribbon-column") ]
+      ( if A.null groups then
+          [ HH.li
+              [ HP.class_ (HH.ClassName "selection-ribbon-address") ]
+              [ HH.text "(no selection)" ]
+          ]
+        else
+          groups <#> \entry ->
+            HH.li
+              [ HP.class_ (HH.ClassName "selection-ribbon-address") ]
+              [ HH.text entry ]
+      )
 
 renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
 renderSearchSection st =
@@ -306,7 +335,7 @@ handle action = case action of
     case selectedPericopeAddresses st.pericopes of
       Nothing -> pure unit
       Just { first, second } -> do
-        void $ H.liftAff $ postLocalReferences first second
+        void $ H.liftAff $ postLocalReferences first.text second.text
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
@@ -423,7 +452,7 @@ syncUrl = do
   st <- H.get
   H.liftEffect $ storeSeeds (pericopesToSeeds st.pericopes)
 
-selectedPericopeAddresses :: Array Pericope -> Maybe { first :: String, second :: String }
+selectedPericopeAddresses :: Array Pericope -> Maybe { first :: SelectedAddress, second :: SelectedAddress }
 selectedPericopeAddresses pericopes =
   case pericopesWithSelection of
     [first, second] -> Just { first, second }
@@ -432,4 +461,34 @@ selectedPericopeAddresses pericopes =
   pericopesWithSelection =
     pericopes
       # A.filter (\p -> Set.size p.selected > 0)
-      <#> P.selectedAddressText
+      <#> selectionFromPericope
+
+  selectionFromPericope :: Pericope -> SelectedAddress
+  selectionFromPericope p =
+    let text = P.selectedAddressText p
+    in { text, groups: expandSelectionAddress text }
+
+expandSelectionAddress :: String -> Array String
+expandSelectionAddress addressText =
+  case A.uncons segments of
+    Nothing -> []
+    Just { head: firstSeg, tail } ->
+      let prefix = addressPrefixFromString firstSeg
+          restWithPrefix = tail
+            <#> applyPrefix prefix
+      in A.cons firstSeg restWithPrefix
+  where
+    segments =
+      split (Pattern ".") addressText
+        # map trim
+        # A.filter (_ /= "")
+
+    applyPrefix :: Maybe String -> String -> String
+    applyPrefix Nothing segment = segment
+    applyPrefix (Just pre) segment =
+      if contains (Pattern ",") segment then segment else pre <> segment
+
+    addressPrefixFromString :: String -> Maybe String
+    addressPrefixFromString segment = do
+      ix <- lastIndexOf (Pattern ",") segment
+      pure $ CU.take (ix + 1) segment
