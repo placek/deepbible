@@ -12,7 +12,6 @@ import Data.Set as Set
 import Data.Const (Const)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.Common (trim)
-import Data.String (joinWith)
 import Data.Functor (void)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -433,22 +432,4 @@ selectedPericopeAddresses pericopes =
   pericopesWithSelection =
     pericopes
       # A.filter (\p -> Set.size p.selected > 0)
-      <#> selectedAddressText
-
-selectedAddressText :: Pericope -> String
-selectedAddressText pericope =
-  joinWith "." (renderSelection (A.reverse selectedVerses))
-  where
-  selectedVerses =
-    pericope.verses
-      # A.mapMaybe \(Verse v) ->
-          if Set.member v.verse_id pericope.selected then Just v else Nothing
-
-  renderSelection arr =
-    case A.uncons arr of
-      Nothing -> []
-      Just { head: x, tail } ->
-        if A.null tail then
-          [ x.address ]
-        else
-          renderSelection tail <> [ show x.verse ]
+      <#> P.selectedAddressText

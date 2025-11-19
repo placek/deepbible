@@ -1,10 +1,11 @@
-module Pericope (Query(..), Output(..), component) where
+module Pericope (Query(..), Output(..), component, selectedAddressText) where
 
 import Prelude
 
 import Api (fetchCommentaries, fetchCrossReferences, fetchSources, fetchVerses)
 import Data.Array (catMaybes)
-import Data.String (Pattern(..), contains, joinWith, toLower)
+import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower)
+import Data.String.CodeUnits as CU
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -555,8 +556,39 @@ selectedAddressText pericope =
     renderSelection arr =
       case A.uncons arr of
         Nothing -> []
-        Just { head: x, tail }
-          | A.null tail -> [x.address]
-          | otherwise -> renderSelection tail <> [show x.verse]
+        Just { head, tail } ->
+          let
+            verses = A.cons head tail <#> _.verse
+            ranges = renderRanges verses
+            prefix = addressPrefix head.address
+          in
+          case A.uncons ranges of
+            Nothing -> []
+            Just { head: firstRange, tail: restRanges } ->
+              A.cons (prefix <> firstRange) restRanges
   in
-  joinWith "." (renderSelection (A.reverse selectedAddresses))
+  joinWith "." (renderSelection selectedAddresses)
+
+addressPrefix :: Address -> String
+addressPrefix address =
+  case lastIndexOf (Pattern ",") address of
+    Just ix -> CU.take (ix + 1) address
+    Nothing -> ""
+
+renderRanges :: Array Int -> Array String
+renderRanges arr =
+  case A.uncons arr of
+    Nothing -> []
+    Just { head, tail } -> go head head tail
+  where
+  go start prev rest =
+    case A.uncons rest of
+      Nothing -> [formatRange start prev]
+      Just { head: x, tail: xs }
+        | x == prev + 1 -> go start x xs
+        | otherwise -> A.cons (formatRange start prev) (go x x xs)
+
+formatRange :: Int -> Int -> String
+formatRange start end
+  | start == end = show start
+  | otherwise = show start <> "-" <> show end
