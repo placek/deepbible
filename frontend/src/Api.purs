@@ -68,7 +68,7 @@ searchVerses :: String -> Aff (Either String (Array VerseSearchResult))
 searchVerses query = do
   let
     encoded = encodeURIComponent query
-    url = baseUrl <> "/_all_verses?text_search=phfts." <> encoded
+    url = "https://n8n.placki.cloud/webhook/search-deepbible?query=" <> encoded
   res <- AX.get driver RF.json url
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)

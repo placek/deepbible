@@ -203,7 +203,7 @@ renderSearchResult result =
     ]
     [ HH.div
         [ HP.class_ (HH.ClassName "search-result-address") ]
-        [ HH.text (details.source <> " – " <> details.address) ]
+        [ HH.text (details.source <> ": " <> details.address) ]
     , HH.div
         [ HP.class_ (HH.ClassName "search-result-text") ]
         [ HH.text (stripTags details.text) ]
