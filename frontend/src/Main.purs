@@ -14,7 +14,6 @@ import Data.String (Pattern(..), contains, lastIndexOf, split)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.CodeUnits as CU
 import Data.String.Common (trim)
-import Data.Functor (void)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen as H
@@ -26,7 +25,7 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
-import Types (AppState, Pericope, PericopeId, Verse(..), VerseSearchResult)
+import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
 import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
