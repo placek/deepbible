@@ -11421,7 +11421,7 @@ var renderSearchResult = function(result) {
   var details2 = unwrap7(result);
   return li([class_("search-result"), onClick(function(v) {
     return new SelectSearchResult(result);
-  })])([div2([class_("search-result-address")])([text5(details2.source + (": " + details2.address))]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
+  })])([div2([class_("search-result-address")])([text5("@" + (details2.source + (" ~" + details2.address)))]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
 };
 var renderSearchResults = function(st) {
   var $86 = !st.searchOpen || $$null(st.searchResults);
