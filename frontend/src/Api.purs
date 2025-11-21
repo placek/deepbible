@@ -67,9 +67,9 @@ fetchCommentaries verseId = do
 searchVerses :: String -> Aff (Either String (Array VerseSearchResult))
 searchVerses query = do
   let
-    encoded = encodeURIComponent query
-    url = "https://n8n.placki.cloud/webhook/search-deepbible?query=" <> encoded
-  res <- AX.get driver RF.json url
+    url = baseUrl <> "/rpc/search_verses"
+    payload = ("search_phrase" := query) ~> jsonEmptyObject
+  res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of

@@ -5945,6 +5945,7 @@ var extend2 = function(encoder) {
     };
   };
 };
+var encodeString = id;
 var assoc = function(encoder) {
   return function(k) {
     var $64 = Tuple.create(k);
@@ -5958,6 +5959,9 @@ var assoc = function(encoder) {
 var encodeJsonJson = {
   encodeJson: /* @__PURE__ */ identity(categoryFn)
 };
+var encodeJsonJString = {
+  encodeJson: encodeString
+};
 var encodeJson = function(dict) {
   return dict.encodeJson;
 };
@@ -5968,11 +5972,6 @@ var extend3 = function(dictEncodeJson) {
 };
 var assoc2 = function(dictEncodeJson) {
   return assoc(encodeJson(dictEncodeJson));
-};
-
-// output/Query/foreign.js
-var encodeURIComponent2 = (value16) => {
-  return globalThis.encodeURIComponent(value16);
 };
 
 // output/Data.Argonaut.Decode.Combinators/index.js
@@ -6088,39 +6087,16 @@ var decodeCommentary = {
 };
 
 // output/Api/index.js
-var bind3 = /* @__PURE__ */ bind(bindAff);
-var pure5 = /* @__PURE__ */ pure(applicativeAff);
-var decodeJson3 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerseSearchResult));
 var extend4 = /* @__PURE__ */ extend3(encodeJsonJson);
 var assoc3 = /* @__PURE__ */ assoc2(encodeJsonJson);
-var decodeJson1 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeCommentary));
-var decodeJson22 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeCrossReference));
-var decodeJson32 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeSourceInfo));
-var decodeJson4 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerse));
-var searchVerses = function(query3) {
-  var encoded = encodeURIComponent2(query3);
-  var url = "https://n8n.placki.cloud/webhook/search-deepbible?query=" + encoded;
-  return bind3(get2(driver)(json2)(url))(function(res) {
-    if (res instanceof Left) {
-      return pure5(new Left("HTTP error: " + printError(res.value0)));
-    }
-    ;
-    if (res instanceof Right) {
-      var v = decodeJson3(res.value0.body);
-      if (v instanceof Left) {
-        return pure5(new Left("Failed to search verses"));
-      }
-      ;
-      if (v instanceof Right) {
-        return pure5(new Right(v.value0));
-      }
-      ;
-      throw new Error("Failed pattern match at Api (line 75, column 19 - line 77, column 42): " + [v.constructor.name]);
-    }
-    ;
-    throw new Error("Failed pattern match at Api (line 73, column 3 - line 77, column 42): " + [res.constructor.name]);
-  });
-};
+var bind3 = /* @__PURE__ */ bind(bindAff);
+var pure5 = /* @__PURE__ */ pure(applicativeAff);
+var decodeJson3 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeCommentary));
+var decodeJson1 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeCrossReference));
+var decodeJson22 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeSourceInfo));
+var decodeJson32 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerse));
+var assoc1 = /* @__PURE__ */ assoc2(encodeJsonJString);
+var decodeJson4 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerseSearchResult));
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCommentaries = function(verseId) {
   var url = baseUrl + "/rpc/commentaries";
@@ -6131,7 +6107,7 @@ var fetchCommentaries = function(verseId) {
     }
     ;
     if (res instanceof Right) {
-      var v = decodeJson1(res.value0.body);
+      var v = decodeJson3(res.value0.body);
       if (v instanceof Left) {
         return pure5(new Left("Failed to fetch commentaries: " + verseId));
       }
@@ -6155,7 +6131,7 @@ var fetchCrossReferences = function(verseId) {
     }
     ;
     if (res instanceof Right) {
-      var v = decodeJson22(res.value0.body);
+      var v = decodeJson1(res.value0.body);
       if (v instanceof Left) {
         return pure5(new Left("Failed to fetch cross references: " + verseId));
       }
@@ -6178,7 +6154,7 @@ var fetchSources = /* @__PURE__ */ function() {
     }
     ;
     if (res instanceof Right) {
-      var v = decodeJson32(res.value0.body);
+      var v = decodeJson22(res.value0.body);
       if (v instanceof Left) {
         return pure5(new Left("Failed to fetch sources"));
       }
@@ -6203,7 +6179,7 @@ var fetchVerses = function(address2) {
       }
       ;
       if (res instanceof Right) {
-        var v = decodeJson4(res.value0.body);
+        var v = decodeJson32(res.value0.body);
         if (v instanceof Left) {
           return pure5(new Left("Failed to fetch verses: " + address2));
         }
@@ -6235,6 +6211,30 @@ var postLocalReferences = function(first) {
       throw new Error("Failed pattern match at Api (line 85, column 3 - line 87, column 33): " + [res.constructor.name]);
     });
   };
+};
+var searchVerses = function(query3) {
+  var url = baseUrl + "/rpc/search_verses";
+  var payload = extend4(assoc1("search_phrase")(query3))(jsonEmptyObject);
+  return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+    if (res instanceof Left) {
+      return pure5(new Left("HTTP error: " + printError(res.value0)));
+    }
+    ;
+    if (res instanceof Right) {
+      var v = decodeJson4(res.value0.body);
+      if (v instanceof Left) {
+        return pure5(new Left("Failed to search verses"));
+      }
+      ;
+      if (v instanceof Right) {
+        return pure5(new Right(v.value0));
+      }
+      ;
+      throw new Error("Failed pattern match at Api (line 75, column 19 - line 77, column 42): " + [v.constructor.name]);
+    }
+    ;
+    throw new Error("Failed pattern match at Api (line 73, column 3 - line 77, column 42): " + [res.constructor.name]);
+  });
 };
 
 // output/Effect.Aff.Class/index.js
