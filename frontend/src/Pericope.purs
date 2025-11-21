@@ -142,23 +142,23 @@ render st =
           in
             HH.div [ HP.class_ (HH.ClassName "didascalia-header") ]
               [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
-                  [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
-                      [ HH.text "☰" ]
-                  , HH.button
-                      [ HP.class_ (HH.ClassName "didascalia-duplicate")
-                      , HP.title "duplicate pericope"
-                      , HE.onClick \_ -> Duplicate
-                      ]
-                      [ HH.text "⧉" ]
-                  , HH.button
-                      [ HP.class_ (HH.ClassName "didascalia-remove")
-                      , HP.title "remove pericope"
-                      , HE.onClick \_ -> Remove
-                      ]
-                      [ HH.text "✕" ]
+              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
+                  [ HH.text "☰" ]
+              , HH.button
+                  [ HP.class_ (HH.ClassName "didascalia-duplicate icon-button")
+                  , HP.title "duplicate pericope"
+                  , HE.onClick \_ -> Duplicate
                   ]
-              , addressNode
+                  [ HH.text "⧉" ]
+              , HH.button
+                  [ HP.class_ (HH.ClassName "didascalia-remove icon-button")
+                  , HP.title "remove pericope"
+                  , HE.onClick \_ -> Remove
+                  ]
+                  [ HH.text "✕" ]
               ]
+            , addressNode
+            ]
 
         , if st.editingSource then
             let
@@ -211,7 +211,7 @@ render st =
                           in
                           HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
                             [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
-                            , HH.ul [ HP.class_ (HH.ClassName "source-options") ] (renderOption <$> sorted)
+                            , HH.ul [ HP.class_ (HH.ClassName "source-options list-reset") ] (renderOption <$> sorted)
                             ]
                         sortedLanguages = A.sort languages
                       in
@@ -280,14 +280,14 @@ render st =
                       [ ]
                   ]
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
+                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references list-reset") ]
                       (renderRef <$> payload.references)
                   ]
               commentaryNodes =
                 if A.null payload.commentaries then
                   []
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries") ]
+                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries list-reset") ]
                       (renderCommentary <$> payload.commentaries)
                   ]
             in

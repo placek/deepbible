@@ -6,6 +6,22 @@ body {
   background-attachment: fixed;
 }
 
+.list-reset {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.icon-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-button:focus-visible {
+  outline: none;
+}
+
 .selection-ribbon {
   position: absolute;
   bottom: 0;
@@ -32,9 +48,6 @@ body {
 }
 
 .selection-ribbon-column {
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
 
 .selection-ribbon-address {
@@ -62,13 +75,6 @@ body {
 .didascalia-handle {
   cursor: grab;
   user-select: none;
-}
-
-.didascalia-remove,
-.didascalia-duplicate {
-  border: none;
-  background: transparent;
-  cursor: pointer;
 }
 
 .didascalia:active .didascalia-handle {
@@ -110,7 +116,6 @@ body {
 }
 
 .cross-references {
-  list-style: none;
 }
 
 .cross-reference {
@@ -118,7 +123,6 @@ body {
 }
 
 .commentaries {
-  list-style: none;
 }
 
 .commentary-text a {
@@ -156,9 +160,6 @@ body {
 }
 
 .search-results {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   max-height: 15em;
   overflow-y: auto;
 }

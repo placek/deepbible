@@ -10909,9 +10909,9 @@ var render = function(st) {
       ;
       return div2([class_("address"), onClick(HandleAddressClick.create)])([text5(st.pericope.address)]);
     }();
-    return div2([class_("didascalia-header")])([div2([class_("didascalia-handle-group")])([div2([class_("didascalia-handle")])([text5("\u2630")]), button([class_("didascalia-duplicate"), title2("duplicate pericope"), onClick(function(v) {
+    return div2([class_("didascalia-header")])([div2([class_("didascalia-handle-group")])([div2([class_("didascalia-handle")])([text5("\u2630")]), button([class_("didascalia-duplicate icon-button"), title2("duplicate pericope"), onClick(function(v) {
       return Duplicate.value;
-    })])([text5("\u29C9")]), button([class_("didascalia-remove"), title2("remove pericope"), onClick(function(v) {
+    })])([text5("\u29C9")]), button([class_("didascalia-remove icon-button"), title2("remove pericope"), onClick(function(v) {
       return Remove.value;
     })])([text5("\u2715")])]), addressNode]);
   }(), function() {
@@ -10962,7 +10962,7 @@ var render = function(st) {
                 return v.name;
               }(unwrap6($259));
             }))(entries);
-            return div2([class_("source-language-group")])([h4([class_("source-language")])([text5(lang2)]), ul([class_("source-options")])(map27(renderOption)(sorted))]);
+            return div2([class_("source-language-group")])([h4([class_("source-language")])([text5(lang2)]), ul([class_("source-options list-reset")])(map27(renderOption)(sorted))]);
           };
           var languages2 = toUnfoldable5(fromFoldable6(mapFlipped3(filteredInfos)(function($260) {
             return function(v) {
@@ -11027,7 +11027,7 @@ var render = function(st) {
             return [div2([class_("cross-references-empty")])([])];
           }
           ;
-          return [ul([class_("cross-references")])(map27(renderRef)(st.crossRefs.value0.references))];
+          return [ul([class_("cross-references list-reset")])(map27(renderRef)(st.crossRefs.value0.references))];
         }();
         var commentaryNodes = function() {
           var $257 = $$null(st.crossRefs.value0.commentaries);
@@ -11035,7 +11035,7 @@ var render = function(st) {
             return [];
           }
           ;
-          return [ul([class_("commentaries")])(map27(renderCommentary)(st.crossRefs.value0.commentaries))];
+          return [ul([class_("commentaries list-reset")])(map27(renderCommentary)(st.crossRefs.value0.commentaries))];
         }();
         return append12(crossReferenceNodes)(commentaryNodes);
       }
@@ -11429,7 +11429,7 @@ var renderSearchResults = function(st) {
     return [];
   }
   ;
-  return [ul([class_("search-results list"), onClick(SearchResultsClick.create)])(mapFlipped4(st.searchResults)(renderSearchResult))];
+  return [ul([class_("search-results list list-reset"), onClick(SearchResultsClick.create)])(mapFlipped4(st.searchResults)(renderSearchResult))];
 };
 var renderSearchFeedback = function(st) {
   var baseAttrs = [class_("search-status")];
@@ -12032,7 +12032,7 @@ var handle2 = function(action2) {
 };
 var renderSelectionRibbon = function(st) {
   var renderSelectionColumn = function(groups) {
-    return ul([class_("selection-ribbon-column")])(function() {
+    return ul([class_("selection-ribbon-column list-reset")])(function() {
       var $216 = $$null(groups);
       if ($216) {
         return [li([class_("selection-ribbon-address")])([text5("(no selection)")])];

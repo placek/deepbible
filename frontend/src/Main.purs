@@ -130,7 +130,7 @@ renderSelectionRibbon st =
   renderSelectionColumn :: Array String -> H.ComponentHTML Action ChildSlots Aff
   renderSelectionColumn groups =
     HH.ul
-      [ HP.class_ (HH.ClassName "selection-ribbon-column") ]
+      [ HP.class_ (HH.ClassName "selection-ribbon-column list-reset") ]
       ( if A.null groups then
           [ HH.li
               [ HP.class_ (HH.ClassName "selection-ribbon-address") ]
@@ -185,7 +185,7 @@ renderSearchResults st =
     []
   else
     [ HH.ul
-        [ HP.class_ (HH.ClassName "search-results list")
+        [ HP.class_ (HH.ClassName "search-results list list-reset")
         , HE.onClick SearchResultsClick
         ]
         (st.searchResults <#> renderSearchResult)

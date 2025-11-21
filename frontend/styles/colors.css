@@ -53,17 +53,14 @@ input {
 }
 
 .didascalia-handle,
-.didascalia-duplicate,
-.didascalia-remove {
+.icon-button {
   color: var(--base1);
 }
 
 .didascalia-handle:hover,
 .didascalia-handle:focus-visible,
-.didascalia-duplicate:hover,
-.didascalia-duplicate:focus-visible,
-.didascalia-remove:hover,
-.didascalia-remove:focus-visible {
+.icon-button:hover,
+.icon-button:focus-visible {
   color: var(--base02);
 }
 

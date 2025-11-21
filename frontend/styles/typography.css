@@ -20,8 +20,7 @@ h2 {
   font-size: smaller;
 }
 
-.didascalia-remove,
-.didascalia-duplicate {
+.icon-button {
   font-size: smaller;
   line-height: 1;
 }
@@ -58,15 +57,10 @@ h2 {
 
 .source-options {
   text-align: left;
-  list-style: none;
 }
 
 .textus {
   text-align: justify;
-}
-
-.cross-references {
-  list-style: none;
 }
 
 .cross-reference {
@@ -76,10 +70,6 @@ h2 {
 .cross-references-loading,
 .cross-references-empty {
   font-size: x-small;
-}
-
-.commentaries {
-  list-style: none;
 }
 
 .commentary {
