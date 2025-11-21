@@ -8,11 +8,10 @@ body {
 
 .selection-ribbon {
   position: absolute;
-  top: 0;
-  left: 75%;
-  background-color: var(--violet);
-  border-radius: 0 0 1.2em 1.2em;
-  min-width: 14em;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--green);
   padding: 0.75em 1em;
   box-shadow: 0 0.75em 1.5em rgba(0, 0, 0, 0.35);
   display: flex;
@@ -160,7 +159,6 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px dashed var(--base1);
   max-height: 15em;
   overflow-y: auto;
 }
@@ -171,16 +169,11 @@ body {
 
 .search-result {
   padding: 0.5em;
-  background-color: var(--base3);
   cursor: pointer;
 }
 
-.search-result:hover {
-  background-color: var(--base2);
-}
-
-.search-result-address {
-  color: var(--violet);
+.search-result-address,
+.search-result-source {
   font-size: small;
 }
 

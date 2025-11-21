@@ -22,15 +22,9 @@
   background-color: var(--base2);
 }
 
-
 body {
   background-color: var(--base2);
   color: var(--base01);
-}
-
-.cross-reference,
-.app-footer a {
-  color: var(--blue);
 }
 
 h2 {
@@ -38,71 +32,72 @@ h2 {
   text-shadow: 1px 1px var(--blue);
 }
 
+a {
+  color: var(--blue);
+}
+
+input {
+  background-color: var(--base3);
+}
+
+.cross-reference {
+  color: var(--blue);
+}
+
+.textus {
+  background-color: var(--base3);
+}
+
 .pericope + .pericope {
   border-top-color: var(--base1);
 }
 
 .didascalia-handle,
-.source-option-description,
-.commentary-text a,
-.verse e,
-.verse n,
-.verse f,
 .didascalia-duplicate,
 .didascalia-remove {
   color: var(--base1);
 }
 
 .didascalia-handle:hover,
-.didascalia-handle:focus-visible {
-  color: var(--cyan);
-}
-
+.didascalia-handle:focus-visible,
 .didascalia-duplicate:hover,
-.didascalia-duplicate:focus-visible {
-  color: var(--blue);
-}
-
+.didascalia-duplicate:focus-visible,
 .didascalia-remove:hover,
 .didascalia-remove:focus-visible {
-  color: var(--red);
+  color: var(--base02);
 }
 
-.search-input-group input,
-.didascalia .address.editing input,
-.didascalia .source.editing input {
-  background-color: var(--base3);
-  color: var(--base00);
-}
-
-.margin .selected-address, .verse.selected {
+.selected-address,
+.verse.selected {
   color: var(--green);
 }
 
-.source {
-  color: var(--violet);
+.address,
+.search-result-address,
+.address input {
+  color: var(--red);
 }
 
-.source-list {
+.source,
+.search-result-source,
+.source input,
+.source-option-name, .source-language {
+  color: var(--yellow);
+}
+
+.list {
   background-color: var(--base3);
   border-color: var(--base1);
+  color: var(--base00);
 }
 
 .source-language {
-  color: var(--base0);
   background-color: var(--base2);
 }
 
-.source-option:hover {
+.source-option:hover,
+.search-result:hover {
   background-color: var(--base2);
-}
-
-.source-option-name {
-  color: var(--violet);
-}
-
-.textus {
-  background-color: var(--base3);
 }
 
 .cross-references-loading,
@@ -110,6 +105,13 @@ h2 {
 .commentary,
 .commentary-text {
   color: var(--base01);
+}
+
+.commentary-text *,
+.verse e,
+.verse n,
+.verse f {
+  color: var(--base1);
 }
 
 .commentary-marker {
@@ -129,9 +131,5 @@ h2 {
 }
 
 .verse j {
-  text-shadow-color: 0 0 var(--orange);
-}
-
-.app-footer a:hover {
-  color: var(--cyan);
+  color: var(--orange);
 }

@@ -10970,7 +10970,7 @@ var render = function(st) {
             }(unwrap6($260));
           })));
           var sortedLanguages = sort2(languages2);
-          return [div2([class_("source-list")])(map27(renderGroup)(sortedLanguages))];
+          return [div2([class_("source-list list")])(map27(renderGroup)(sortedLanguages))];
         }
         ;
         throw new Error("Failed pattern match at Pericope (line 165, column 28 - line 219, column 24): " + [st.sources.constructor.name]);
@@ -11386,7 +11386,7 @@ var stripTags = /* @__PURE__ */ function() {
         ;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 217, column 5 - line 223, column 50): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 219, column 5 - line 225, column 50): " + [v.constructor.name]);
     };
   };
   var $219 = go2(false);
@@ -11421,7 +11421,7 @@ var renderSearchResult = function(result) {
   var details2 = unwrap7(result);
   return li([class_("search-result"), onClick(function(v) {
     return new SelectSearchResult(result);
-  })])([div2([class_("search-result-address")])([text5("@" + (details2.source + (" ~" + details2.address)))]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
+  })])([div2([class_("search-result-address")])([text5("~" + details2.address)]), div2([class_("search-result-source")])([text5("@" + details2.source)]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
 };
 var renderSearchResults = function(st) {
   var $86 = !st.searchOpen || $$null(st.searchResults);
@@ -11429,7 +11429,7 @@ var renderSearchResults = function(st) {
     return [];
   }
   ;
-  return [ul([class_("search-results"), onClick(SearchResultsClick.create)])(mapFlipped4(st.searchResults)(renderSearchResult))];
+  return [ul([class_("search-results list"), onClick(SearchResultsClick.create)])(mapFlipped4(st.searchResults)(renderSearchResult))];
 };
 var renderSearchFeedback = function(st) {
   var baseAttrs = [class_("search-status")];
@@ -11450,7 +11450,7 @@ var renderSearchFeedback = function(st) {
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Main (line 172, column 6 - line 181, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 171, column 6 - line 180, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
 };
 var renderSearchSection = function(st) {
   return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([input2([attr2("type")("text"), placeholder3("Search verses"), value15(st.searchInput), onValueInput(UpdateSearchInput.create), onFocus(function(v) {
@@ -11527,7 +11527,7 @@ var expandSelectionAddress = function(addressText) {
         return v2.value0 + v1;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 486, column 5 - line 486, column 52): " + [v2.constructor.name, v1.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 488, column 5 - line 488, column 52): " + [v2.constructor.name, v1.constructor.name]);
     };
   };
   var addressPrefixFromString = function(segment) {
@@ -11546,7 +11546,7 @@ var expandSelectionAddress = function(addressText) {
     return cons(v.value0.head)(restWithPrefix);
   }
   ;
-  throw new Error("Failed pattern match at Main (line 473, column 3 - line 479, column 40): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 475, column 3 - line 481, column 40): " + [v.constructor.name]);
 };
 var selectedPericopeAddresses = function(pericopes) {
   var selectionFromPericope = function(p2) {
@@ -11602,7 +11602,7 @@ var handle2 = function(action2) {
             return insertPericope(v2.address)(v2.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Main (line 253, column 7 - line 255, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 255, column 7 - line 257, column 61): " + [res.constructor.name]);
         });
       });
     });
@@ -11695,7 +11695,7 @@ var handle2 = function(action2) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 280, column 31 - line 293, column 10): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 282, column 31 - line 295, column 10): " + [action2.value0.constructor.name]);
   }
   ;
   if (action2 instanceof SelectSearchResult) {
@@ -11721,7 +11721,7 @@ var handle2 = function(action2) {
           return insertPericope(details2.address)(details2.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 299, column 5 - line 301, column 75): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 301, column 5 - line 303, column 75): " + [res.constructor.name]);
       });
     });
   }
@@ -11737,7 +11737,7 @@ var handle2 = function(action2) {
           return false;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 305, column 53 - line 307, column 29): " + [st.searchError.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 307, column 53 - line 309, column 29): " + [st.searchError.constructor.name]);
       }());
       if ($143) {
         var $144 = {};
@@ -11825,7 +11825,7 @@ var handle2 = function(action2) {
           return $$void7(liftAff2(postLocalReferences(v2.value0.first.text)(v2.value0.second.text)));
         }
         ;
-        throw new Error("Failed pattern match at Main (line 335, column 5 - line 338, column 70): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 337, column 5 - line 340, column 70): " + [v2.constructor.name]);
       });
     });
   }
@@ -11901,7 +11901,7 @@ var handle2 = function(action2) {
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 351, column 5 - line 356, column 16): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 353, column 5 - line 358, column 16): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -11925,11 +11925,11 @@ var handle2 = function(action2) {
               return insertPericope(v2.value0.address)(v2.value0.source)(res.value0);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 367, column 11 - line 369, column 51): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 369, column 11 - line 371, column 51): " + [res.constructor.name]);
           });
         }
         ;
-        throw new Error("Failed pattern match at Main (line 361, column 7 - line 369, column 51): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 363, column 7 - line 371, column 51): " + [v2.constructor.name]);
       });
     }
     ;
@@ -12007,7 +12007,7 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 398, column 7 - line 400, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 400, column 7 - line 402, column 61): " + [res.constructor.name]);
       });
     }
     ;
@@ -12021,14 +12021,14 @@ var handle2 = function(action2) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 404, column 7 - line 406, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 406, column 7 - line 408, column 61): " + [res.constructor.name]);
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 358, column 23 - line 406, column 61): " + [action2.value1.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 360, column 23 - line 408, column 61): " + [action2.value1.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at Main (line 242, column 17 - line 406, column 61): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 244, column 17 - line 408, column 61): " + [action2.constructor.name]);
 };
 var renderSelectionRibbon = function(st) {
   var renderSelectionColumn = function(groups) {
@@ -12045,14 +12045,14 @@ var renderSelectionRibbon = function(st) {
   };
   var v = selectedPericopeAddresses(st.pericopes);
   if (v instanceof Just) {
-    return [div2([class_("selection-ribbon"), onClick(SelectionRibbonClick.create)])([div2([class_("selection-ribbon-addresses")])([renderSelectionColumn(v.value0.first.groups), div2([class_("selection-ribbon-plus")])([text5("+")]), renderSelectionColumn(v.value0.second.groups)])])];
+    return [div2([class_("selection-ribbon"), onClick(SelectionRibbonClick.create)])([div2([class_("selection-ribbon-addresses")])([renderSelectionColumn(v.value0.first.groups), renderSelectionColumn(v.value0.second.groups)])])];
   }
   ;
   if (v instanceof Nothing) {
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Main (line 114, column 3 - line 129, column 9): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 114, column 3 - line 128, column 9): " + [v.constructor.name]);
 };
 var render2 = function(st) {
   return div2([onClick(function(v) {

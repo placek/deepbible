@@ -215,7 +215,7 @@ render st =
                             ]
                         sortedLanguages = A.sort languages
                       in
-                      [ HH.div [ HP.class_ (HH.ClassName "source-list") ] (renderGroup <$> sortedLanguages)
+                      [ HH.div [ HP.class_ (HH.ClassName "source-list list") ] (renderGroup <$> sortedLanguages)
                       ]
             in
             HH.div

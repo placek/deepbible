@@ -50,15 +50,18 @@ h2 {
   box-sizing: border-box;
 }
 
+.list {
+  border-width: 1px;
+  border-style: dashed;
+  max-height: 15em;
+  overflow: auto;
+}
+
 .source-list {
   padding: 0;
   position: absolute;
   top: auto;
   left: auto;
-  border-width: 1px;
-  border-style: dashed;
-  max-height: 15em;
-  overflow: auto;
 }
 
 .source-language {

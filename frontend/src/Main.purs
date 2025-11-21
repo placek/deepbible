@@ -120,7 +120,6 @@ renderSelectionRibbon st =
           [ HH.div
               [ HP.class_ (HH.ClassName "selection-ribbon-addresses") ]
               [ renderSelectionColumn selections.first.groups
-              , HH.div [ HP.class_ (HH.ClassName "selection-ribbon-plus") ] [ HH.text "+" ]
               , renderSelectionColumn selections.second.groups
               ]
           ]
@@ -186,7 +185,7 @@ renderSearchResults st =
     []
   else
     [ HH.ul
-        [ HP.class_ (HH.ClassName "search-results")
+        [ HP.class_ (HH.ClassName "search-results list")
         , HE.onClick SearchResultsClick
         ]
         (st.searchResults <#> renderSearchResult)
@@ -203,7 +202,10 @@ renderSearchResult result =
     ]
     [ HH.div
         [ HP.class_ (HH.ClassName "search-result-address") ]
-        [ HH.text ("@" <> details.source <> " ~" <> details.address) ]
+        [ HH.text ("~" <> details.address) ]
+    , HH.div
+        [ HP.class_ (HH.ClassName "search-result-source") ]
+        [ HH.text ("@" <> details.source) ]
     , HH.div
         [ HP.class_ (HH.ClassName "search-result-text") ]
         [ HH.text (stripTags details.text) ]
