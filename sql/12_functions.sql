@@ -333,10 +333,10 @@ DECLARE
   v_term    text;
 BEGIN
   v_source := substring(search_phrase from '@([^\s]+)');
-  v_address := substring(search_phrase from '~([^\s]*\s+\d+(,\d+)?)');
-  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~\S*\s+\d+(,\d+)?\s*', '', 'gi'));
+  v_address := substring(search_phrase from '~([^\s]*(\s+\d+(,\d+)?)?)');
+  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~\S*(\s+\d+(,\d+)?)?\s*', '', 'gi'));
 
-  IF v_term = '' THEN
+  IF v_term IS NULL OR v_term !~ '\w' THEN
     v_term := NULL;
   END IF;
 
@@ -346,6 +346,7 @@ BEGIN
   WHERE (v_source  IS NULL OR v.source = v_source)
     AND (v_address IS NULL OR v.address ILIKE
            CASE
+           WHEN strpos(v_address, ' ') = 0 THEN v_address || ' %'
            WHEN strpos(v_address, ',') = 0 THEN v_address || ',%'
            ELSE v_address
            END
