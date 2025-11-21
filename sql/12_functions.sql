@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
@@ -314,5 +316,45 @@ BEGIN
     AND v_position BETWEEN (ac.chapter_number_from * 1000 + ac.verse_number_from)
                        AND (ac.chapter_number_to   * 1000 + ac.verse_number_to)
   ORDER BY ac.chapter_number_from, ac.verse_number_from, ac.marker;
+END;
+$BODY$;
+
+DROP FUNCTION IF EXISTS public.search_verses(text);
+CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
+  RETURNS SETOF _all_verses
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+DECLARE
+  v_source  text;
+  v_address text;
+  v_term    text;
+BEGIN
+  v_source := substring(search_phrase from '@([^\s]+)');
+  v_address := substring(search_phrase from '~([^\s]*\s+\d+(,\d+)?)');
+  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~\S*\s+\d+(,\d+)?\s*', '', 'gi'));
+
+  IF v_term = '' THEN
+    v_term := NULL;
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM public._all_verses v
+  WHERE (v_source  IS NULL OR v.source = v_source)
+    AND (v_address IS NULL OR v.address ILIKE
+           CASE
+           WHEN strpos(v_address, ',') = 0 THEN v_address || ',%'
+           ELSE v_address
+           END
+        )
+    AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
+  ORDER BY CASE
+           WHEN v_term IS NULL THEN -(book_number * 1000 + chapter * 100 + verse)
+           ELSE similarity(v.text, COALESCE(v_term, search_phrase))
+           END DESC
+  LIMIT 500;
 END;
 $BODY$;
