@@ -23,46 +23,6 @@ body {
   outline: none;
 }
 
-.selection-ribbon {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--green);
-  padding: 0.75em 1em;
-  box-shadow: 0 0.75em 1.5em rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  align-items: stretch;
-  color: var(--base3);
-  font-size: 1em;
-  cursor: pointer;
-  user-select: none;
-}
-
-.selection-ribbon-addresses {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.75em;
-}
-
-.selection-ribbon-column {
-}
-
-.selection-ribbon-address {
-  font-size: 0.85em;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-
-.selection-ribbon-plus {
-  font-size: 1.5em;
-  font-weight: bold;
-  align-self: center;
-}
-
 .pericope + .pericope {
   border-top-width: 1px;
   border-top-style: dashed;

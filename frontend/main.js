@@ -226,7 +226,7 @@ var pure = function(dict) {
   return dict.pure;
 };
 var unless = function(dictApplicative) {
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   return function(v) {
     return function(v1) {
       if (!v) {
@@ -234,7 +234,7 @@ var unless = function(dictApplicative) {
       }
       ;
       if (v) {
-        return pure17(unit);
+        return pure16(unit);
       }
       ;
       throw new Error("Failed pattern match at Control.Applicative (line 68, column 1 - line 68, column 65): " + [v.constructor.name, v1.constructor.name]);
@@ -242,7 +242,7 @@ var unless = function(dictApplicative) {
   };
 };
 var when = function(dictApplicative) {
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   return function(v) {
     return function(v1) {
       if (v) {
@@ -250,7 +250,7 @@ var when = function(dictApplicative) {
       }
       ;
       if (!v) {
-        return pure17(unit);
+        return pure16(unit);
       }
       ;
       throw new Error("Failed pattern match at Control.Applicative (line 63, column 1 - line 63, column 63): " + [v.constructor.name, v1.constructor.name]);
@@ -259,10 +259,10 @@ var when = function(dictApplicative) {
 };
 var liftA1 = function(dictApplicative) {
   var apply3 = apply(dictApplicative.Apply0());
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   return function(f) {
     return function(a2) {
-      return apply3(pure17(f))(a2);
+      return apply3(pure16(f))(a2);
     };
   };
 };
@@ -890,11 +890,11 @@ var composeKleisliFlipped = function(dictBind) {
   };
 };
 var composeKleisli = function(dictBind) {
-  var bind16 = bind(dictBind);
+  var bind15 = bind(dictBind);
   return function(f) {
     return function(g) {
       return function(a2) {
-        return bind16(f(a2))(g);
+        return bind15(f(a2))(g);
       };
     };
   };
@@ -1029,12 +1029,12 @@ var unlessM = function(dictMonad) {
 };
 var ap = function(dictMonad) {
   var bind9 = bind(dictMonad.Bind1());
-  var pure17 = pure(dictMonad.Applicative0());
+  var pure16 = pure(dictMonad.Applicative0());
   return function(f) {
     return function(a2) {
       return bind9(f)(function(f$prime) {
         return bind9(a2)(function(a$prime) {
-          return pure17(f$prime(a$prime));
+          return pure16(f$prime(a$prime));
         });
       });
     };
@@ -1125,10 +1125,10 @@ var $$try = function(dictMonadError) {
   var catchError1 = catchError(dictMonadError);
   var Monad0 = dictMonadError.MonadThrow0().Monad0();
   var map30 = map(Monad0.Bind1().Apply0().Functor0());
-  var pure17 = pure(Monad0.Applicative0());
+  var pure16 = pure(Monad0.Applicative0());
   return function(a2) {
     return catchError1(map30(Right.create)(a2))(function($52) {
-      return pure17(Left.create($52));
+      return pure16(Left.create($52));
     });
   };
 };
@@ -1592,12 +1592,12 @@ var monadExceptT = function(dictMonad) {
 };
 var bindExceptT = function(dictMonad) {
   var bind9 = bind(dictMonad.Bind1());
-  var pure17 = pure(dictMonad.Applicative0());
+  var pure16 = pure(dictMonad.Applicative0());
   return {
     bind: function(v) {
       return function(k) {
         return bind9(v)(either(function($193) {
-          return pure17(Left.create($193));
+          return pure16(Left.create($193));
         })(function(a2) {
           var v1 = k(a2);
           return v1;
@@ -1650,24 +1650,24 @@ var altExceptT = function(dictSemigroup) {
   return function(dictMonad) {
     var Bind1 = dictMonad.Bind1();
     var bind9 = bind(Bind1);
-    var pure17 = pure(dictMonad.Applicative0());
+    var pure16 = pure(dictMonad.Applicative0());
     var functorExceptT1 = functorExceptT(Bind1.Apply0().Functor0());
     return {
       alt: function(v) {
         return function(v1) {
           return bind9(v)(function(rm) {
             if (rm instanceof Right) {
-              return pure17(new Right(rm.value0));
+              return pure16(new Right(rm.value0));
             }
             ;
             if (rm instanceof Left) {
               return bind9(v1)(function(rn) {
                 if (rn instanceof Right) {
-                  return pure17(new Right(rn.value0));
+                  return pure16(new Right(rn.value0));
                 }
                 ;
                 if (rn instanceof Left) {
-                  return pure17(new Left(append6(rm.value0)(rn.value0)));
+                  return pure16(new Left(append6(rm.value0)(rn.value0)));
                 }
                 ;
                 throw new Error("Failed pattern match at Control.Monad.Except.Trans (line 87, column 9 - line 89, column 49): " + [rn.constructor.name]);
@@ -2022,13 +2022,13 @@ var foldr = function(dict) {
 };
 var traverse_ = function(dictApplicative) {
   var applySecond2 = applySecond(dictApplicative.Apply0());
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   return function(dictFoldable) {
     var foldr22 = foldr(dictFoldable);
     return function(f) {
       return foldr22(function($454) {
         return applySecond2(f($454));
-      })(pure17(unit));
+      })(pure16(unit));
     };
   };
 };
@@ -2209,13 +2209,13 @@ var traverseArrayImpl = /* @__PURE__ */ function() {
   }
   return function(apply3) {
     return function(map30) {
-      return function(pure17) {
+      return function(pure16) {
         return function(f) {
           return function(array) {
             function go2(bot, top2) {
               switch (top2 - bot) {
                 case 0:
-                  return pure17([]);
+                  return pure16([]);
                 case 1:
                   return map30(array1)(f(array[bot]));
                 case 2:
@@ -2644,7 +2644,7 @@ var traversableWithIndexObject = {
     var Apply0 = dictApplicative.Apply0();
     var apply3 = apply(Apply0);
     var map30 = map(Apply0.Functor0());
-    var pure17 = pure(dictApplicative);
+    var pure16 = pure(dictApplicative);
     return function(f) {
       return function(ms) {
         return fold2(function(acc) {
@@ -2653,7 +2653,7 @@ var traversableWithIndexObject = {
               return apply3(map30(flip(insert(k)))(acc))(f(k)(v));
             };
           };
-        })(pure17(empty))(ms);
+        })(pure16(empty))(ms);
       };
     };
   },
@@ -2748,11 +2748,6 @@ var jsonParser = function(j) {
 };
 
 // output/Data.String.Common/foreign.js
-var split = function(sep) {
-  return function(s) {
-    return s.split(sep);
-  };
-};
 var toLower = function(s) {
   return s.toLowerCase();
 };
@@ -4690,12 +4685,12 @@ var fail = function(dictMonad) {
   };
 };
 var unsafeReadTagged = function(dictMonad) {
-  var pure17 = pure(applicativeExceptT(dictMonad));
+  var pure16 = pure(applicativeExceptT(dictMonad));
   var fail1 = fail(dictMonad);
   return function(tag) {
     return function(value16) {
       if (tagOf(value16) === tag) {
-        return pure17(unsafeFromForeign(value16));
+        return pure16(unsafeFromForeign(value16));
       }
       ;
       if (otherwise) {
@@ -6195,23 +6190,6 @@ var fetchVerses = function(address2) {
     });
   };
 };
-var postLocalReferences = function(first) {
-  return function(second) {
-    var url = baseUrl + "/local_references";
-    var payload = extend4(assoc3("first")(id(first)))(extend4(assoc3("second")(id(second)))(jsonEmptyObject));
-    return bind3(post(driver)(ignore)(url)(new Just(json(payload))))(function(res) {
-      if (res instanceof Left) {
-        return pure5(new Left("HTTP error: " + printError(res.value0)));
-      }
-      ;
-      if (res instanceof Right) {
-        return pure5(new Right(unit));
-      }
-      ;
-      throw new Error("Failed pattern match at Api (line 85, column 3 - line 87, column 33): " + [res.constructor.name]);
-    });
-  };
-};
 var searchVerses = function(query3) {
   var url = baseUrl + "/rpc/search_verses";
   var payload = extend4(assoc1("search_phrase")(query3))(jsonEmptyObject);
@@ -7612,7 +7590,7 @@ var liftFreeAp = /* @__PURE__ */ function() {
   return Lift.create;
 }();
 var goLeft = function(dictApplicative) {
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   return function(fStack) {
     return function(valStack) {
       return function(nat) {
@@ -7620,7 +7598,7 @@ var goLeft = function(dictApplicative) {
           return function(count) {
             if (func instanceof Pure) {
               return new Tuple(new Cons({
-                func: pure17(func.value0),
+                func: pure16(func.value0),
                 count
               }, fStack), valStack);
             }
@@ -7691,7 +7669,7 @@ var functorFreeAp = {
 };
 var foldFreeAp = function(dictApplicative) {
   var goApply1 = goApply(dictApplicative);
-  var pure17 = pure(dictApplicative);
+  var pure16 = pure(dictApplicative);
   var goLeft1 = goLeft(dictApplicative);
   return function(nat) {
     return function(z) {
@@ -7700,7 +7678,7 @@ var foldFreeAp = function(dictApplicative) {
         var $tco_result;
         function $tco_loop(v) {
           if (v.value1.value0 instanceof Pure) {
-            var v1 = goApply1(v.value0)(v.value1.value1)(pure17(v.value1.value0.value0));
+            var v1 = goApply1(v.value0)(v.value1.value1)(pure16(v.value1.value0.value0));
             if (v1 instanceof Left) {
               $tco_done = true;
               return v1.value0;
@@ -8126,13 +8104,13 @@ var liftF = function(f) {
 var foldFree = function(dictMonadRec) {
   var Monad0 = dictMonadRec.Monad0();
   var map111 = map(Monad0.Bind1().Apply0().Functor0());
-  var pure17 = pure(Monad0.Applicative0());
+  var pure16 = pure(Monad0.Applicative0());
   var tailRecM4 = tailRecM(dictMonadRec);
   return function(k) {
     var go2 = function(f) {
       var v = toView(f);
       if (v instanceof Return) {
-        return map111(Done.create)(pure17(v.value0));
+        return map111(Done.create)(pure16(v.value0));
       }
       ;
       if (v instanceof Bind) {
@@ -8372,9 +8350,9 @@ var query = function() {
         return function(p2) {
           return function(q2) {
             return liftF(new ChildQuery2(mkChildQueryBox(new ChildQuery(function(dictApplicative) {
-              var pure17 = pure(dictApplicative);
+              var pure16 = pure(dictApplicative);
               return function(k) {
-                var $177 = maybe(pure17(Nothing.value))(k);
+                var $177 = maybe(pure16(Nothing.value))(k);
                 var $178 = lookup23(label5)(p2);
                 return function($179) {
                   return $177($178($179));
@@ -8717,10 +8695,10 @@ function unsafeReadPropImpl(f, s, key2, value16) {
 // output/Foreign.Index/index.js
 var unsafeReadProp = function(dictMonad) {
   var fail3 = fail(dictMonad);
-  var pure17 = pure(applicativeExceptT(dictMonad));
+  var pure16 = pure(applicativeExceptT(dictMonad));
   return function(k) {
     return function(value16) {
-      return unsafeReadPropImpl(fail3(new TypeMismatch("object", typeOf(value16))), pure17, k, value16);
+      return unsafeReadPropImpl(fail3(new TypeMismatch("object", typeOf(value16))), pure16, k, value16);
     };
   };
 };
@@ -11171,16 +11149,14 @@ var pericopeIsSymbol = {
 };
 var slot2 = /* @__PURE__ */ slot()(pericopeIsSymbol)(ordInt);
 var component1 = /* @__PURE__ */ component(monadAffAff);
+var map29 = /* @__PURE__ */ map(functorArray);
 var discard6 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
-var map29 = /* @__PURE__ */ map(functorArray);
-var bind15 = /* @__PURE__ */ bind(bindMaybe);
-var pure15 = /* @__PURE__ */ pure(applicativeMaybe);
 var $$void7 = /* @__PURE__ */ $$void(functorHalogenM);
 var query2 = /* @__PURE__ */ query()(pericopeIsSymbol)(ordInt);
 var for_3 = /* @__PURE__ */ for_(applicativeHalogenM)(foldableArray);
 var liftAff2 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
-var pure16 = /* @__PURE__ */ pure(applicativeHalogenM);
+var pure15 = /* @__PURE__ */ pure(applicativeHalogenM);
 var modify_4 = /* @__PURE__ */ modify_2(monadStateHalogenM);
 var Initialize2 = /* @__PURE__ */ function() {
   function Initialize3() {
@@ -11346,16 +11322,6 @@ var SearchResultsClick = /* @__PURE__ */ function() {
   };
   return SearchResultsClick2;
 }();
-var SelectionRibbonClick = /* @__PURE__ */ function() {
-  function SelectionRibbonClick2(value0) {
-    this.value0 = value0;
-  }
-  ;
-  SelectionRibbonClick2.create = function(value0) {
-    return new SelectionRibbonClick2(value0);
-  };
-  return SelectionRibbonClick2;
-}();
 var syncUrl = /* @__PURE__ */ bind8(get5)(function(st) {
   return liftEffect7(storeSeeds(pericopesToSeeds(st.pericopes)));
 });
@@ -11386,12 +11352,12 @@ var stripTags = /* @__PURE__ */ function() {
         ;
       }
       ;
-      throw new Error("Failed pattern match at Main (line 218, column 5 - line 224, column 50): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 174, column 5 - line 180, column 50): " + [v.constructor.name]);
     };
   };
-  var $219 = go2(false);
-  return function($220) {
-    return fromCharArray($219(toCharArray($220)));
+  var $191 = go2(false);
+  return function($192) {
+    return fromCharArray($191(toCharArray($192)));
   };
 }();
 var reorder = function(fromId) {
@@ -11424,8 +11390,8 @@ var renderSearchResult = function(result) {
   })])([div2([class_("search-result-address")])([text5("~" + details2.address)]), div2([class_("search-result-source")])([text5("@" + details2.source)]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
 };
 var renderSearchResults = function(st) {
-  var $86 = !st.searchOpen || $$null(st.searchResults);
-  if ($86) {
+  var $77 = !st.searchOpen || $$null(st.searchResults);
+  if ($77) {
     return [];
   }
   ;
@@ -11442,15 +11408,15 @@ var renderSearchFeedback = function(st) {
   }
   ;
   if (!st.searchLoading && st.searchError instanceof Nothing) {
-    var $90 = st.searchPerformed && $$null(st.searchResults);
-    if ($90) {
+    var $81 = st.searchPerformed && $$null(st.searchResults);
+    if ($81) {
       return [div2(baseAttrs)([text5("No results")])];
     }
     ;
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Main (line 170, column 6 - line 179, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
+  throw new Error("Failed pattern match at Main (line 126, column 6 - line 135, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
 };
 var renderSearchSection = function(st) {
   return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([input2([attr2("type")("text"), placeholder3("Search verses"), value15(st.searchInput), onValueInput(UpdateSearchInput.create), onFocus(function(v) {
@@ -11464,6 +11430,11 @@ var pericopeSlot = /* @__PURE__ */ function() {
 var renderPericope = function(p2) {
   return slot2(pericopeSlot)(p2.id)(component1)(p2)(ChildMsg.create(p2.id));
 };
+var render2 = function(st) {
+  return div2([onClick(function(v) {
+    return HandleDocumentClick.value;
+  })])([renderSearchSection(st), div_(map29(renderPericope)(st.pericopes)), renderFooter]);
+};
 var insertPericope = function(address2) {
   return function(source2) {
     return function(verses) {
@@ -11476,17 +11447,17 @@ var insertPericope = function(address2) {
           selected: empty4
         };
         return discard6(put3(function() {
-          var $91 = {};
-          for (var $92 in st) {
-            if ({}.hasOwnProperty.call(st, $92)) {
-              $91[$92] = st[$92];
+          var $82 = {};
+          for (var $83 in st) {
+            if ({}.hasOwnProperty.call(st, $83)) {
+              $82[$83] = st[$83];
             }
             ;
           }
           ;
-          $91.pericopes = snoc(st.pericopes)(pericope);
-          $91.nextId = st.nextId + 1 | 0;
-          return $91;
+          $82.pericopes = snoc(st.pericopes)(pericope);
+          $82.nextId = st.nextId + 1 | 0;
+          return $82;
         }()))(function() {
           return syncUrl;
         });
@@ -11508,66 +11479,6 @@ var initialState = function(v) {
     searchError: Nothing.value
   };
 };
-var expandSelectionAddress = function(addressText) {
-  var segments = filter(function(v2) {
-    return v2 !== "";
-  })(map29(trim)(split(".")(addressText)));
-  var applyPrefix = function(v2) {
-    return function(v1) {
-      if (v2 instanceof Nothing) {
-        return v1;
-      }
-      ;
-      if (v2 instanceof Just) {
-        var $96 = contains(",")(v1);
-        if ($96) {
-          return v1;
-        }
-        ;
-        return v2.value0 + v1;
-      }
-      ;
-      throw new Error("Failed pattern match at Main (line 488, column 5 - line 488, column 52): " + [v2.constructor.name, v1.constructor.name]);
-    };
-  };
-  var addressPrefixFromString = function(segment) {
-    return bind15(lastIndexOf2(",")(segment))(function(ix) {
-      return pure15(take2(ix + 1 | 0)(segment));
-    });
-  };
-  var v = uncons(segments);
-  if (v instanceof Nothing) {
-    return [];
-  }
-  ;
-  if (v instanceof Just) {
-    var prefix = addressPrefixFromString(v.value0.head);
-    var restWithPrefix = mapFlipped4(v.value0.tail)(applyPrefix(prefix));
-    return cons(v.value0.head)(restWithPrefix);
-  }
-  ;
-  throw new Error("Failed pattern match at Main (line 475, column 3 - line 481, column 40): " + [v.constructor.name]);
-};
-var selectedPericopeAddresses = function(pericopes) {
-  var selectionFromPericope = function(p2) {
-    var text6 = selectedAddressText(p2);
-    return {
-      text: text6,
-      groups: expandSelectionAddress(text6)
-    };
-  };
-  var pericopesWithSelection = mapFlipped4(filter(function(p2) {
-    return size3(p2.selected) > 0;
-  })(pericopes))(selectionFromPericope);
-  if (pericopesWithSelection.length === 2) {
-    return new Just({
-      first: pericopesWithSelection[0],
-      second: pericopesWithSelection[1]
-    });
-  }
-  ;
-  return Nothing.value;
-};
 var handle2 = function(action2) {
   var cancelEditing = function(p2) {
     return $$void7(query2(pericopeSlot)(p2.id)(new CancelEditing(unit)));
@@ -11588,8 +11499,8 @@ var handle2 = function(action2) {
         source: "TRO+"
       }];
       var seeds = function() {
-        var $106 = $$null(urlSeeds);
-        if ($106) {
+        var $86 = $$null(urlSeeds);
+        if ($86) {
           return defaultSeeds;
         }
         ;
@@ -11598,14 +11509,14 @@ var handle2 = function(action2) {
       return for_3(seeds)(function(v2) {
         return bind8(liftAff2(fetchVerses(v2.address)(v2.source)))(function(res) {
           if (res instanceof Left) {
-            return pure16(unit);
+            return pure15(unit);
           }
           ;
           if (res instanceof Right) {
             return insertPericope(v2.address)(v2.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Main (line 255, column 7 - line 257, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Main (line 211, column 7 - line 213, column 61): " + [res.constructor.name]);
         });
       });
     });
@@ -11617,43 +11528,43 @@ var handle2 = function(action2) {
   ;
   if (action2 instanceof UpdateSearchInput) {
     return modify_4(function(st) {
-      var $116 = {};
-      for (var $117 in st) {
-        if ({}.hasOwnProperty.call(st, $117)) {
-          $116[$117] = st[$117];
+      var $96 = {};
+      for (var $97 in st) {
+        if ({}.hasOwnProperty.call(st, $97)) {
+          $96[$97] = st[$97];
         }
         ;
       }
       ;
-      $116.searchInput = action2.value0;
-      return $116;
+      $96.searchInput = action2.value0;
+      return $96;
     });
   }
   ;
   if (action2 instanceof SubmitSearch) {
     return bind8(get5)(function(st) {
       var query1 = trim(st.searchInput);
-      var $120 = query1 === "";
-      if ($120) {
-        return pure16(unit);
+      var $100 = query1 === "";
+      if ($100) {
+        return pure15(unit);
       }
       ;
       return discard6(modify_4(function(state3) {
-        var $121 = {};
-        for (var $122 in state3) {
-          if ({}.hasOwnProperty.call(state3, $122)) {
-            $121[$122] = state3[$122];
+        var $101 = {};
+        for (var $102 in state3) {
+          if ({}.hasOwnProperty.call(state3, $102)) {
+            $101[$102] = state3[$102];
           }
           ;
         }
         ;
-        $121.searchInput = query1;
-        $121.searchLoading = true;
-        $121.searchError = Nothing.value;
-        $121.searchOpen = true;
-        $121.searchPerformed = true;
-        $121.searchResults = [];
-        return $121;
+        $101.searchInput = query1;
+        $101.searchLoading = true;
+        $101.searchError = Nothing.value;
+        $101.searchOpen = true;
+        $101.searchPerformed = true;
+        $101.searchResults = [];
+        return $101;
       }))(function() {
         return bind8(liftAff2(searchVerses(query1)))(function(res) {
           return handle2(new ReceiveSearchResults(res));
@@ -11665,73 +11576,73 @@ var handle2 = function(action2) {
   if (action2 instanceof ReceiveSearchResults) {
     if (action2.value0 instanceof Left) {
       return modify_4(function(st) {
-        var $125 = {};
-        for (var $126 in st) {
-          if ({}.hasOwnProperty.call(st, $126)) {
-            $125[$126] = st[$126];
+        var $105 = {};
+        for (var $106 in st) {
+          if ({}.hasOwnProperty.call(st, $106)) {
+            $105[$106] = st[$106];
           }
           ;
         }
         ;
-        $125.searchLoading = false;
-        $125.searchError = new Just(action2.value0.value0);
-        $125.searchResults = [];
-        return $125;
+        $105.searchLoading = false;
+        $105.searchError = new Just(action2.value0.value0);
+        $105.searchResults = [];
+        return $105;
       });
     }
     ;
     if (action2.value0 instanceof Right) {
       return modify_4(function(st) {
-        var $129 = {};
-        for (var $130 in st) {
-          if ({}.hasOwnProperty.call(st, $130)) {
-            $129[$130] = st[$130];
+        var $109 = {};
+        for (var $110 in st) {
+          if ({}.hasOwnProperty.call(st, $110)) {
+            $109[$110] = st[$110];
           }
           ;
         }
         ;
-        $129.searchLoading = false;
-        $129.searchError = Nothing.value;
-        $129.searchResults = action2.value0.value0;
-        $129.searchOpen = true;
-        return $129;
+        $109.searchLoading = false;
+        $109.searchError = Nothing.value;
+        $109.searchResults = action2.value0.value0;
+        $109.searchOpen = true;
+        return $109;
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 282, column 31 - line 295, column 10): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 238, column 31 - line 251, column 10): " + [action2.value0.constructor.name]);
   }
   ;
   if (action2 instanceof SelectSearchResult) {
     var details2 = unwrap7(action2.value0);
     return discard6(modify_4(function(st) {
-      var $134 = {};
-      for (var $135 in st) {
-        if ({}.hasOwnProperty.call(st, $135)) {
-          $134[$135] = st[$135];
+      var $114 = {};
+      for (var $115 in st) {
+        if ({}.hasOwnProperty.call(st, $115)) {
+          $114[$115] = st[$115];
         }
         ;
       }
       ;
-      $134.searchOpen = false;
-      return $134;
+      $114.searchOpen = false;
+      return $114;
     }))(function() {
       return bind8(liftAff2(fetchVerses(details2.address)(details2.source)))(function(res) {
         if (res instanceof Left) {
-          return pure16(unit);
+          return pure15(unit);
         }
         ;
         if (res instanceof Right) {
           return insertPericope(details2.address)(details2.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 301, column 5 - line 303, column 75): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 257, column 5 - line 259, column 75): " + [res.constructor.name]);
       });
     });
   }
   ;
   if (action2 instanceof FocusSearchInput) {
     return modify_4(function(st) {
-      var $143 = st.searchPerformed || (st.searchLoading || function() {
+      var $123 = st.searchPerformed || (st.searchLoading || function() {
         if (st.searchError instanceof Just) {
           return true;
         }
@@ -11740,19 +11651,19 @@ var handle2 = function(action2) {
           return false;
         }
         ;
-        throw new Error("Failed pattern match at Main (line 307, column 53 - line 309, column 29): " + [st.searchError.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 263, column 53 - line 265, column 29): " + [st.searchError.constructor.name]);
       }());
-      if ($143) {
-        var $144 = {};
-        for (var $145 in st) {
-          if ({}.hasOwnProperty.call(st, $145)) {
-            $144[$145] = st[$145];
+      if ($123) {
+        var $124 = {};
+        for (var $125 in st) {
+          if ({}.hasOwnProperty.call(st, $125)) {
+            $124[$125] = st[$125];
           }
           ;
         }
         ;
-        $144.searchOpen = true;
-        return $144;
+        $124.searchOpen = true;
+        return $124;
       }
       ;
       return st;
@@ -11761,16 +11672,16 @@ var handle2 = function(action2) {
   ;
   if (action2 instanceof CloseSearchResults) {
     return modify_4(function(st) {
-      var $147 = {};
-      for (var $148 in st) {
-        if ({}.hasOwnProperty.call(st, $148)) {
-          $147[$148] = st[$148];
+      var $127 = {};
+      for (var $128 in st) {
+        if ({}.hasOwnProperty.call(st, $128)) {
+          $127[$128] = st[$128];
         }
         ;
       }
       ;
-      $147.searchOpen = false;
-      return $147;
+      $127.searchOpen = false;
+      return $127;
     });
   }
   ;
@@ -11784,21 +11695,21 @@ var handle2 = function(action2) {
       return handle2(CloseSearchResults.value);
     }
     ;
-    return pure16(unit);
+    return pure15(unit);
   }
   ;
   if (action2 instanceof HandleDocumentClick) {
     return discard6(modify_4(function(st) {
-      var $152 = {};
-      for (var $153 in st) {
-        if ({}.hasOwnProperty.call(st, $153)) {
-          $152[$153] = st[$153];
+      var $132 = {};
+      for (var $133 in st) {
+        if ({}.hasOwnProperty.call(st, $133)) {
+          $132[$133] = st[$133];
         }
         ;
       }
       ;
-      $152.searchOpen = false;
-      return $152;
+      $132.searchOpen = false;
+      return $132;
     }))(function() {
       return bind8(get5)(function(st) {
         return for_3(st.pericopes)(cancelEditing);
@@ -11816,95 +11727,78 @@ var handle2 = function(action2) {
     return liftEffect7(stopPropagation(toEvent2(action2.value0)));
   }
   ;
-  if (action2 instanceof SelectionRibbonClick) {
-    return discard6(liftEffect7(stopPropagation(toEvent2(action2.value0))))(function() {
-      return bind8(get5)(function(st) {
-        var v2 = selectedPericopeAddresses(st.pericopes);
-        if (v2 instanceof Nothing) {
-          return pure16(unit);
-        }
-        ;
-        if (v2 instanceof Just) {
-          return $$void7(liftAff2(postLocalReferences(v2.value0.first.text)(v2.value0.second.text)));
-        }
-        ;
-        throw new Error("Failed pattern match at Main (line 337, column 5 - line 340, column 70): " + [v2.constructor.name]);
-      });
-    });
-  }
-  ;
   if (action2 instanceof StartDrag) {
     return modify_4(function(st) {
-      var $162 = {};
-      for (var $163 in st) {
-        if ({}.hasOwnProperty.call(st, $163)) {
-          $162[$163] = st[$163];
+      var $137 = {};
+      for (var $138 in st) {
+        if ({}.hasOwnProperty.call(st, $138)) {
+          $137[$138] = st[$138];
         }
         ;
       }
       ;
-      $162.dragging = new Just(action2.value0);
-      return $162;
+      $137.dragging = new Just(action2.value0);
+      return $137;
     });
   }
   ;
   if (action2 instanceof OverDrag) {
     return modify_4(function(st) {
-      var $166 = {};
-      for (var $167 in st) {
-        if ({}.hasOwnProperty.call(st, $167)) {
-          $166[$167] = st[$167];
+      var $141 = {};
+      for (var $142 in st) {
+        if ({}.hasOwnProperty.call(st, $142)) {
+          $141[$142] = st[$142];
         }
         ;
       }
       ;
-      $166.droppingOver = new Just(action2.value0);
-      return $166;
+      $141.droppingOver = new Just(action2.value0);
+      return $141;
     });
   }
   ;
   if (action2 instanceof LeaveDrag) {
     return modify_4(function(st) {
-      var $170 = {};
-      for (var $171 in st) {
-        if ({}.hasOwnProperty.call(st, $171)) {
-          $170[$171] = st[$171];
+      var $145 = {};
+      for (var $146 in st) {
+        if ({}.hasOwnProperty.call(st, $146)) {
+          $145[$146] = st[$146];
         }
         ;
       }
       ;
-      $170.droppingOver = Nothing.value;
-      return $170;
+      $145.droppingOver = Nothing.value;
+      return $145;
     });
   }
   ;
   if (action2 instanceof DropOn) {
     return bind8(get5)(function(st) {
       if (st.dragging instanceof Nothing) {
-        return pure16(unit);
+        return pure15(unit);
       }
       ;
       if (st.dragging instanceof Just) {
         var ps = reorder(st.dragging.value0)(action2.value0)(st.pericopes);
         return discard6(put3(function() {
-          var $175 = {};
-          for (var $176 in st) {
-            if ({}.hasOwnProperty.call(st, $176)) {
-              $175[$176] = st[$176];
+          var $150 = {};
+          for (var $151 in st) {
+            if ({}.hasOwnProperty.call(st, $151)) {
+              $150[$151] = st[$151];
             }
             ;
           }
           ;
-          $175.pericopes = ps;
-          $175.dragging = Nothing.value;
-          $175.droppingOver = Nothing.value;
-          return $175;
+          $150.pericopes = ps;
+          $150.dragging = Nothing.value;
+          $150.droppingOver = Nothing.value;
+          return $150;
         }()))(function() {
           return syncUrl;
         });
       }
       ;
-      throw new Error("Failed pattern match at Main (line 353, column 5 - line 358, column 16): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at Main (line 301, column 5 - line 306, column 16): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -11915,43 +11809,43 @@ var handle2 = function(action2) {
           return q2.id === action2.value1.value0.id;
         })(st.pericopes);
         if (v2 instanceof Nothing) {
-          return pure16(unit);
+          return pure15(unit);
         }
         ;
         if (v2 instanceof Just) {
           return bind8(liftAff2(fetchVerses(v2.value0.address)(v2.value0.source)))(function(res) {
             if (res instanceof Left) {
-              return pure16(unit);
+              return pure15(unit);
             }
             ;
             if (res instanceof Right) {
               return insertPericope(v2.value0.address)(v2.value0.source)(res.value0);
             }
             ;
-            throw new Error("Failed pattern match at Main (line 369, column 11 - line 371, column 51): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at Main (line 317, column 11 - line 319, column 51): " + [res.constructor.name]);
           });
         }
         ;
-        throw new Error("Failed pattern match at Main (line 363, column 7 - line 371, column 51): " + [v2.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 311, column 7 - line 319, column 51): " + [v2.constructor.name]);
       });
     }
     ;
     if (action2.value1 instanceof DidRemove) {
       return discard6(modify_4(function(st) {
-        var $188 = length(st.pericopes) > 1;
-        if ($188) {
-          var $189 = {};
-          for (var $190 in st) {
-            if ({}.hasOwnProperty.call(st, $190)) {
-              $189[$190] = st[$190];
+        var $163 = length(st.pericopes) > 1;
+        if ($163) {
+          var $164 = {};
+          for (var $165 in st) {
+            if ({}.hasOwnProperty.call(st, $165)) {
+              $164[$165] = st[$165];
             }
             ;
           }
           ;
-          $189.pericopes = filter(function(q2) {
+          $164.pericopes = filter(function(q2) {
             return q2.id !== action2.value1.value0;
           })(st.pericopes);
-          return $189;
+          return $164;
         }
         ;
         return st;
@@ -11978,23 +11872,23 @@ var handle2 = function(action2) {
     ;
     if (action2.value1 instanceof DidUpdate) {
       return discard6(modify_4(function(st) {
-        var $198 = {};
-        for (var $199 in st) {
-          if ({}.hasOwnProperty.call(st, $199)) {
-            $198[$199] = st[$199];
+        var $173 = {};
+        for (var $174 in st) {
+          if ({}.hasOwnProperty.call(st, $174)) {
+            $173[$174] = st[$174];
           }
           ;
         }
         ;
-        $198.pericopes = mapFlipped4(st.pericopes)(function(q2) {
-          var $197 = q2.id === action2.value1.value0.id;
-          if ($197) {
+        $173.pericopes = mapFlipped4(st.pericopes)(function(q2) {
+          var $172 = q2.id === action2.value1.value0.id;
+          if ($172) {
             return action2.value1.value0;
           }
           ;
           return q2;
         });
-        return $198;
+        return $173;
       }))(function() {
         return syncUrl;
       });
@@ -12003,64 +11897,35 @@ var handle2 = function(action2) {
     if (action2.value1 instanceof DidLoadCrossReference) {
       return bind8(liftAff2(fetchVerses(action2.value1.value0.address)(action2.value1.value0.source)))(function(res) {
         if (res instanceof Left) {
-          return pure16(unit);
+          return pure15(unit);
         }
         ;
         if (res instanceof Right) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 400, column 7 - line 402, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 348, column 7 - line 350, column 61): " + [res.constructor.name]);
       });
     }
     ;
     if (action2.value1 instanceof DidCreatePericopeFromSelection) {
       return bind8(liftAff2(fetchVerses(action2.value1.value0.address)(action2.value1.value0.source)))(function(res) {
         if (res instanceof Left) {
-          return pure16(unit);
+          return pure15(unit);
         }
         ;
         if (res instanceof Right) {
           return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at Main (line 406, column 7 - line 408, column 61): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 354, column 7 - line 356, column 61): " + [res.constructor.name]);
       });
     }
     ;
-    throw new Error("Failed pattern match at Main (line 360, column 23 - line 408, column 61): " + [action2.value1.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 308, column 23 - line 356, column 61): " + [action2.value1.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at Main (line 243, column 17 - line 408, column 61): " + [action2.constructor.name]);
-};
-var renderSelectionRibbon = function(st) {
-  var renderSelectionColumn = function(groups) {
-    return ul([class_("selection-ribbon-column list-reset")])(function() {
-      var $216 = $$null(groups);
-      if ($216) {
-        return [li([class_("selection-ribbon-address")])([text5("(no selection)")])];
-      }
-      ;
-      return mapFlipped4(groups)(function(entry) {
-        return li([class_("selection-ribbon-address")])([text5(entry)]);
-      });
-    }());
-  };
-  var v = selectedPericopeAddresses(st.pericopes);
-  if (v instanceof Just) {
-    return [div2([class_("selection-ribbon"), onClick(SelectionRibbonClick.create)])([div2([class_("selection-ribbon-addresses")])([renderSelectionColumn(v.value0.first.groups), renderSelectionColumn(v.value0.second.groups)])])];
-  }
-  ;
-  if (v instanceof Nothing) {
-    return [];
-  }
-  ;
-  throw new Error("Failed pattern match at Main (line 113, column 3 - line 127, column 9): " + [v.constructor.name]);
-};
-var render2 = function(st) {
-  return div2([onClick(function(v) {
-    return HandleDocumentClick.value;
-  })])(append13(renderSelectionRibbon(st))([renderSearchSection(st), div_(map29(renderPericope)(st.pericopes)), renderFooter]));
+  throw new Error("Failed pattern match at Main (line 199, column 17 - line 356, column 61): " + [action2.constructor.name]);
 };
 var component2 = /* @__PURE__ */ function() {
   return mkComponent({
