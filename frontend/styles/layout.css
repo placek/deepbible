@@ -40,7 +40,7 @@ h2 {
 }
 
 .margin {
-  padding: 1em 0;
+  padding: 1em;
   width: 6em;
 }
 
@@ -80,10 +80,6 @@ h2 {
   border-top: 1px solid var(--base2);
 }
 
-.selected-address {
-  padding: 0 1em;
-}
-
 .source-option {
   padding: 0.5em;
 }
@@ -91,6 +87,7 @@ h2 {
 .textus {
   padding: 1em;
   flex: 1;
+  font-size: 1.2em;
 }
 
 

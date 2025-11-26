@@ -117,6 +117,10 @@ body {
   font-family: greek;
 }
 
+n, s, m {
+  font-family: monospace;
+}
+
 .cross-references {
 }
 
