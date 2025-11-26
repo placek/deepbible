@@ -66,6 +66,13 @@ input {
 
 .selected-address,
 .verse.selected {
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-decoration-line: underline;
+  text-decoration-color: var(--green);
+}
+
+.selected-address {
   color: var(--green);
 }
 
