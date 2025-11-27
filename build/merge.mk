@@ -56,6 +56,16 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  echo "  text TEXT" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
 	  \
+	  echo "DROP TABLE IF EXISTS _stories;" >> $$tmp_sql; \
+	  echo "CREATE TABLE _stories (" >> $$tmp_sql; \
+	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
+	  echo "  source_number INTEGER," >> $$tmp_sql; \
+	  echo "  book_number NUMERIC," >> $$tmp_sql; \
+	  echo "  chapter NUMERIC," >> $$tmp_sql; \
+	  echo "  verse NUMERIC," >> $$tmp_sql; \
+	  echo "  title TEXT" >> $$tmp_sql; \
+	  echo ");" >> $$tmp_sql; \
+	  \
 	  echo "DROP TABLE IF EXISTS _commentaries;" >> $$tmp_sql; \
 	  echo "CREATE TABLE _commentaries (" >> $$tmp_sql; \
 	  echo "  language TEXT NOT NULL," >> $$tmp_sql; \
@@ -97,6 +107,19 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    echo "       $$idx AS source_number," >> $$tmp_sql; \
 	    echo "       b.book_number, b.short_name, COALESCE(b.long_name, b.short_name) AS long_name" >> $$tmp_sql; \
 	    echo "FROM source.books b;" >> $$tmp_sql; \
+	    \
+	    has_stories=$$(sqlite3 "$$db" "SELECT 1 FROM sqlite_master WHERE type='table' AND name='stories' LIMIT 1;"); \
+	    if [ "$$has_stories" = "1" ]; then \
+	      echo "INSERT INTO _stories (language, source_number, book_number, chapter, verse, title)" >> $$tmp_sql; \
+	      echo "SELECT" >> $$tmp_sql; \
+	      echo "  '$*' AS language," >> $$tmp_sql; \
+	      echo "  CAST($$idx AS INTEGER) AS source_number," >> $$tmp_sql; \
+	      echo "  s.book_number," >> $$tmp_sql; \
+	      echo "  s.chapter," >> $$tmp_sql; \
+	      echo "  s.verse," >> $$tmp_sql; \
+	      echo "  s.title" >> $$tmp_sql; \
+	      echo "FROM source.stories s;" >> $$tmp_sql; \
+	    fi; \
 	    \
 	    echo "INSERT INTO _all_verses (" >> $$tmp_sql; \
 	    echo "  id, language, source, book, book_name, address," >> $$tmp_sql; \
