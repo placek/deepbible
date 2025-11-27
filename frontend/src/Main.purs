@@ -202,7 +202,7 @@ handle action = case action of
     let defaultSeeds =
           [ { address: "J 3,16-17", source: "NVUL" }
           , { address: "J 3,16-17", source: "NA28" }
-          , { address: "J 3,16-17", source: "BT" }
+          , { address: "J 3,16-17", source: "BT_03" }
           , { address: "J 3,16-17", source: "TRO+" }
           ]
         seeds = if A.null urlSeeds then defaultSeeds else urlSeeds
