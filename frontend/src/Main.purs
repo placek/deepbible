@@ -156,11 +156,14 @@ renderSearchResult result =
     , HE.onClick \_ -> SelectSearchResult result
     ]
     [ HH.div
-        [ HP.class_ (HH.ClassName "search-result-address") ]
-        [ HH.text ("~" <> details.address) ]
-    , HH.div
-        [ HP.class_ (HH.ClassName "search-result-source") ]
-        [ HH.text ("@" <> details.source) ]
+        [ HP.class_ (HH.ClassName "search-result-meta") ]
+        [ HH.div
+            [ HP.class_ (HH.ClassName "search-result-address") ]
+            [ HH.text ("~" <> details.address) ]
+        , HH.div
+            [ HP.class_ (HH.ClassName "search-result-source") ]
+            [ HH.text ("@" <> details.source) ]
+        ]
     , HH.div
         [ HP.class_ (HH.ClassName "search-result-text") ]
         [ HH.text (stripTags details.text) ]

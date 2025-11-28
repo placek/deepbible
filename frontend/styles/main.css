@@ -135,8 +135,17 @@ n, s, m {
 }
 
 .search-result {
+  display: flex;
+  gap: 0.75em;
   padding: 0.5em;
   cursor: pointer;
+}
+
+.search-result-meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-width: 2.5em;
 }
 
 .search-result-address,
@@ -145,6 +154,6 @@ n, s, m {
 }
 
 .search-result-text {
-  margin-top: 0.25em;
+  flex: 1 1 auto;
   font-size: 0.9em;
 }
