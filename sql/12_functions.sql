@@ -319,9 +319,10 @@ BEGIN
 END;
 $BODY$;
 
+-- full-text search for verses
 DROP FUNCTION IF EXISTS public.search_verses(text);
 CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
-  RETURNS SETOF _all_verses
+  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
   VOLATILE PARALLEL UNSAFE
@@ -332,34 +333,40 @@ DECLARE
   v_address text;
   v_term    text;
 BEGIN
-  v_source := substring(search_phrase from '@([^\s]+)');
-  v_address := substring(search_phrase from '~([^\s]*(\s+\d+(,\d+)?)?)');
-  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~\S*(\s+\d+(,\d+)?)?\s*', '', 'gi'));
+  v_source := substring(search_phrase from '@(\S+)');
+  v_address := substring(search_phrase from '~(\S*(\s+\d+(,[\d\-\.]+)?)?)');
+  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S*(\s+\d+(,[\d\-\.]+)?)?)', '', 'gi'));
+
+  RAISE NOTICE 'search_verses: source=%, address=%, term=%', v_source, v_address, v_term;
 
   IF v_term IS NULL OR v_term !~ '\w' THEN
     v_term := NULL;
   END IF;
 
+  IF v_address IS NOT NULL THEN
   RETURN QUERY
-  SELECT *
-  FROM public._all_verses v
-  WHERE (v_source  IS NULL OR v.source = v_source)
-    AND (v_address IS NULL OR v.address ILIKE
-           CASE
-           WHEN strpos(v_address, ' ') = 0 THEN v_address || ' %'
-           WHEN strpos(v_address, ',') = 0 THEN v_address || ',%'
-           ELSE v_address
-           END
-        )
-    AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
-  ORDER BY CASE
-           WHEN v_term IS NULL THEN -(book_number * 1000 + chapter * 100 + verse)
-           ELSE similarity(v.text, COALESCE(v_term, search_phrase))
-           END DESC
-  LIMIT 500;
+    SELECT *
+    FROM public.verses_by_address(v_address, v_source) v
+    WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
+    LIMIT 500;
+
+  ELSE
+  RETURN QUERY
+    SELECT *
+    FROM public._all_verses v
+    WHERE (v_source  IS NULL OR v.source = v_source)
+      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
+    ORDER BY CASE
+             WHEN v_term IS NULL THEN -(book_number * 1000 + chapter * 100 + verse)
+             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
+             END DESC
+    LIMIT 500;
+  END IF;
+
 END;
 $BODY$;
 
+-- materialized view of rendered stories
 DROP MATERIALIZED VIEW IF EXISTS public._rendered_stories;
 CREATE MATERIALIZED VIEW public._rendered_stories AS
 WITH
@@ -483,6 +490,7 @@ JOIN _all_sources src
  AND src.source_number = e.source_number
 ORDER BY e.language, src.name, e.book_number, e.start_chapter, e.start_verse, e.chapter;
 
+-- function to get rendered stories by source and address
 DROP FUNCTION IF EXISTS public.get_rendered_stories(text, text);
 CREATE OR REPLACE FUNCTION public.get_rendered_stories(p_source text, p_address text)
   RETURNS SETOF _rendered_stories 
