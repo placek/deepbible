@@ -11135,7 +11135,7 @@ var render = function(st) {
           ;
           return [ul([class_("commentaries list-reset")])(map27(renderCommentary)(st.crossRefs.value0.commentaries))];
         }();
-        return append12(crossReferenceNodes)(append12(commentaryNodes)(storyNodes));
+        return append12(storyNodes)(append12(crossReferenceNodes)(commentaryNodes));
       }
       ;
       throw new Error("Failed pattern match at Pericope (line 267, column 27 - line 303, column 67): " + [st.crossRefs.constructor.name]);

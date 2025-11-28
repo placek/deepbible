@@ -300,7 +300,7 @@ render st =
                       (renderStory <$> payload.stories)
                   ]
             in
-              crossReferenceNodes <> commentaryNodes <> storyNodes
+              storyNodes <> crossReferenceNodes <> commentaryNodes
         renderRef (CrossReference ref) =
           HH.li
             [ HP.class_ (HH.ClassName "cross-reference")
