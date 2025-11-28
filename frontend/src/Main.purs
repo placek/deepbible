@@ -116,7 +116,7 @@ renderSearchSection st =
                   , HH.input
                       [ HP.class_ (HH.ClassName "search-input")
                       , HP.attr (HH.AttrName "type") "text"
-                      , HP.placeholder "Search verses"
+                      , HP.placeholder "search verses, e.g. '@NVUL ~J 3,10- Deus'"
                       , HP.value st.searchInput
                       , HE.onValueInput UpdateSearchInput
                       , HE.onFocus \_ -> FocusSearchInput
@@ -136,7 +136,7 @@ renderSearchInputHighlights input =
     segments = splitSearchInput input
   in
     if CU.length input == 0 then
-      [ HH.span [ HP.class_ (HH.ClassName "search-input-placeholder") ] [ HH.text "Search verses" ] ]
+      [ HH.span [ HP.class_ (HH.ClassName "search-input-placeholder") ] [ HH.text "" ] ]
     else
       segments <#> renderSegment
   where

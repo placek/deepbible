@@ -11561,7 +11561,7 @@ var renderSearchInputHighlights = function(input3) {
   var segments = splitSearchInput(input3);
   var $82 = length3(input3) === 0;
   if ($82) {
-    return [span4([class_("search-input-placeholder")])([text5("Search verses")])];
+    return [span4([class_("search-input-placeholder")])([text5("")])];
   }
   ;
   return mapFlipped4(segments)(renderSegment);
@@ -11588,7 +11588,7 @@ var renderSearchFeedback = function(st) {
   throw new Error("Failed pattern match at Main (line 155, column 6 - line 164, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
 };
 var renderSearchSection = function(st) {
-  return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("Search verses"), value15(st.searchInput), onValueInput(UpdateSearchInput.create), onFocus(function(v) {
+  return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. '@NVUL ~J 3,10- Deus'"), value15(st.searchInput), onValueInput(UpdateSearchInput.create), onFocus(function(v) {
     return FocusSearchInput.value;
   }), onClick(SearchInputClick.create), onKeyDown(HandleSearchKey.create)])])])])(append13(renderSearchFeedback(st))(renderSearchResults(st))));
 };
