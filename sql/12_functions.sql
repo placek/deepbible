@@ -352,12 +352,12 @@ BEGIN
 
   ELSE
   RETURN QUERY
-    SELECT *
+    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, v.text
     FROM public._all_verses v
     WHERE (v_source  IS NULL OR v.source = v_source)
       AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
     ORDER BY CASE
-             WHEN v_term IS NULL THEN -(book_number * 1000 + chapter * 100 + verse)
+             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
              ELSE similarity(v.text, COALESCE(v_term, search_phrase))
              END DESC
     LIMIT 500;
