@@ -20,3 +20,4 @@ GRANT EXECUTE ON FUNCTION public.verses_by_address(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.cross_references(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.commentaries(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.search_verses(text) TO web_anon;
+GRANT EXECUTE ON FUNCTION public.get_rendered_stories(text, text) TO web_anon;

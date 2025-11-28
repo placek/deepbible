@@ -359,3 +359,129 @@ BEGIN
   LIMIT 500;
 END;
 $BODY$;
+
+DROP VIEW public._rendered_stories;
+CREATE OR REPLACE VIEW public._rendered_stories AS
+WITH
+story_bounds AS (
+  SELECT
+     s.language,
+     s.source_number,
+     s.book_number,
+     s.title,
+     s.chapter AS start_chapter,
+     s.verse AS start_verse,
+     lead(s.chapter) OVER w AS next_chapter,
+     lead(s.verse) OVER w AS next_verse
+   FROM _all_stories s
+   WINDOW w AS (PARTITION BY s.language, s.source_number, s.book_number ORDER BY s.chapter, s.verse)
+),
+filtered_stories AS (
+  SELECT
+    sb.language,
+    sb.source_number,
+    sb.book_number,
+    sb.title,
+    sb.start_chapter,
+    sb.start_verse,
+    sb.next_chapter,
+    sb.next_verse
+  FROM story_bounds sb
+  WHERE NOT (sb.next_chapter = sb.start_chapter AND sb.next_verse = (sb.start_verse + 1::numeric))
+),
+story_chapter_range AS (
+  SELECT
+    fs.language,
+    fs.source_number,
+    fs.book_number,
+    fs.title,
+    fs.start_chapter,
+    fs.start_verse,
+    fs.next_chapter,
+    fs.next_verse,
+    CASE
+    WHEN fs.next_chapter IS NULL THEN fs.start_chapter
+    WHEN fs.next_chapter = fs.start_chapter THEN fs.start_chapter
+    WHEN fs.next_chapter > fs.start_chapter THEN
+      CASE
+      WHEN fs.next_verse IS NULL OR fs.next_verse = 1::numeric THEN fs.next_chapter - 1::numeric
+      ELSE fs.next_chapter
+      END
+    ELSE fs.start_chapter
+    END AS last_chapter
+  FROM filtered_stories fs
+),
+expanded AS (
+  SELECT
+    scr.language,
+    scr.source_number,
+    scr.book_number,
+    scr.title,
+    scr.start_chapter,
+    scr.start_verse,
+    scr.next_chapter,
+    scr.next_verse,
+    scr.last_chapter,
+    chap.chap AS chapter,
+    CASE
+    WHEN chap.chap = scr.start_chapter THEN scr.start_verse
+    ELSE 1::numeric
+    END AS from_verse,
+    CASE
+    WHEN scr.next_chapter IS NULL THEN NULL::numeric
+    WHEN scr.next_chapter = scr.start_chapter THEN scr.next_verse - 1::numeric
+    WHEN scr.next_chapter > scr.start_chapter THEN
+      CASE
+      WHEN chap.chap < scr.last_chapter THEN NULL::numeric
+      WHEN chap.chap = scr.last_chapter THEN
+        CASE
+        WHEN scr.next_verse IS NULL OR scr.next_verse = 1::numeric THEN NULL::numeric
+        ELSE scr.next_verse - 1::numeric
+        END
+      ELSE NULL::numeric
+      END
+    ELSE NULL::numeric
+    END AS to_verse
+  FROM story_chapter_range scr
+  JOIN LATERAL generate_series(scr.start_chapter, scr.last_chapter) chap(chap) ON true
+)
+
+SELECT
+  src.name AS source,
+  b.short_name AS book,
+  e.title,
+  format(
+    CASE
+    WHEN e.to_verse IS NULL THEN '%s %s,%s-'::text
+    WHEN e.to_verse = e.from_verse THEN '%s %s,%s'::text
+    WHEN e.to_verse = 0::numeric THEN '%s %s,1'::text
+    ELSE '%s %s,%s-%s'::text
+    END, b.short_name, e.chapter, e.from_verse, e.to_verse) AS address,
+  1000::numeric * e.chapter + e.from_verse AS a,
+  1000::numeric * e.chapter +
+    CASE
+    WHEN e.to_verse IS NULL THEN 999::numeric
+    WHEN e.to_verse = 0::numeric THEN 1::numeric
+    ELSE e.to_verse
+    END AS b
+FROM expanded e
+JOIN _all_books b ON b.language = e.language AND b.source_number = e.source_number AND b.book_number::numeric = e.book_number
+JOIN _all_sources src ON src.language = e.language AND src.source_number = e.source_number
+ORDER BY e.language, src.name, e.book_number, e.start_chapter, e.start_verse, e.chapter;
+
+DROP FUNCTION IF EXISTS public.get_rendered_stories(text, text);
+CREATE OR REPLACE FUNCTION public.get_rendered_stories(p_source text, p_address text)
+  RETURNS SETOF _rendered_stories 
+  LANGUAGE 'sql'
+  COST 100
+  STABLE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+  SELECT s.*
+  FROM public._rendered_stories AS s
+  JOIN public.parse_address(p_address) AS a
+    ON (1000 * a.chapter + a.verse BETWEEN s.a AND s.b)
+   AND s.a <> s.b
+   AND s.book = a.book
+  WHERE s.source = p_source;
+$BODY$;
