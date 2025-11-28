@@ -112,13 +112,13 @@ input {
 }
 
 .commentary-text *,
+.commentary-marker,
 .verse e,
 .verse n,
 .verse f {
   color: var(--base1);
 }
 
-.commentary-marker,
 .story-address {
   color: var(--magenta);
 }
