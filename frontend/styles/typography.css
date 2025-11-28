@@ -134,3 +134,11 @@ h2 {
 .app-footer a:hover {
   text-decoration: underline;
 }
+
+.story {
+  font-size: x-small;
+}
+
+.story-title {
+  font-weight: bold;
+}
