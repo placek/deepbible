@@ -11,6 +11,7 @@ import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Const (Const)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
+import Data.String.CodeUnits as CU
 import Data.String.Common (trim)
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -25,6 +26,7 @@ import Type.Proxy (Proxy(..))
 import Pericope as P
 import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
+import SearchHighlight (splitSearchInput, toMaybeColor)
 import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
@@ -104,20 +106,47 @@ renderSearchSection st =
     [ HP.class_ (HH.ClassName "search-section") ]
     ( [ HH.div
           [ HP.class_ (HH.ClassName "search-input-group") ]
-              [ HH.input
-                  [ HP.attr (HH.AttrName "type") "text"
-                  , HP.placeholder "Search verses"
-                  , HP.value st.searchInput
-                  , HE.onValueInput UpdateSearchInput
-                  , HE.onFocus \_ -> FocusSearchInput
-                  , HE.onClick SearchInputClick
-                  , HE.onKeyDown HandleSearchKey
+              [ HH.div
+                  [ HP.class_ (HH.ClassName "search-input-wrapper") ]
+                  [ HH.div
+                      [ HP.class_ (HH.ClassName "search-input-highlight")
+                      , HP.attr (HH.AttrName "aria-hidden") "true"
+                      ]
+                      (renderSearchInputHighlights st.searchInput)
+                  , HH.input
+                      [ HP.class_ (HH.ClassName "search-input")
+                      , HP.attr (HH.AttrName "type") "text"
+                      , HP.placeholder "Search verses"
+                      , HP.value st.searchInput
+                      , HE.onValueInput UpdateSearchInput
+                      , HE.onFocus \_ -> FocusSearchInput
+                      , HE.onClick SearchInputClick
+                      , HE.onKeyDown HandleSearchKey
+                      ]
                   ]
               ]
           ]
         <> renderSearchFeedback st
         <> renderSearchResults st
     )
+
+renderSearchInputHighlights :: String -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderSearchInputHighlights input =
+  let
+    segments = splitSearchInput input
+  in
+    if CU.length input == 0 then
+      [ HH.span [ HP.class_ (HH.ClassName "search-input-placeholder") ] [ HH.text "Search verses" ] ]
+    else
+      segments <#> renderSegment
+  where
+  renderSegment segment =
+    case toMaybeColor segment of
+      Just "yellow" ->
+        HH.span [ HP.class_ (HH.ClassName "search-token search-token--yellow") ] [ HH.text segment.text ]
+      Just "red" ->
+        HH.span [ HP.class_ (HH.ClassName "search-token search-token--red") ] [ HH.text segment.text ]
+      _ -> HH.span_ [ HH.text segment.text ]
 
 renderSearchFeedback :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
 renderSearchFeedback st =

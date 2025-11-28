@@ -110,14 +110,47 @@ n, s, m {
   align-items: center;
 }
 
-.search-input-group input {
+.search-input-wrapper {
+  position: relative;
   flex: 1;
+  background-color: var(--base3);
+}
+
+.search-input-group input {
+  width: 100%;
   padding: 0.5em 0.75em;
   border: none;
+  background-color: transparent;
+  color: transparent;
+  caret-color: var(--base00);
+  position: relative;
+  z-index: 1;
 }
 
 .search-input-group input:focus-visible {
   outline: none;
+}
+
+.search-input-highlight {
+  position: absolute;
+  inset: 0;
+  padding: 0.5em 0.75em;
+  pointer-events: none;
+  white-space: pre-wrap;
+  color: var(--base00);
+  overflow: hidden;
+}
+
+.search-token--yellow {
+  color: var(--yellow);
+}
+
+.search-token--red {
+  color: var(--red);
+}
+
+.search-input-placeholder {
+  color: var(--base1);
 }
 
 .search-status {
