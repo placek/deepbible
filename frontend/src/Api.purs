@@ -12,7 +12,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary, VerseSearchResult)
+import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary, VerseSearchResult, Story)
 import Query (encodeURIComponent)
 
 baseUrl :: String
@@ -63,6 +63,18 @@ fetchCommentaries verseId = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left $ "Failed to fetch commentaries: " <> verseId
       Right commentaries -> pure $ Right commentaries
+
+fetchRenderedStories :: Source -> Address -> Aff (Either String (Array Story))
+fetchRenderedStories source address = do
+  let
+    url = baseUrl <> "/rpc/get_rendered_stories"
+    payload = ("p_source" := fromString source) ~> ("p_address" := fromString address) ~> jsonEmptyObject
+  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left $ "Failed to fetch stories: " <> address
+      Right stories -> pure $ Right stories
 
 searchVerses :: String -> Aff (Either String (Array VerseSearchResult))
 searchVerses query = do

@@ -102,6 +102,10 @@ h2 {
   margin: 0.3em 0;
 }
 
+.story {
+  font-size: small;
+}
+
 .commentary-marker {
   margin-right: 0.3em;
 }

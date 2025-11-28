@@ -2,7 +2,7 @@ module Pericope (Query(..), Output(..), component, selectedAddressText) where
 
 import Prelude
 
-import Api (fetchCommentaries, fetchCrossReferences, fetchSources, fetchVerses)
+import Api (fetchCommentaries, fetchCrossReferences, fetchRenderedStories, fetchSources, fetchVerses)
 import Data.Array (catMaybes)
 import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower)
 import Data.String.CodeUnits as CU
@@ -22,7 +22,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Effect.Aff.Class (class MonadAff)
 
-import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, CrossReference(..), Commentary(..), VerseId)
+import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, CrossReference(..), Commentary(..), Story(..), VerseId)
 
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 
@@ -41,6 +41,7 @@ data Output
   | DidUpdate Pericope
   | DidLoadCrossReference { source :: Source, address :: Address }
   | DidCreatePericopeFromSelection { source :: Source, address :: Address }
+  | DidLoadStory { source :: Source, address :: Address }
 
 type State =
   { pericope :: Pericope
@@ -55,7 +56,7 @@ type State =
 data CrossRefState
   = CrossRefsIdle
   | CrossRefsLoading
-  | CrossRefsLoaded { references :: Array CrossReference, commentaries :: Array Commentary }
+  | CrossRefsLoaded { references :: Array CrossReference, commentaries :: Array Commentary, stories :: Array Story }
 
 component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
@@ -101,6 +102,7 @@ data Action
   | Drop DragEvent
   | Receive Pericope
   | OpenCrossReference Address
+  | OpenStory { source :: Source, address :: Address }
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
@@ -290,8 +292,15 @@ render st =
                   [ HH.ul [ HP.class_ (HH.ClassName "commentaries list-reset") ]
                       (renderCommentary <$> payload.commentaries)
                   ]
+              storyNodes =
+                if A.null payload.stories then
+                  []
+                else
+                  [ HH.ul [ HP.class_ (HH.ClassName "stories list-reset") ]
+                      (renderStory <$> payload.stories)
+                  ]
             in
-              crossReferenceNodes <> commentaryNodes
+              crossReferenceNodes <> commentaryNodes <> storyNodes
         renderRef (CrossReference ref) =
           HH.li
             [ HP.class_ (HH.ClassName "cross-reference")
@@ -309,6 +318,18 @@ render st =
                 , HP.prop (HH.PropName "innerHTML") commentary.text
                 ]
                 []
+            ]
+        renderStory (Story story) =
+          HH.li
+            [ HP.class_ (HH.ClassName "story")
+            ]
+            [ HH.div [ HP.class_ (HH.ClassName "story-title") ] [ HH.text story.title ]
+            , HH.a
+                [ HP.class_ (HH.ClassName "story-address")
+                , HP.href "javascript:void(0)"
+                , HE.onClick \_ -> OpenStory { source: story.source, address: story.address }
+                ]
+                [ HH.text story.address ]
             ]
       in
       HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs)
@@ -440,25 +461,35 @@ handle = case _ of
       case selectedIds of
         [only] -> do
           let
+            selectedVerse = A.find (\(Verse v) -> v.verse_id == only) st.pericope.verses
             stillSelected verse = do
               st' <- H.get
               pure (Set.size st'.pericope.selected == 1 && Set.member verse st'.pericope.selected)
-          refsRes <- H.liftAff $ fetchCrossReferences only
-          stillAfterRefs <- stillSelected only
-          when stillAfterRefs do
-            commRes <- H.liftAff $ fetchCommentaries only
-            stillAfterCommentaries <- stillSelected only
-            when stillAfterCommentaries do
-              let
-                refs = case refsRes of
-                  Left _ -> []
-                  Right fetchedRefs -> fetchedRefs
-                commentaries = case commRes of
-                  Left _ -> []
-                  Right fetchedCommentaries -> fetchedCommentaries
-              H.modify_ _
-                { crossRefs = CrossRefsLoaded { references: refs, commentaries }
-                }
+          case selectedVerse of
+            Nothing -> pure unit
+            Just (Verse v) -> do
+              refsRes <- H.liftAff $ fetchCrossReferences only
+              stillAfterRefs <- stillSelected only
+              when stillAfterRefs do
+                commRes <- H.liftAff $ fetchCommentaries only
+                stillAfterCommentaries <- stillSelected only
+                when stillAfterCommentaries do
+                  storiesRes <- H.liftAff $ fetchRenderedStories v.source v.address
+                  stillAfterStories <- stillSelected only
+                  when stillAfterStories do
+                    let
+                      refs = case refsRes of
+                        Left _ -> []
+                        Right fetchedRefs -> fetchedRefs
+                      commentaries = case commRes of
+                        Left _ -> []
+                        Right fetchedCommentaries -> fetchedCommentaries
+                      stories = case storiesRes of
+                        Left _ -> []
+                        Right fetchedStories -> fetchedStories
+                    H.modify_ _
+                      { crossRefs = CrossRefsLoaded { references: refs, commentaries, stories }
+                      }
         _ -> pure unit
 
   Remove -> do
@@ -507,6 +538,9 @@ handle = case _ of
   OpenCrossReference address -> do
     st <- H.get
     H.raise (DidLoadCrossReference { source: st.pericope.source, address })
+
+  OpenStory payload -> do
+    H.raise (DidLoadStory payload)
 
 handleQuery
   :: forall a m

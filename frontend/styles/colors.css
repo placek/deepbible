@@ -118,7 +118,8 @@ input {
   color: var(--base1);
 }
 
-.commentary-marker {
+.commentary-marker,
+.story-address {
   color: var(--magenta);
 }
 

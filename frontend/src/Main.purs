@@ -355,6 +355,12 @@ handle action = case action of
         Left _ -> pure unit
         Right verses -> insertPericope address source verses
 
+    P.DidLoadStory { source, address } -> do
+      res <- H.liftAff $ fetchVerses address source
+      case res of
+        Left _ -> pure unit
+        Right verses -> insertPericope address source verses
+
   where
   cancelEditing
     :: Pericope

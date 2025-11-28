@@ -46,6 +46,18 @@ newtype Commentary =
 
 derive instance newtypeCommentary :: Newtype Commentary _
 
+newtype Story =
+  Story
+    { source :: Source
+    , book :: String
+    , title :: String
+    , address :: Address
+    , a :: Int
+    , b :: Int
+    }
+
+derive instance newtypeStory :: Newtype Story _
+
 -- A verse as returned by /rpc/verses_by_address
 newtype Verse =
   Verse
@@ -105,6 +117,17 @@ instance decodeCommentary :: DecodeJson Commentary where
     marker <- obj .: "marker"
     text <- obj .: "text"
     pure $ Commentary { marker, text }
+
+instance decodeStory :: DecodeJson Story where
+  decodeJson j = do
+    obj <- decodeJson j
+    source <- obj .: "source"
+    book <- obj .: "book"
+    title <- obj .: "title"
+    address <- obj .: "address"
+    a <- obj .: "a"
+    b <- obj .: "b"
+    pure $ Story { source, book, title, address, a, b }
 
 instance decodeVerseSearchResult :: DecodeJson VerseSearchResult where
   decodeJson j = do
