@@ -6,6 +6,7 @@ pkgs.mkShell {
     rlwrap
     sqlitebrowser
     pgloader
+    pgformatter
     postgresql
     p7zip
   ];
