@@ -1,28 +1,28 @@
-module Pericope (Query(..), Output(..), component, selectedAddressText) where
+module Pericope.Component (Query(..), Output(..), component, selectedAddressText) where
 
 import Prelude
 
-import Api (fetchCommentaries, fetchCrossReferences, fetchRenderedStories, fetchSources, fetchVerses)
 import Data.Array (catMaybes)
-import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower)
-import Data.String.CodeUnits as CU
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
-import Data.Set as Set
 import Data.Newtype (unwrap)
-import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
-import Web.HTML.Event.DragEvent (DragEvent)
-import Web.HTML.Event.DragEvent as DragEv
-import Web.Event.Event (preventDefault, stopPropagation)
-import Web.UIEvent.KeyboardEvent (key)
+import Data.Set as Set
+import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower)
+import Data.String.CodeUnits as CU
+import Domain.Bible.Types (Address, Commentary(..), CrossReference(..), Source, SourceInfo, Story(..), Verse(..), VerseId)
+import Domain.Pericope.Types (Pericope, PericopeId)
+import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Effect.Aff.Class (class MonadAff)
-
-import Types (Pericope, PericopeId, Verse(..), Address, Source, SourceInfo, CrossReference(..), Commentary(..), Story(..), VerseId)
+import Infrastructure.Api (fetchCommentaries, fetchCrossReferences, fetchRenderedStories, fetchSources, fetchVerses)
+import Web.Event.Event (preventDefault, stopPropagation)
+import Web.HTML.Event.DragEvent (DragEvent)
+import Web.HTML.Event.DragEvent as DragEv
+import Web.UIEvent.KeyboardEvent (key)
+import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 

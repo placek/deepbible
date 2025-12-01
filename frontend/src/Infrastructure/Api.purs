@@ -1,18 +1,18 @@
-module Api where
+module Infrastructure.Api where
 
 import Prelude
 
-import Affjax.Web (driver)
 import Affjax as AX
 import Affjax.RequestBody as RB
 import Affjax.ResponseFormat as RF
+import Affjax.Web (driver)
+import Data.Argonaut ((:=), decodeJson, jsonEmptyObject, (~>))
 import Data.Argonaut.Core (fromString)
-import Data.Argonaut ((:=), (~>), jsonEmptyObject, decodeJson)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Types (Verse, Address, Source, SourceInfo, VerseId, CrossReference, Commentary, VerseSearchResult, Story)
+import Domain.Bible.Types (Address, Commentary, CrossReference, Source, SourceInfo, Story, Verse, VerseId, VerseSearchResult)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"

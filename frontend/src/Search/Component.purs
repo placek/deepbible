@@ -1,8 +1,7 @@
-module Search where
+module Search.Component where
 
 import Prelude
 
-import Api (fetchVerses, searchVerses)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -15,11 +14,14 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import SearchHighlight (splitSearchInput, toMaybeColor)
-import Types (AppState, Verse, VerseSearchResult)
 import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
+
+import App.State (AppState)
+import Domain.Bible.Types (Verse, VerseSearchResult)
+import Infrastructure.Api (fetchVerses, searchVerses)
+import Search.Highlight (splitSearchInput, toMaybeColor)
 
 -- Actions specific to search functionality
 -- Consumers should wrap these in their own action type.

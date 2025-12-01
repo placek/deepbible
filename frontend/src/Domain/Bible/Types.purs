@@ -1,16 +1,15 @@
-module Types where
+module Domain.Bible.Types where
 
 import Prelude
 
-import Data.Maybe (Maybe)
-import Data.Newtype (class Newtype)
-import Data.Set as Set
 import Data.Argonaut (class DecodeJson, decodeJson, (.:))
+import Data.Newtype (class Newtype)
+
+-- Core domain primitives
 
 type Address = String
 type Source = String
 type VerseId = String
-type PericopeId = Int
 
 newtype VerseSearchResult =
   VerseSearchResult
@@ -140,27 +139,3 @@ instance decodeVerseSearchResult :: DecodeJson VerseSearchResult where
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =
     "Verse { verse_id: " <> show verse_id <> ", text: " <> show text <> " }"
-
--- One pericope = didascalia (address + source) + list of verses
-
-type Pericope =
-  { id :: PericopeId
-  , address :: Address
-  , source :: Source
-  , verses :: Array Verse
-  , selected :: Set.Set VerseId
-  }
-
--- App state = list of pericopes in order + dnd drag state
-type AppState =
-  { pericopes :: Array Pericope
-  , dragging :: Maybe PericopeId
-  , droppingOver :: Maybe PericopeId
-  , nextId :: Int
-  , searchInput :: String
-  , searchResults :: Array VerseSearchResult
-  , searchOpen :: Boolean
-  , searchPerformed :: Boolean
-  , searchLoading :: Boolean
-  , searchError :: Maybe String
-  }

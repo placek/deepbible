@@ -1,4 +1,4 @@
-module UrlState
+module App.UrlState
   ( PericopeSeed
   , loadSeeds
   , pericopesToSeeds
@@ -8,7 +8,8 @@ module UrlState
 import Prelude
 
 import Effect (Effect)
-import Types (Pericope)
+
+import Domain.Pericope.Types (Pericope)
 
 type PericopeSeed =
   { address :: String

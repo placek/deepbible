@@ -1,6 +1,4 @@
-module SearchHighlight where
-
-import Prelude
+module Search.Highlight where
 
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
