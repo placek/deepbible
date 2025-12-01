@@ -276,7 +276,7 @@ BEGIN
   IF v_address IS NOT NULL THEN
   RETURN QUERY
     SELECT *
-    FROM public.verses_by_address(v_address, v_source) v
+    FROM public.fetch_verses_by_address(v_address, v_source) v
     WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
     LIMIT 500;
 

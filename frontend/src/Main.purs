@@ -2,17 +2,13 @@ module Main where
 
 import Prelude
 
-import Api (fetchVerses, searchVerses)
+import Api (fetchVerses)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Newtype (unwrap)
 import Data.Set as Set
 import Data.Const (Const)
-import Data.String.CodeUnits (fromCharArray, toCharArray)
-import Data.String.CodeUnits as CU
-import Data.String.Common (trim)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen as H
@@ -24,12 +20,9 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Pericope as P
-import Types (AppState, Pericope, PericopeId, Verse, VerseSearchResult)
+import Search as Search
+import Types (AppState, Pericope, PericopeId, Verse)
 import UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
-import SearchHighlight (splitSearchInput, toMaybeColor)
-import Web.Event.Event (stopPropagation)
-import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
-import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -65,16 +58,8 @@ data Action
   | OverDrag PericopeId
   | LeaveDrag PericopeId
   | DropOn PericopeId
-  | UpdateSearchInput String
-  | SubmitSearch
-  | ReceiveSearchResults (Either String (Array VerseSearchResult))
-  | SelectSearchResult VerseSearchResult
-  | FocusSearchInput
-  | CloseSearchResults
-  | HandleSearchKey KeyboardEvent
+  | HandleSearch Search.Action
   | HandleDocumentClick
-  | SearchInputClick MouseEvent
-  | SearchResultsClick MouseEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -94,122 +79,11 @@ render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
-    [ renderSearchSection st
+    [ Search.renderSearchSection HandleSearch st
     , HH.div_
         (renderPericope <$> st.pericopes)
     , renderFooter
     ]
-
-renderSearchSection :: AppState -> H.ComponentHTML Action ChildSlots Aff
-renderSearchSection st =
-  HH.div
-    [ HP.class_ (HH.ClassName "search-section") ]
-    ( [ HH.div
-          [ HP.class_ (HH.ClassName "search-input-group") ]
-              [ HH.div
-                  [ HP.class_ (HH.ClassName "search-input-wrapper") ]
-                  [ HH.div
-                      [ HP.class_ (HH.ClassName "search-input-highlight")
-                      , HP.attr (HH.AttrName "aria-hidden") "true"
-                      ]
-                      (renderSearchInputHighlights st.searchInput)
-                  , HH.input
-                      [ HP.class_ (HH.ClassName "search-input")
-                      , HP.attr (HH.AttrName "type") "text"
-                      , HP.placeholder "search verses, e.g. '@NVUL ~J 3,10- Deus'"
-                      , HP.value st.searchInput
-                      , HE.onValueInput UpdateSearchInput
-                      , HE.onFocus \_ -> FocusSearchInput
-                      , HE.onClick SearchInputClick
-                      , HE.onKeyDown HandleSearchKey
-                      ]
-                  ]
-              ]
-          ]
-        <> renderSearchFeedback st
-        <> renderSearchResults st
-    )
-
-renderSearchInputHighlights :: String -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderSearchInputHighlights input =
-  let
-    segments = splitSearchInput input
-  in
-    if CU.length input == 0 then
-      [ HH.span [ HP.class_ (HH.ClassName "search-input-placeholder") ] [ HH.text "" ] ]
-    else
-      segments <#> renderSegment
-  where
-  renderSegment segment =
-    case toMaybeColor segment of
-      Just "yellow" ->
-        HH.span [ HP.class_ (HH.ClassName "search-token search-token--yellow") ] [ HH.text segment.text ]
-      Just "red" ->
-        HH.span [ HP.class_ (HH.ClassName "search-token search-token--red") ] [ HH.text segment.text ]
-      _ -> HH.span_ [ HH.text segment.text ]
-
-renderSearchFeedback :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderSearchFeedback st =
-  let
-    baseAttrs = [ HP.class_ (HH.ClassName "search-status") ]
-  in case st.searchLoading, st.searchError of
-       true, _ ->
-         [ HH.div baseAttrs [ HH.text "Searching…" ] ]
-       false, Just err ->
-         [ HH.div baseAttrs [ HH.text err ] ]
-       false, Nothing ->
-         if st.searchPerformed && A.null st.searchResults then
-           [ HH.div baseAttrs [ HH.text "No results" ] ]
-         else
-           []
-
-renderSearchResults :: AppState -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderSearchResults st =
-  if not st.searchOpen || A.null st.searchResults then
-    []
-  else
-    [ HH.ul
-        [ HP.class_ (HH.ClassName "search-results list list-reset")
-        , HE.onClick SearchResultsClick
-        ]
-        (st.searchResults <#> renderSearchResult)
-    ]
-
-renderSearchResult :: VerseSearchResult -> H.ComponentHTML Action ChildSlots Aff
-renderSearchResult result =
-  let
-    details = unwrap result
-  in
-  HH.li
-    [ HP.class_ (HH.ClassName "search-result")
-    , HE.onClick \_ -> SelectSearchResult result
-    ]
-    [ HH.div
-        [ HP.class_ (HH.ClassName "search-result-meta") ]
-        [ HH.div
-            [ HP.class_ (HH.ClassName "search-result-address") ]
-            [ HH.text ("~" <> details.address) ]
-        , HH.div
-            [ HP.class_ (HH.ClassName "search-result-source") ]
-            [ HH.text ("@" <> details.source) ]
-        ]
-    , HH.div
-        [ HP.class_ (HH.ClassName "search-result-text") ]
-        [ HH.text (stripTags details.text) ]
-    ]
-
-stripTags :: String -> String
-stripTags = fromCharArray <<< go false <<< toCharArray
-  where
-  go :: Boolean -> Array Char -> Array Char
-  go insideTag chars =
-    case A.uncons chars of
-      Nothing -> []
-      Just { head: c, tail: cs }
-        | c == '<' -> go true cs
-        | c == '>' -> go false cs
-        | insideTag -> go insideTag cs
-        | otherwise -> A.cons c (go insideTag cs)
 
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
@@ -247,77 +121,13 @@ handle action = case action of
   AddPericope addr src verses ->
     insertPericope addr src verses
 
-  UpdateSearchInput value ->
-    H.modify_ \st -> st { searchInput = value }
-
-  SubmitSearch -> do
-    st <- H.get
-    let query = trim st.searchInput
-    if query == "" then
-      pure unit
-    else do
-      H.modify_ \state -> state
-        { searchInput = query
-        , searchLoading = true
-        , searchError = Nothing
-        , searchOpen = true
-        , searchPerformed = true
-        , searchResults = []
-        }
-      res <- H.liftAff $ searchVerses query
-      handle (ReceiveSearchResults res)
-
-  ReceiveSearchResults res -> case res of
-    Left err ->
-      H.modify_ \st -> st
-        { searchLoading = false
-        , searchError = Just err
-        , searchResults = []
-        }
-    Right results ->
-      H.modify_ \st -> st
-        { searchLoading = false
-        , searchError = Nothing
-        , searchResults = results
-        , searchOpen = true
-        }
-
-  SelectSearchResult result -> do
-    let details = unwrap result
-    H.modify_ \st -> st { searchOpen = false }
-    res <- H.liftAff $ fetchVerses details.address details.source
-    case res of
-      Left _ -> pure unit
-      Right verses -> insertPericope details.address details.source verses
-
-  FocusSearchInput ->
-    H.modify_ \st ->
-      if st.searchPerformed || st.searchLoading || (case st.searchError of
-            Just _ -> true
-            Nothing -> false
-         )
-      then st { searchOpen = true }
-      else st
-
-  CloseSearchResults ->
-    H.modify_ \st -> st { searchOpen = false }
-
-  HandleSearchKey ev -> case key ev of
-    "Enter" -> handle SubmitSearch
-    "Escape" -> handle CloseSearchResults
-    _ -> pure unit
+  HandleSearch searchAction ->
+    Search.handleAction insertPericope searchAction
 
   HandleDocumentClick -> do
-    H.modify_ \st -> st { searchOpen = false }
+    Search.handleAction insertPericope Search.CloseSearchResults
     st <- H.get
     for_ st.pericopes cancelEditing
-
-  SearchInputClick ev -> do
-    H.liftEffect $ stopPropagation (toEvent ev)
-    handle FocusSearchInput
-
-  SearchResultsClick ev ->
-    H.liftEffect $ stopPropagation (toEvent ev)
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
