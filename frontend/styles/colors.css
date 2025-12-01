@@ -1,67 +1,66 @@
 :root {
-  --base03:  #002b36;
-  --base02:  #073642;
-  --base01:  #586e75;
-  --base00:  #657b83;
-  --base0:   #839496;
-  --base1:   #93a1a1;
-  --base2:   #eee8d5;
-  --base3:   #fdf6e3;
-  --yellow:  #b58900;
-  --orange:  #cb4b16;
-  --red:     #dc322f;
-  --magenta: #d33682;
-  --violet:  #6c71c4;
-  --blue:    #268bd2;
-  --cyan:    #2aa198;
-  --green:   #859900;
+  --background-strong: #002b36;
+  --icon-hover: #073642;
+  --text-primary: #586e75;
+  --text-secondary: #657b83;
+  --text-muted: #93a1a1;
+  --panel-background: #eee8d5;
+  --page-background: #fdf6e3;
+  --source-color: #b58900;
+  --jesus-color: #cb4b16;
+  --address-color: #dc322f;
+  --story-color: #d33682;
+  --footnote-color: #6c71c4;
+  --cross-reference-color: #268bd2;
+  --accent-commentary: #586e75;
+  --highlight-positive: #859900;
 }
 
 ::selection {
-  color: var(--blue);
-  background-color: var(--base2);
+  color: var(--cross-reference-color);
+  background-color: var(--panel-background);
 }
 
 body {
-  background-color: var(--base2);
-  color: var(--base01);
+  background-color: var(--panel-background);
+  color: var(--text-primary);
 }
 
 h2 {
-  color: var(--base3);
-  text-shadow: 1px 1px var(--blue);
+  color: var(--page-background);
+  text-shadow: 1px 1px var(--cross-reference-color);
 }
 
 a {
-  color: var(--blue);
+  color: var(--cross-reference-color);
 }
 
 input {
-  background-color: var(--base3);
+  background-color: var(--page-background);
 }
 
 .cross-reference {
-  color: var(--blue);
+  color: var(--cross-reference-color);
 }
 
 .textus {
-  background-color: var(--base3);
+  background-color: var(--page-background);
 }
 
 .pericope + .pericope {
-  border-top-color: var(--base1);
+  border-top-color: var(--text-muted);
 }
 
 .didascalia-handle,
 .icon-button {
-  color: var(--base1);
+  color: var(--text-muted);
 }
 
 .didascalia-handle:hover,
 .didascalia-handle:focus-visible,
 .icon-button:hover,
 .icon-button:focus-visible {
-  color: var(--base02);
+  color: var(--icon-hover);
 }
 
 .selected-address,
@@ -69,53 +68,53 @@ input {
   text-decoration-style: dotted;
   text-decoration-thickness: 1px;
   text-decoration-line: underline;
-  text-decoration-color: var(--green);
+  text-decoration-color: var(--highlight-positive);
 }
 
 .selected-address {
-  color: var(--green);
+  color: var(--highlight-positive);
 }
 
 .address,
 .search-result-address,
 .address input {
-  color: var(--red);
+  color: var(--address-color);
 }
 
 .source,
 .search-result-source,
 .source input,
 .source-option-name, .source-language {
-  color: var(--yellow);
+  color: var(--source-color);
 }
 
 .list {
-  background-color: var(--base3);
-  border-color: var(--base1);
-  color: var(--base00);
+  background-color: var(--page-background);
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .source-language {
-  background-color: var(--base2);
+  background-color: var(--panel-background);
 }
 
 .source-option:hover,
 .search-result:hover {
-  background-color: var(--base2);
+  background-color: var(--panel-background);
 }
 
 .story-title {
   text-decoration-style: dotted;
   text-decoration-thickness: 1px;
   text-decoration-line: underline;
-  text-decoration-color: var(--magenta);
+  text-decoration-color: var(--story-color);
 }
 
 .cross-references-loading,
 .cross-references-empty,
 .commentary,
 .commentary-text {
-  color: var(--base01);
+  color: var(--accent-commentary);
 }
 
 .commentary-text *,
@@ -123,25 +122,22 @@ input {
 .verse e,
 .verse n,
 .verse f {
-  color: var(--base1);
+  color: var(--text-muted);
 }
 
 .story-address {
-  color: var(--magenta);
+  color: var(--story-color);
 }
 
 .verse::before {
-  color: var(--red);
+  color: var(--address-color);
 }
 
+.verse m,
 .verse s {
-  color: var(--violet);
-}
-
-.verse m {
-  color: var(--magenta);
+  color: var(--footnote-color);
 }
 
 .verse j {
-  color: var(--orange);
+  color: var(--jesus-color);
 }

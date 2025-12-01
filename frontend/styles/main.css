@@ -113,7 +113,7 @@ n, s, m {
 .search-input-wrapper {
   position: relative;
   flex: 1;
-  background-color: var(--base3);
+  background-color: var(--page-background);
 }
 
 .search-input-group input {
@@ -122,7 +122,7 @@ n, s, m {
   border: none;
   background-color: transparent;
   color: transparent;
-  caret-color: var(--base00);
+  caret-color: var(--text-secondary);
   position: relative;
   z-index: 1;
 }
@@ -137,20 +137,20 @@ n, s, m {
   padding: 0.5em 0.75em;
   pointer-events: none;
   white-space: pre-wrap;
-  color: var(--base00);
+  color: var(--text-secondary);
   overflow: hidden;
 }
 
 .search-token--yellow {
-  color: var(--yellow);
+  color: var(--source-color);
 }
 
 .search-token--red {
-  color: var(--red);
+  color: var(--address-color);
 }
 
 .search-input-placeholder {
-  color: var(--base1);
+  color: var(--text-muted);
 }
 
 .search-status {
@@ -164,7 +164,7 @@ n, s, m {
 }
 
 .search-result + .search-result {
-  border-top: 1px solid var(--base2);
+  border-top: 1px solid var(--panel-background);
 }
 
 .search-result {

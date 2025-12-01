@@ -1,8 +1,8 @@
 # TODO
 
 - Color scheme:
-  - [ ] unify the color scheme across all pages
-  - [ ] rename the var() color names to be objects related
+  - [x] unify the color scheme across all pages
+  - [x] rename the var() color names to be objects related
   - [ ] allow users to customize their color scheme
 - Commentaries:
   - [ ] make the links in the commentaries clickable (opening the new pericopes)
