@@ -6138,10 +6138,10 @@ var fetchCommentaries = function(verseId) {
         return pure5(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Api (line 63, column 19 - line 65, column 54): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 62, column 19 - line 64, column 54): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Api (line 61, column 3 - line 65, column 54): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Api (line 60, column 3 - line 64, column 54): " + [res.constructor.name]);
   });
 };
 var fetchCrossReferences = function(verseId) {
@@ -6162,10 +6162,10 @@ var fetchCrossReferences = function(verseId) {
         return pure5(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Api (line 51, column 19 - line 53, column 38): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 50, column 19 - line 52, column 38): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Api (line 49, column 3 - line 53, column 38): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Api (line 48, column 3 - line 52, column 38): " + [res.constructor.name]);
   });
 };
 var fetchRenderedStories = function(source2) {
@@ -6187,10 +6187,10 @@ var fetchRenderedStories = function(source2) {
           return pure5(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Api (line 75, column 19 - line 77, column 44): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Api (line 74, column 19 - line 76, column 44): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Api (line 73, column 3 - line 77, column 44): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 72, column 3 - line 76, column 44): " + [res.constructor.name]);
     });
   };
 };
@@ -6211,10 +6211,10 @@ var fetchSources = /* @__PURE__ */ function() {
         return pure5(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Api (line 39, column 19 - line 41, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 38, column 19 - line 40, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Api (line 37, column 3 - line 41, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Api (line 36, column 3 - line 40, column 44): " + [res.constructor.name]);
   });
 }();
 var fetchVerses = function(address2) {
@@ -6236,10 +6236,10 @@ var fetchVerses = function(address2) {
           return pure5(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Api (line 29, column 19 - line 31, column 42): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Api (line 28, column 19 - line 30, column 42): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Api (line 27, column 3 - line 31, column 42): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 26, column 3 - line 30, column 42): " + [res.constructor.name]);
     });
   };
 };
@@ -6261,10 +6261,10 @@ var searchVerses = function(query3) {
         return pure5(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Api (line 87, column 19 - line 89, column 42): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Api (line 86, column 19 - line 88, column 42): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Api (line 85, column 3 - line 89, column 42): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Api (line 84, column 3 - line 88, column 42): " + [res.constructor.name]);
   });
 };
 
