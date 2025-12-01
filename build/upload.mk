@@ -12,7 +12,7 @@ upload-cross-references: $(cross_refs_db)
 	@echo ">> uploading cross-references"
 	SQLITE_PATH="$$(realpath $<)"; \
 	PGURL="$(DATABASE_URL)"; \
-	TABLES="'cross_references'"; \
+	TABLES="'_cross_references'"; \
 	SCHEMA="public"; \
 	sed "s#{{SQLITE_PATH}}#$$SQLITE_PATH#g; s#{{PGURL}}#$$PGURL#g; s#{{SCHEMA}}#$$SCHEMA#g; s#{{TABLES}}#$$TABLES#g" upload.load > /tmp/pgloader.$*.load; \
 	pgloader /tmp/pgloader.$*.load

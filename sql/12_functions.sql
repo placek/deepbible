@@ -450,9 +450,9 @@ AS $BODY$
 DECLARE
   v_language      text;
   v_source_number public._all_books.source_number%TYPE;
-  v_book_number   public.cross_references.book_number%TYPE;
-  v_chapter       public.cross_references.chapter%TYPE;
-  v_verse         public.cross_references.verse%TYPE;
+  v_book_number   public._cross_references.book_number%TYPE;
+  v_chapter       public._cross_references.chapter%TYPE;
+  v_verse         public._cross_references.verse%TYPE;
 BEGIN
   -- Parse p_verse_id = <language>/<source>/<book>/<chapter>/<verse>
   v_language      := NULLIF(split_part(p_verse_id, '/', 1), '');
@@ -512,7 +512,7 @@ BEGIN
         END
       ) AS reference,
       cr.rate
-  FROM public.cross_references AS cr
+  FROM public._cross_references AS cr
   LEFT JOIN main_book AS b
          ON cr.book_number = b.book_number
   LEFT JOIN ref_books AS b1
