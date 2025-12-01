@@ -24,6 +24,8 @@ import Web.HTML.Event.DragEvent as DragEv
 import Web.UIEvent.KeyboardEvent (key)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
+foreign import annotateCommentaryLinks :: Source -> String -> String
+
 -- Child component for one pericope; it is Controlled by parent via Query/Output
 
 data Query a
@@ -483,7 +485,7 @@ handle = case _ of
                         Right fetchedRefs -> fetchedRefs
                       commentaries = case commRes of
                         Left _ -> []
-                        Right fetchedCommentaries -> fetchedCommentaries
+                        Right fetchedCommentaries -> annotateCommentary v.source <$> fetchedCommentaries
                       stories = case storiesRes of
                         Left _ -> []
                         Right fetchedStories -> fetchedStories
@@ -566,6 +568,10 @@ cancelEdits = do
     handle CancelAddressEdit
   when st.editingSource do
     handle CancelSourceEdit
+
+annotateCommentary :: Source -> Commentary -> Commentary
+annotateCommentary source (Commentary commentary) =
+  Commentary commentary { text = annotateCommentaryLinks source commentary.text }
 
 launchFetch :: forall m. MonadAff m => Address -> Source -> H.HalogenM State Action () Output m Unit
 launchFetch address source = do
