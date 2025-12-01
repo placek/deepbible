@@ -156,8 +156,8 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-DROP FUNCTION IF EXISTS public.verses_by_address(text, text);
-CREATE OR REPLACE FUNCTION public.verses_by_address(p_address text, p_source text DEFAULT NULL::text)
+DROP FUNCTION IF EXISTS public.fetch_verses_by_address(text, text);
+CREATE OR REPLACE FUNCTION public.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text)
   RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -196,8 +196,8 @@ END;
 $BODY$;
 
 -- retrieves commentaries for a given verse_id
-DROP FUNCTION IF EXISTS public.commentaries(text);
-CREATE OR REPLACE FUNCTION public.commentaries(p_verse_id text)
+DROP FUNCTION IF EXISTS public.fetch_commentaries(text);
+CREATE OR REPLACE FUNCTION public.fetch_commentaries(p_verse_id text)
   RETURNS TABLE(marker text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -421,8 +421,8 @@ JOIN _all_sources src
 ORDER BY e.language, src.name, e.book_number, e.start_chapter, e.start_verse, e.chapter;
 
 -- function to get rendered stories by source and address
-DROP FUNCTION IF EXISTS public.get_rendered_stories(text, text);
-CREATE OR REPLACE FUNCTION public.get_rendered_stories(p_source text, p_address text)
+DROP FUNCTION IF EXISTS public.fetch_rendered_stories(text, text);
+CREATE OR REPLACE FUNCTION public.fetch_rendered_stories(p_source text, p_address text)
   RETURNS SETOF _rendered_stories 
   LANGUAGE 'sql'
   COST 100
@@ -439,8 +439,8 @@ AS $BODY$
 $BODY$;
 
 -- retrieves cross-references for a given verse_id
-DROP FUNCTION IF EXISTS public.cross_references(text);
-CREATE OR REPLACE FUNCTION public.cross_references(p_verse_id text)
+DROP FUNCTION IF EXISTS public.fetch_cross_references(text);
+CREATE OR REPLACE FUNCTION public.fetch_cross_references(p_verse_id text)
   RETURNS TABLE(id text, address text, reference text, rate bigint)
   LANGUAGE 'plpgsql'
   COST 100

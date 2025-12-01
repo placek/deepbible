@@ -6121,7 +6121,7 @@ var assoc1 = /* @__PURE__ */ assoc2(encodeJsonJString);
 var decodeJson5 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerseSearchResult));
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCommentaries = function(verseId) {
-  var url = baseUrl + "/rpc/commentaries";
+  var url = baseUrl + "/rpc/fetch_commentaries";
   var payload = extend4(assoc3("p_verse_id")(id(verseId)))(jsonEmptyObject);
   return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
     if (res instanceof Left) {
@@ -6145,7 +6145,7 @@ var fetchCommentaries = function(verseId) {
   });
 };
 var fetchCrossReferences = function(verseId) {
-  var url = baseUrl + "/rpc/cross_references";
+  var url = baseUrl + "/rpc/fetch_cross_references";
   var payload = extend4(assoc3("p_verse_id")(id(verseId)))(jsonEmptyObject);
   return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
     if (res instanceof Left) {
@@ -6170,7 +6170,7 @@ var fetchCrossReferences = function(verseId) {
 };
 var fetchRenderedStories = function(source2) {
   return function(address2) {
-    var url = baseUrl + "/rpc/get_rendered_stories";
+    var url = baseUrl + "/rpc/fetch_rendered_stories";
     var payload = extend4(assoc3("p_source")(id(source2)))(extend4(assoc3("p_address")(id(address2)))(jsonEmptyObject));
     return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
       if (res instanceof Left) {
@@ -6219,7 +6219,7 @@ var fetchSources = /* @__PURE__ */ function() {
 }();
 var fetchVerses = function(address2) {
   return function(source2) {
-    var url = baseUrl + "/rpc/verses_by_address";
+    var url = baseUrl + "/rpc/fetch_verses_by_address";
     var payload = extend4(assoc3("p_address")(id(address2)))(extend4(assoc3("p_source")(id(source2)))(jsonEmptyObject));
     return bind3(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
       if (res instanceof Left) {

@@ -20,7 +20,7 @@ baseUrl = "https://api.bible.placki.cloud"
 fetchVerses :: Address -> Source -> Aff (Either String (Array Verse))
 fetchVerses address source = do
   let
-    url = baseUrl <> "/rpc/verses_by_address"
+    url = baseUrl <> "/rpc/fetch_verses_by_address"
     payload = ("p_address" := fromString address) ~> ("p_source" := fromString source) ~> jsonEmptyObject
   res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
@@ -42,7 +42,7 @@ fetchSources = do
 fetchCrossReferences :: VerseId -> Aff (Either String (Array CrossReference))
 fetchCrossReferences verseId = do
   let
-    url = baseUrl <> "/rpc/cross_references"
+    url = baseUrl <> "/rpc/fetch_cross_references"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
   res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
@@ -54,7 +54,7 @@ fetchCrossReferences verseId = do
 fetchCommentaries :: VerseId -> Aff (Either String (Array Commentary))
 fetchCommentaries verseId = do
   let
-    url = baseUrl <> "/rpc/commentaries"
+    url = baseUrl <> "/rpc/fetch_commentaries"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
   res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
@@ -66,7 +66,7 @@ fetchCommentaries verseId = do
 fetchRenderedStories :: Source -> Address -> Aff (Either String (Array Story))
 fetchRenderedStories source address = do
   let
-    url = baseUrl <> "/rpc/get_rendered_stories"
+    url = baseUrl <> "/rpc/fetch_rendered_stories"
     payload = ("p_source" := fromString source) ~> ("p_address" := fromString address) ~> jsonEmptyObject
   res <- AX.post driver RF.json url $ Just (RB.json payload)
   case res of
