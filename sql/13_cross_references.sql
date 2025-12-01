@@ -1,4 +1,4 @@
-DROP FUNCTION IF EXISTS public.gcross_references(text);
+DROP FUNCTION IF EXISTS public.cross_references(text);
 CREATE OR REPLACE FUNCTION public.cross_references(p_verse_id text)
   RETURNS TABLE(id text, address text, reference text, rate bigint)
   LANGUAGE 'plpgsql'
