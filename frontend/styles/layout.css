@@ -40,7 +40,7 @@ h2 {
 }
 
 .margin {
-  padding: 1em;
+  padding: 1em 0;
   width: 6em;
 }
 
@@ -91,10 +91,12 @@ h2 {
 }
 
 
+.stories,
 .cross-references,
 .commentaries {
   padding: 0 0.5em;
   margin: 0;
+  list-style: none;
 }
 
 .cross-reference {
@@ -140,5 +142,6 @@ h2 {
 }
 
 .margin > * {
-  margin-bottom: 0.5em !important;
+  margin-bottom: 1em !important;
+  padding: 0 0.5em;
 }

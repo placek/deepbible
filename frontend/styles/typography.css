@@ -43,7 +43,7 @@ h2 {
 }
 
 .margin .selected-address {
-  font-size: x-small;
+  font-size: small;
 }
 
 .source {
@@ -139,5 +139,5 @@ h2 {
 }
 
 .story-title {
-  font-weight: bold;
+  font-weight: normal;
 }

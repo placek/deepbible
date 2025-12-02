@@ -278,28 +278,26 @@ render st =
             ]
           CrossRefsLoaded payload ->
             let
+              storyNodes =
+                if A.null payload.stories then
+                  []
+                else
+                  [ HH.ul [ HP.class_ (HH.ClassName "stories") ]
+                      (renderStory <$> payload.stories)
+                  ]
               crossReferenceNodes =
                 if A.null payload.references then
-                  [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
-                      [ ]
-                  ]
+                  [ ]
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references list-reset") ]
+                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
                       (renderRef <$> payload.references)
                   ]
               commentaryNodes =
                 if A.null payload.commentaries then
                   []
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries list-reset") ]
+                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries") ]
                       (renderCommentary <$> payload.commentaries)
-                  ]
-              storyNodes =
-                if A.null payload.stories then
-                  []
-                else
-                  [ HH.ul [ HP.class_ (HH.ClassName "stories list-reset") ]
-                      (renderStory <$> payload.stories)
                   ]
             in
               storyNodes <> crossReferenceNodes <> commentaryNodes
