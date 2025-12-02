@@ -92,6 +92,10 @@ input {
   color: var(--source-color);
 }
 
+.source-option {
+  border-color: var(--panel-background);
+}
+
 .search-token--yellow {
   color: var(--source-color);
 }
