@@ -1,3 +1,5 @@
+@font-face { font-family: greek; src: url(newathu.ttf); }
+
 :root {
   --font: 'Arial', sans-serif;
 }
@@ -12,11 +14,11 @@ h2 {
 }
 
 .didascalia {
-  text-align: right;
+  text-align: center;
+  font-size: medium;
 }
 
 .didascalia-handle {
-  font-size: 1.2em;
   font-size: smaller;
 }
 
@@ -60,7 +62,13 @@ h2 {
 }
 
 .textus {
+  font-size: 1.2em;
+  font-family: greek;
   text-align: justify;
+}
+
+n, s, m {
+  font-family: monospace;
 }
 
 .cross-reference {
@@ -96,6 +104,7 @@ h2 {
 .verse::before {
   font-size: x-small;
   vertical-align: super;
+  content: attr(data-verse);
 }
 
 .verse e {
@@ -140,4 +149,31 @@ h2 {
 
 .story-title {
   font-weight: normal;
+}
+
+.story-address {
+  text-decoration: none;
+}
+
+.search-ai-toggle {
+  font-size: 0.9em;
+}
+
+.search-status {
+  font-size: small;
+  font-family: monospace;
+  text-align: center;
+}
+
+.search-result-address,
+.search-result-source {
+  font-size: small;
+}
+
+.search-result-text {
+  font-size: 0.9em;
+}
+
+.search-result--ai:after {
+  font-size: x-small;
 }

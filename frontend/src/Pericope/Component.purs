@@ -282,33 +282,33 @@ render st =
                 if A.null payload.stories then
                   []
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "stories") ]
+                  [ HH.div [ HP.class_ (HH.ClassName "stories") ]
                       (renderStory <$> payload.stories)
                   ]
               crossReferenceNodes =
                 if A.null payload.references then
                   [ ]
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "cross-references") ]
+                  [ HH.div [ HP.class_ (HH.ClassName "cross-references") ]
                       (renderRef <$> payload.references)
                   ]
               commentaryNodes =
                 if A.null payload.commentaries then
                   []
                 else
-                  [ HH.ul [ HP.class_ (HH.ClassName "commentaries") ]
+                  [ HH.div [ HP.class_ (HH.ClassName "commentaries") ]
                       (renderCommentary <$> payload.commentaries)
                   ]
             in
               storyNodes <> crossReferenceNodes <> commentaryNodes
         renderRef (CrossReference ref) =
-          HH.li
+          HH.div
             [ HP.class_ (HH.ClassName "cross-reference")
             , HE.onClick \_ -> OpenCrossReference ref.reference
             ]
             [ HH.text ref.reference ]
         renderCommentary (Commentary commentary) =
-          HH.li
+          HH.div
             [ HP.class_ (HH.ClassName "commentary")
             ]
             [ HH.span [ HP.class_ (HH.ClassName "commentary-marker") ]
@@ -320,7 +320,7 @@ render st =
                 []
             ]
         renderStory (Story story) =
-          HH.li
+          HH.div
             [ HP.class_ (HH.ClassName "story")
             ]
             [ HH.div [ HP.class_ (HH.ClassName "story-title") ] [ HH.text story.title ]

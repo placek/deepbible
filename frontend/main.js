@@ -11423,7 +11423,7 @@ var render = function(st) {
     })])([]);
   })), function() {
     var renderStory = function(v) {
-      return li([class_("story")])([div2([class_("story-title")])([text5(v.title)]), a([class_("story-address"), href4("javascript:void(0)"), onClick(function(v1) {
+      return div2([class_("story")])([div2([class_("story-title")])([text5(v.title)]), a([class_("story-address"), href4("javascript:void(0)"), onClick(function(v1) {
         return new OpenStory({
           source: v.source,
           address: v.address
@@ -11432,12 +11432,12 @@ var render = function(st) {
     };
     var renderSelectedAddress = [div2([class_("selected-address"), onClick(HandleSelectedAddressClick.create)])([text5(addressText)])];
     var renderRef = function(v) {
-      return li([class_("cross-reference"), onClick(function(v1) {
+      return div2([class_("cross-reference"), onClick(function(v1) {
         return new OpenCrossReference(v.reference);
       })])([text5(v.reference)]);
     };
     var renderCommentary = function(v) {
-      return li([class_("commentary")])([span3([class_("commentary-marker")])([text5(v.marker)]), span3([class_("commentary-text"), prop3("innerHTML")(v.text)])([])]);
+      return div2([class_("commentary")])([span3([class_("commentary-marker")])([text5(v.marker)]), span3([class_("commentary-text"), prop3("innerHTML")(v.text)])([])]);
     };
     var renderCrossRefs = function() {
       if (st.crossRefs instanceof CrossRefsIdle) {
@@ -11455,7 +11455,7 @@ var render = function(st) {
             return [];
           }
           ;
-          return [ul([class_("stories")])(map28(renderStory)(st.crossRefs.value0.stories))];
+          return [div2([class_("stories")])(map28(renderStory)(st.crossRefs.value0.stories))];
         }();
         var crossReferenceNodes = function() {
           var $272 = $$null(st.crossRefs.value0.references);
@@ -11463,7 +11463,7 @@ var render = function(st) {
             return [];
           }
           ;
-          return [ul([class_("cross-references")])(map28(renderRef)(st.crossRefs.value0.references))];
+          return [div2([class_("cross-references")])(map28(renderRef)(st.crossRefs.value0.references))];
         }();
         var commentaryNodes = function() {
           var $273 = $$null(st.crossRefs.value0.commentaries);
@@ -11471,7 +11471,7 @@ var render = function(st) {
             return [];
           }
           ;
-          return [ul([class_("commentaries")])(map28(renderCommentary)(st.crossRefs.value0.commentaries))];
+          return [div2([class_("commentaries")])(map28(renderCommentary)(st.crossRefs.value0.commentaries))];
         }();
         return append12(storyNodes)(append12(crossReferenceNodes)(commentaryNodes));
       }

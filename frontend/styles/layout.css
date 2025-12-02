@@ -1,5 +1,9 @@
 body {
   margin: 2em 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5em;
 }
 
 h2 {
@@ -7,21 +11,155 @@ h2 {
   margin-bottom: 0;
 }
 
+#app,
+#app > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5em;
+  width: 100%;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  max-width: 70em;
+  width: 100%;
+  align-items: center;
+  margin: 1em auto;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-group input {
+  width: 100%;
+  padding: 0.5em 0.75em;
+  box-sizing: border-box;
+}
+
+.search-input-group input,
+.search-input-highlight {
+  padding-right: 3.25em;
+}
+
+.search-input-highlight {
+  position: absolute;
+  inset: 0;
+  padding: 0.5em 3.25em 0.5em 0.75em;
+}
+
+.search-status {
+  margin-top: 0.5em;
+}
+
+.search-ai-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  position: absolute;
+  right: 0.75em;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.15em 0.5em;
+  border-radius: 0.35em;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  max-height: 15em;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.search-result + .search-result {
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.search-result {
+  display: flex;
+  gap: 0.75em;
+  padding: 0.5em;
+  position: relative;
+}
+
+.search-result--ai {
+  position: relative;
+  align-items: flex-start;
+}
+
+.search-result--ai:after {
+  content: "AI";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  padding: 0.1em 0.5em;
+}
+
+.search-result-meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-width: 2.5em;
+}
+
+.search-result-text {
+  flex: 1 1 auto;
+}
+
 .pericope {
   display: flex;
+  gap: 1em;
   max-width: 70em;
-  margin: auto;
+  width: 100%;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.pericope + .pericope {
+  border-top-width: 1px;
+  border-top-style: dashed;
 }
 
 .didascalia {
   width: 6em;
   padding: 1em 0;
-  font-size: medium;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
 }
 
-.didascalia .address {
-  margin: 0.5em 0;
+.didascalia-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.didascalia .address,
+.didascalia .source {
+  width: 100%;
+}
+
+.didascalia .address.editing input,
+.didascalia .source.editing input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .didascalia-handle-group {
@@ -31,10 +169,7 @@ h2 {
   gap: 0.25em;
 }
 
-.didascalia-remove {
-  padding: 0;
-}
-
+.didascalia-remove,
 .didascalia-duplicate {
   padding: 0;
 }
@@ -42,12 +177,39 @@ h2 {
 .margin {
   padding: 1em 0;
   width: 6em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
 
-.didascalia .address.editing input,
-.didascalia .source.editing input {
-  width: 100%;
-  box-sizing: border-box;
+.margin > * {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.stories,
+.cross-references,
+.commentaries {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.story,
+.cross-reference,
+.commentary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.commentary {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.3em;
 }
 
 .list {
@@ -55,6 +217,8 @@ h2 {
   border-style: dashed;
   max-height: 15em;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .source-list {
@@ -71,13 +235,13 @@ h2 {
 .source-options {
   padding: 0;
   margin: 0;
-  display: block;
-  margin-block-start: 0;
-  margin-block-end: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .source-option + .source-option {
-  border-top: 1px solid var(--panel-background);
+  border-top-width: 1px;
+  border-top-style: solid;
 }
 
 .source-option {
@@ -87,21 +251,10 @@ h2 {
 .textus {
   padding: 1em;
   flex: 1;
-  font-size: 1.2em;
-}
-
-
-.stories,
-.cross-references,
-.commentaries {
-  padding: 0 0.5em;
-  margin: 0;
-  list-style: none;
 }
 
 .cross-reference {
-  cursor: pointer;
-  margin: 0.3em 0;
+  margin: 0;
 }
 
 .commentary-marker {
@@ -120,7 +273,6 @@ h2 {
 }
 
 .verse::before {
-  content: attr(data-verse);
   margin-right: 0.2em;
 }
 
@@ -132,16 +284,9 @@ h2 {
   margin-left: 0.4em;
 }
 
-.verse s::before {
-  content: "#";
-}
-
 .app-footer {
   width: 100%;
   margin: 2em 0;
-}
-
-.margin > * {
-  margin-bottom: 1em !important;
-  padding: 0 0.5em;
+  display: flex;
+  justify-content: center;
 }
