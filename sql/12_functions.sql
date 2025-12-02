@@ -227,6 +227,10 @@ BEGIN
     SELECT *
     FROM public.fetch_verses_by_address(v_address, v_source, true) v
     WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
+    ORDER BY CASE
+             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
+             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
+             END DESC
     LIMIT 500;
 
   ELSE
