@@ -118,7 +118,7 @@ DECLARE
   end_verse INT;
   v INT;
 BEGIN
-  m := regexp_match(trim(address), '^(.+)\s+(\d+),\s*([\d\.\-]+)$');
+  m := regexp_match(trim(address), '^(.+)\s+(\d+)[,:]\s*([\d\.\-]+)$');
   IF m IS NOT NULL THEN
     book    := m[1];
     chapter := m[2]::INT;
