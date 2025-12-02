@@ -110,6 +110,19 @@ n, s, m {
   align-items: center;
 }
 
+.search-ai-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.search-ai-toggle input {
+  margin: 0;
+}
+
 .search-input-wrapper {
   position: relative;
   flex: 1;
@@ -174,6 +187,12 @@ n, s, m {
   cursor: pointer;
 }
 
+.search-result--ai {
+  position: relative;
+  cursor: default;
+  align-items: flex-start;
+}
+
 .search-result-meta {
   display: flex;
   flex: 0 0 auto;
@@ -189,4 +208,16 @@ n, s, m {
 .search-result-text {
   flex: 1 1 auto;
   font-size: 0.9em;
+}
+
+.search-result-ai-label {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  padding: 0.1em 0.45em;
+  font-size: 0.75em;
+  border-radius: 0.4em;
+  background: var(--panel-background);
+  border: 1px solid var(--text-muted);
+  color: var(--text-secondary);
 }

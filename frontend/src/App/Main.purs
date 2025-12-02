@@ -71,10 +71,14 @@ initialState _ =
   , nextId: 1
   , searchInput: ""
   , searchResults: []
+  , aiSearchResults: []
+  , aiSearchEnabled: false
   , searchOpen: false
   , searchPerformed: false
   , searchLoading: false
+  , aiSearchLoading: false
   , searchError: Nothing
+  , aiSearchError: Nothing
   }
 
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff

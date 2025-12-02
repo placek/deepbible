@@ -219,10 +219,10 @@ var apply = function(dict) {
 };
 var applySecond = function(dictApply) {
   var apply1 = apply(dictApply);
-  var map29 = map(dictApply.Functor0());
+  var map30 = map(dictApply.Functor0());
   return function(a2) {
     return function(b2) {
-      return apply1(map29($$const(identity2))(a2))(b2);
+      return apply1(map30($$const(identity2))(a2))(b2);
     };
   };
 };
@@ -1693,7 +1693,7 @@ var traverseArrayImpl = /* @__PURE__ */ function() {
     };
   }
   return function(apply3) {
-    return function(map29) {
+    return function(map30) {
       return function(pure17) {
         return function(f) {
           return function(array) {
@@ -1702,14 +1702,14 @@ var traverseArrayImpl = /* @__PURE__ */ function() {
                 case 0:
                   return pure17([]);
                 case 1:
-                  return map29(array1)(f(array[bot]));
+                  return map30(array1)(f(array[bot]));
                 case 2:
-                  return apply3(map29(array2)(f(array[bot])))(f(array[bot + 1]));
+                  return apply3(map30(array2)(f(array[bot])))(f(array[bot + 1]));
                 case 3:
-                  return apply3(apply3(map29(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
+                  return apply3(apply3(map30(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
                 default:
                   var pivot = bot + Math.floor((top2 - bot) / 4) * 2;
-                  return apply3(map29(concat2)(go2(bot, pivot)))(go2(pivot, top2));
+                  return apply3(map30(concat2)(go2(bot, pivot)))(go2(pivot, top2));
               }
             }
             return go2(0, array.length);
@@ -1874,6 +1874,9 @@ var insertAt = /* @__PURE__ */ function() {
 var index = /* @__PURE__ */ function() {
   return runFn4(indexImpl)(Just.create)(Nothing.value);
 }();
+var last = function(xs) {
+  return index(xs)(length(xs) - 1 | 0);
+};
 var findIndex = /* @__PURE__ */ function() {
   return runFn4(findIndexImpl)(Just.create)(Nothing.value);
 }();
@@ -3801,10 +3804,10 @@ var catchError = function(dict) {
 var $$try = function(dictMonadError) {
   var catchError1 = catchError(dictMonadError);
   var Monad0 = dictMonadError.MonadThrow0().Monad0();
-  var map29 = map(Monad0.Bind1().Apply0().Functor0());
+  var map30 = map(Monad0.Bind1().Apply0().Functor0());
   var pure17 = pure(Monad0.Applicative0());
   return function(a2) {
-    return catchError1(map29(Right.create)(a2))(function($52) {
+    return catchError1(map30(Right.create)(a2))(function($52) {
       return pure17(Left.create($52));
     });
   };
@@ -4485,6 +4488,7 @@ var toEventTarget = unsafeCoerce2;
 // output/Web.HTML.Event.EventTypes/index.js
 var input = "input";
 var domcontentloaded = "DOMContentLoaded";
+var change = "change";
 
 // output/Halogen.Aff.Util/index.js
 var bind2 = /* @__PURE__ */ bind(bindAff);
@@ -4676,6 +4680,13 @@ var foreachSlot = function(dictApplicative) {
 var empty4 = empty2;
 
 // output/Data.String.Common/foreign.js
+var replace2 = function(s1) {
+  return function(s2) {
+    return function(s3) {
+      return s3.replace(s1, s2);
+    };
+  };
+};
 var toLower = function(s) {
   return s.toLowerCase();
 };
@@ -5551,6 +5562,9 @@ var unsafeReadTagged = function(dictMonad) {
     };
   };
 };
+var readBoolean = function(dictMonad) {
+  return unsafeReadTagged(dictMonad)("Boolean");
+};
 var readString = function(dictMonad) {
   return unsafeReadTagged(dictMonad)("String");
 };
@@ -5737,14 +5751,14 @@ var traversableWithIndexObject = {
   traverseWithIndex: function(dictApplicative) {
     var Apply0 = dictApplicative.Apply0();
     var apply3 = apply(Apply0);
-    var map29 = map(Apply0.Functor0());
+    var map30 = map(Apply0.Functor0());
     var pure17 = pure(dictApplicative);
     return function(f) {
       return function(ms) {
         return fold2(function(acc) {
           return function(k) {
             return function(v) {
-              return apply3(map29(flip(insert4(k)))(acc))(f(k)(v));
+              return apply3(map30(flip(insert4(k)))(acc))(f(k)(v));
             };
           };
         })(pure17(empty5))(ms);
@@ -6967,6 +6981,9 @@ var monadAffHalogenM = function(dictMonadAff) {
   };
 };
 var functorHalogenM = freeFunctor;
+var fork = function(hmu) {
+  return liftF(new Fork(hmu, identity9));
+};
 var bindHalogenM = freeBind;
 var applicativeHalogenM = freeApplicative;
 
@@ -7193,6 +7210,7 @@ var h4 = /* @__PURE__ */ element2("h4");
 var input2 = function(props) {
   return element2("input")(props)([]);
 };
+var label4 = /* @__PURE__ */ element2("label");
 var li = /* @__PURE__ */ element2("li");
 var span3 = /* @__PURE__ */ element2("span");
 var span_ = /* @__PURE__ */ span3([]);
@@ -7222,6 +7240,7 @@ var class_ = /* @__PURE__ */ function() {
     return $36(unwrap2($37));
   };
 }();
+var checked2 = /* @__PURE__ */ prop1("checked");
 var autofocus6 = /* @__PURE__ */ prop1("autofocus");
 var attr2 = /* @__PURE__ */ function() {
   return attr(Nothing.value);
@@ -7393,6 +7412,7 @@ var addForeignPropHandler = function(key2) {
     };
   };
 };
+var onChecked = /* @__PURE__ */ addForeignPropHandler(change)("checked")(/* @__PURE__ */ readBoolean(monadIdentity));
 var onValueInput = /* @__PURE__ */ addForeignPropHandler(input)("value")(readString2);
 
 // output/Control.Monad.Fork.Class/index.js
@@ -7407,7 +7427,7 @@ var monadForkAff = {
     return functorFiber;
   }
 };
-var fork = function(dict) {
+var fork2 = function(dict) {
   return dict.fork;
 };
 
@@ -7494,7 +7514,7 @@ var discard3 = /* @__PURE__ */ discard(discardUnit);
 var discard1 = /* @__PURE__ */ discard3(bindAff);
 var traverse_12 = /* @__PURE__ */ traverse_(applicativeAff);
 var traverse_22 = /* @__PURE__ */ traverse_12(foldableList);
-var fork3 = /* @__PURE__ */ fork(monadForkAff);
+var fork3 = /* @__PURE__ */ fork2(monadForkAff);
 var parSequence_2 = /* @__PURE__ */ parSequence_(parallelAff)(applicativeParAff)(foldableList);
 var pure6 = /* @__PURE__ */ pure(applicativeAff);
 var map19 = /* @__PURE__ */ map(functorCoyoneda);
@@ -7772,7 +7792,7 @@ var bind4 = /* @__PURE__ */ bind(bindEffect);
 var discard4 = /* @__PURE__ */ discard(discardUnit);
 var for_2 = /* @__PURE__ */ for_(applicativeEffect)(foldableMaybe);
 var traverse_5 = /* @__PURE__ */ traverse_(applicativeAff)(foldableList);
-var fork4 = /* @__PURE__ */ fork(monadForkAff);
+var fork4 = /* @__PURE__ */ fork2(monadForkAff);
 var bindFlipped7 = /* @__PURE__ */ bindFlipped(bindEffect);
 var traverse_13 = /* @__PURE__ */ traverse_(applicativeEffect);
 var traverse_23 = /* @__PURE__ */ traverse_13(foldableMaybe);
@@ -9728,6 +9748,33 @@ var decodeCommentary = {
     });
   }
 };
+var decodeAiSearchResult = {
+  decodeJson: function(j) {
+    return bind5(decodeJson2(j))(function(obj) {
+      return bind5(getField3(obj)("address"))(function(rawAddress) {
+        var address2 = replace2(":")(",")(rawAddress);
+        return bind5(getField3(obj)("explanation"))(function(explanation) {
+          return pure10({
+            address: address2,
+            explanation
+          });
+        });
+      });
+    });
+  }
+};
+var getField22 = /* @__PURE__ */ getField2(/* @__PURE__ */ decodeArray2(decodeAiSearchResult));
+var decodeAiSearchResponse = {
+  decodeJson: function(j) {
+    return bind5(decodeJson2(j))(function(obj) {
+      return bind5(getField22(obj)("output"))(function(output2) {
+        return pure10({
+          output: output2
+        });
+      });
+    });
+  }
+};
 
 // output/Infrastructure.Api/index.js
 var extend4 = /* @__PURE__ */ extend3(encodeJsonJson);
@@ -9741,6 +9788,8 @@ var decodeJson32 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decod
 var decodeJson4 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerse));
 var assoc1 = /* @__PURE__ */ assoc2(encodeJsonJString);
 var decodeJson5 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeVerseSearchResult));
+var decodeJson6 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeAiSearchResult));
+var decodeJson7 = /* @__PURE__ */ decodeJson(decodeAiSearchResponse);
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCommentaries = function(verseId) {
   var url = baseUrl + "/rpc/fetch_commentaries";
@@ -9760,10 +9809,10 @@ var fetchCommentaries = function(verseId) {
         return pure11(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 62, column 19 - line 64, column 54): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 66, column 19 - line 68, column 54): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 60, column 3 - line 64, column 54): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 64, column 3 - line 68, column 54): " + [res.constructor.name]);
   });
 };
 var fetchCrossReferences = function(verseId) {
@@ -9784,10 +9833,10 @@ var fetchCrossReferences = function(verseId) {
         return pure11(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 50, column 19 - line 52, column 38): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 54, column 19 - line 56, column 38): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 48, column 3 - line 52, column 38): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 52, column 3 - line 56, column 38): " + [res.constructor.name]);
   });
 };
 var fetchRenderedStories = function(source2) {
@@ -9809,10 +9858,10 @@ var fetchRenderedStories = function(source2) {
           return pure11(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 74, column 19 - line 76, column 44): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 78, column 19 - line 80, column 44): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 72, column 3 - line 76, column 44): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 76, column 3 - line 80, column 44): " + [res.constructor.name]);
     });
   };
 };
@@ -9833,10 +9882,10 @@ var fetchSources = /* @__PURE__ */ function() {
         return pure11(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 38, column 19 - line 40, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 42, column 19 - line 44, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 36, column 3 - line 40, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 40, column 3 - line 44, column 44): " + [res.constructor.name]);
   });
 }();
 var fetchVerses = function(address2) {
@@ -9858,10 +9907,10 @@ var fetchVerses = function(address2) {
           return pure11(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 28, column 19 - line 30, column 42): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 32, column 19 - line 34, column 42): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 26, column 3 - line 30, column 42): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 30, column 3 - line 34, column 42): " + [res.constructor.name]);
     });
   };
 };
@@ -9883,11 +9932,56 @@ var searchVerses = function(query3) {
         return pure11(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 86, column 19 - line 88, column 42): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 90, column 19 - line 92, column 42): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 84, column 3 - line 88, column 42): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 88, column 3 - line 92, column 42): " + [res.constructor.name]);
   });
+};
+var aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search";
+var fetchAiExplanations = function(phrase) {
+  return function(maybeSource) {
+    var payload = function() {
+      if (maybeSource instanceof Just) {
+        return extend4(assoc3("phrase")(id2(phrase)))(extend4(assoc3("source")(id2(maybeSource.value0)))(jsonEmptyObject));
+      }
+      ;
+      if (maybeSource instanceof Nothing) {
+        return extend4(assoc3("phrase")(id2(phrase)))(jsonEmptyObject);
+      }
+      ;
+      throw new Error("Failed pattern match at Infrastructure.Api (line 98, column 7 - line 104, column 61): " + [maybeSource.constructor.name]);
+    }();
+    return bind6(post(driver)(json2)(aiExplainUrl)(new Just(json(payload))))(function(res) {
+      if (res instanceof Left) {
+        return pure11(new Left("HTTP error: " + printError(res.value0)));
+      }
+      ;
+      if (res instanceof Right) {
+        var v = decodeJson6(res.value0.body);
+        if (v instanceof Right) {
+          return pure11(new Right(v.value0));
+        }
+        ;
+        if (v instanceof Left) {
+          var v1 = decodeJson7(res.value0.body);
+          if (v1 instanceof Right) {
+            return pure11(new Right(v1.value0.output));
+          }
+          ;
+          if (v1 instanceof Left) {
+            return pure11(new Left("Failed to fetch AI explanations"));
+          }
+          ;
+          throw new Error("Failed pattern match at Infrastructure.Api (line 110, column 17 - line 112, column 64): " + [v1.constructor.name]);
+        }
+        ;
+        throw new Error("Failed pattern match at Infrastructure.Api (line 108, column 19 - line 112, column 64): " + [v.constructor.name]);
+      }
+      ;
+      throw new Error("Failed pattern match at Infrastructure.Api (line 106, column 3 - line 112, column 64): " + [res.constructor.name]);
+    });
+  };
 };
 
 // output/Pericope.Component/foreign.js
@@ -11312,8 +11406,10 @@ var value15 = /* @__PURE__ */ value12(isPropString);
 var modify_4 = /* @__PURE__ */ modify_(monadStateHalogenM);
 var bind8 = /* @__PURE__ */ bind(bindHalogenM);
 var get5 = /* @__PURE__ */ get(monadStateHalogenM);
+var map28 = /* @__PURE__ */ map(functorMaybe);
 var pure15 = /* @__PURE__ */ pure(applicativeHalogenM);
 var discard6 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
+var when5 = /* @__PURE__ */ when(applicativeHalogenM);
 var liftAff2 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
 var liftEffect7 = /* @__PURE__ */ liftEffect(/* @__PURE__ */ monadEffectHalogenM(monadEffectAff));
 var UpdateSearchInput = /* @__PURE__ */ function() {
@@ -11333,6 +11429,16 @@ var SubmitSearch = /* @__PURE__ */ function() {
   SubmitSearch2.value = new SubmitSearch2();
   return SubmitSearch2;
 }();
+var SetAiSearchEnabled = /* @__PURE__ */ function() {
+  function SetAiSearchEnabled2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  SetAiSearchEnabled2.create = function(value0) {
+    return new SetAiSearchEnabled2(value0);
+  };
+  return SetAiSearchEnabled2;
+}();
 var ReceiveSearchResults = /* @__PURE__ */ function() {
   function ReceiveSearchResults2(value0) {
     this.value0 = value0;
@@ -11342,6 +11448,26 @@ var ReceiveSearchResults = /* @__PURE__ */ function() {
     return new ReceiveSearchResults2(value0);
   };
   return ReceiveSearchResults2;
+}();
+var ReceiveAiSearchResults = /* @__PURE__ */ function() {
+  function ReceiveAiSearchResults2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  ReceiveAiSearchResults2.create = function(value0) {
+    return new ReceiveAiSearchResults2(value0);
+  };
+  return ReceiveAiSearchResults2;
+}();
+var SelectAiSearchResult = /* @__PURE__ */ function() {
+  function SelectAiSearchResult2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  SelectAiSearchResult2.create = function(value0) {
+    return new SelectAiSearchResult2(value0);
+  };
+  return SelectAiSearchResult2;
 }();
 var SelectSearchResult = /* @__PURE__ */ function() {
   function SelectSearchResult2(value0) {
@@ -11424,12 +11550,12 @@ var stripTags = /* @__PURE__ */ function() {
         ;
       }
       ;
-      throw new Error("Failed pattern match at Search.Component (line 227, column 5 - line 233, column 50): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Search.Component (line 329, column 5 - line 335, column 50): " + [v.constructor.name]);
     };
   };
-  var $86 = go2(false);
-  return function($87) {
-    return fromCharArray($86(toCharArray($87)));
+  var $126 = go2(false);
+  return function($127) {
+    return fromCharArray($126(toCharArray($127)));
   };
 }();
 var renderSearchResult = function(toParentAction) {
@@ -11438,18 +11564,6 @@ var renderSearchResult = function(toParentAction) {
     return li([class_("search-result"), onClick(function(v) {
       return toParentAction(new SelectSearchResult(result));
     })])([div2([class_("search-result-meta")])([div2([class_("search-result-address")])([text5("~" + details2.address)]), div2([class_("search-result-source")])([text5("@" + details2.source)])]), div2([class_("search-result-text")])([text5(stripTags(details2.text))])]);
-  };
-};
-var renderSearchResults = function(toParentAction) {
-  return function(st) {
-    var $38 = !st.searchOpen || $$null(st.searchResults);
-    if ($38) {
-      return [];
-    }
-    ;
-    return [ul([class_("search-results list list-reset"), onClick(function($88) {
-      return toParentAction(SearchResultsClick.create($88));
-    })])(mapFlipped4(st.searchResults)(renderSearchResult(toParentAction)))];
   };
 };
 var renderSearchInputHighlights = function(input3) {
@@ -11466,15 +11580,28 @@ var renderSearchInputHighlights = function(input3) {
     return span_([text5(segment.text)]);
   };
   var segments = splitSearchInput(input3);
-  var $42 = length5(input3) === 0;
-  if ($42) {
+  var $50 = length5(input3) === 0;
+  if ($50) {
     return [span3([class_("search-input-placeholder")])([text5("")])];
   }
   ;
   return mapFlipped4(segments)(renderSegment);
 };
 var renderSearchFeedback = function(st) {
+  var hasAiResults = st.aiSearchEnabled && !$$null(st.aiSearchResults);
   var baseAttrs = [class_("search-status")];
+  var aiLoading = st.aiSearchEnabled && st.aiSearchLoading;
+  var aiErrored = st.aiSearchEnabled && function() {
+    if (st.aiSearchError instanceof Just) {
+      return true;
+    }
+    ;
+    if (st.aiSearchError instanceof Nothing) {
+      return false;
+    }
+    ;
+    throw new Error("Failed pattern match at Search.Component (line 210, column 40 - line 212, column 23): " + [st.aiSearchError.constructor.name]);
+  }();
   if (st.searchLoading) {
     return [div2(baseAttrs)([text5("Searching\u2026")])];
   }
@@ -11483,131 +11610,295 @@ var renderSearchFeedback = function(st) {
     return [div2(baseAttrs)([text5(st.searchError.value0)])];
   }
   ;
-  if (!st.searchLoading && st.searchError instanceof Nothing) {
-    var $46 = st.searchPerformed && $$null(st.searchResults);
-    if ($46) {
+  if (!st.searchLoading && (st.searchError instanceof Nothing && aiLoading)) {
+    return [div2(baseAttrs)([text5("Fetching AI explanations\u2026")])];
+  }
+  ;
+  if (!st.searchLoading && (st.searchError instanceof Nothing && (!aiLoading && aiErrored))) {
+    return [div2(baseAttrs)([text5("AI error: " + fromMaybe("")(st.aiSearchError))])];
+  }
+  ;
+  if (!st.searchLoading && (st.searchError instanceof Nothing && (!aiLoading && !aiErrored))) {
+    var $58 = st.searchPerformed && ($$null(st.searchResults) && !hasAiResults);
+    if ($58) {
       return [div2(baseAttrs)([text5("No results")])];
     }
     ;
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Search.Component (line 150, column 6 - line 159, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name]);
+  throw new Error("Failed pattern match at Search.Component (line 215, column 6 - line 228, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name, aiLoading.constructor.name, aiErrored.constructor.name]);
+};
+var renderAiSearchResult = function(toParentAction) {
+  return function(aiResult) {
+    var details2 = unwrap7(aiResult);
+    return li([class_("search-result search-result--ai"), onClick(function(v) {
+      return toParentAction(new SelectAiSearchResult(aiResult));
+    })])([div2([class_("search-result-meta")])([div2([class_("search-result-address")])([text5(details2.address)])]), div2([class_("search-result-text")])([text5(details2.explanation)]), div2([class_("search-result-ai-label")])([text5("AI")])]);
+  };
+};
+var renderSearchResults = function(toParentAction) {
+  return function(st) {
+    var aiResults = function() {
+      if (st.aiSearchEnabled) {
+        return st.aiSearchResults;
+      }
+      ;
+      return [];
+    }();
+    var results = append13(mapFlipped4(aiResults)(renderAiSearchResult(toParentAction)))(mapFlipped4(st.searchResults)(renderSearchResult(toParentAction)));
+    var $60 = !st.searchOpen || $$null(results);
+    if ($60) {
+      return [];
+    }
+    ;
+    return [ul([class_("search-results list list-reset"), onClick(function($128) {
+      return toParentAction(SearchResultsClick.create($128));
+    })])(results)];
+  };
 };
 var renderSearchSection = function(toParentAction) {
   return function(st) {
-    return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. '@NVUL ~J 3,10- Deus'"), value15(st.searchInput), onValueInput(function($89) {
-      return toParentAction(UpdateSearchInput.create($89));
+    return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. '@NVUL ~J 3,10- Deus'"), value15(st.searchInput), onValueInput(function($129) {
+      return toParentAction(UpdateSearchInput.create($129));
     }), onFocus(function(v) {
       return toParentAction(FocusSearchInput.value);
-    }), onClick(function($90) {
-      return toParentAction(SearchInputClick.create($90));
-    }), onKeyDown(function($91) {
-      return toParentAction(HandleSearchKey.create($91));
-    })])])])])(append13(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
+    }), onClick(function($130) {
+      return toParentAction(SearchInputClick.create($130));
+    }), onKeyDown(function($131) {
+      return toParentAction(HandleSearchKey.create($131));
+    })])]), label4([class_("search-ai-toggle")])([input2([attr2("type")("checkbox"), checked2(st.aiSearchEnabled), onChecked(function($132) {
+      return toParentAction(SetAiSearchEnabled.create($132));
+    })]), text5("AI")])])])(append13(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
   };
 };
 var handleAction = function(insertPericope2) {
   return function(action2) {
     if (action2 instanceof UpdateSearchInput) {
       return modify_4(function(st) {
-        var $48 = {};
-        for (var $49 in st) {
-          if ({}.hasOwnProperty.call(st, $49)) {
-            $48[$49] = st[$49];
+        var $62 = {};
+        for (var $63 in st) {
+          if ({}.hasOwnProperty.call(st, $63)) {
+            $62[$63] = st[$63];
           }
           ;
         }
         ;
-        $48.searchInput = action2.value0;
-        return $48;
+        $62.searchInput = action2.value0;
+        return $62;
       });
     }
     ;
     if (action2 instanceof SubmitSearch) {
       return bind8(get5)(function(st) {
+        var defaultAiSource = map28(function(v2) {
+          return v2.source;
+        })(last(st.pericopes));
         var query3 = trim(st.searchInput);
-        var $52 = query3 === "";
-        if ($52) {
+        var $66 = query3 === "";
+        if ($66) {
           return pure15(unit);
         }
         ;
         return discard6(modify_4(function(state3) {
-          var $53 = {};
-          for (var $54 in state3) {
-            if ({}.hasOwnProperty.call(state3, $54)) {
-              $53[$54] = state3[$54];
+          var $67 = {};
+          for (var $68 in state3) {
+            if ({}.hasOwnProperty.call(state3, $68)) {
+              $67[$68] = state3[$68];
             }
             ;
           }
           ;
-          $53.searchInput = query3;
-          $53.searchLoading = true;
-          $53.searchError = Nothing.value;
-          $53.searchOpen = true;
-          $53.searchPerformed = true;
-          $53.searchResults = [];
-          return $53;
+          $67.searchInput = query3;
+          $67.searchLoading = true;
+          $67.aiSearchLoading = st.aiSearchEnabled;
+          $67.searchError = Nothing.value;
+          $67.aiSearchError = Nothing.value;
+          $67.searchOpen = true;
+          $67.searchPerformed = true;
+          $67.searchResults = [];
+          $67.aiSearchResults = [];
+          return $67;
         }))(function() {
-          return bind8(liftAff2(searchVerses(query3)))(function(res) {
-            return handleAction(insertPericope2)(new ReceiveSearchResults(res));
+          return discard6(when5(st.aiSearchEnabled)(bind8(fork(bind8(liftAff2(fetchAiExplanations(query3)(defaultAiSource)))(function(aiRes) {
+            return handleAction(insertPericope2)(new ReceiveAiSearchResults(aiRes));
+          })))(function() {
+            return pure15(unit);
+          })))(function() {
+            return bind8(liftAff2(searchVerses(query3)))(function(res) {
+              return handleAction(insertPericope2)(new ReceiveSearchResults(res));
+            });
           });
         });
+      });
+    }
+    ;
+    if (action2 instanceof SetAiSearchEnabled) {
+      return modify_4(function(st) {
+        var $73 = {};
+        for (var $74 in st) {
+          if ({}.hasOwnProperty.call(st, $74)) {
+            $73[$74] = st[$74];
+          }
+          ;
+        }
+        ;
+        $73.aiSearchEnabled = action2.value0;
+        $73.aiSearchResults = function() {
+          if (action2.value0) {
+            return st.aiSearchResults;
+          }
+          ;
+          return [];
+        }();
+        $73.aiSearchLoading = function() {
+          if (action2.value0) {
+            return st.aiSearchLoading;
+          }
+          ;
+          return false;
+        }();
+        $73.aiSearchError = function() {
+          if (action2.value0) {
+            return st.aiSearchError;
+          }
+          ;
+          return Nothing.value;
+        }();
+        return $73;
       });
     }
     ;
     if (action2 instanceof ReceiveSearchResults) {
       if (action2.value0 instanceof Left) {
         return modify_4(function(st) {
-          var $57 = {};
-          for (var $58 in st) {
-            if ({}.hasOwnProperty.call(st, $58)) {
-              $57[$58] = st[$58];
+          var $78 = {};
+          for (var $79 in st) {
+            if ({}.hasOwnProperty.call(st, $79)) {
+              $78[$79] = st[$79];
             }
             ;
           }
           ;
-          $57.searchLoading = false;
-          $57.searchError = new Just(action2.value0.value0);
-          $57.searchResults = [];
-          return $57;
+          $78.searchLoading = false;
+          $78.searchError = new Just(action2.value0.value0);
+          $78.searchResults = [];
+          return $78;
         });
       }
       ;
       if (action2.value0 instanceof Right) {
         return modify_4(function(st) {
-          var $61 = {};
-          for (var $62 in st) {
-            if ({}.hasOwnProperty.call(st, $62)) {
-              $61[$62] = st[$62];
+          var $82 = {};
+          for (var $83 in st) {
+            if ({}.hasOwnProperty.call(st, $83)) {
+              $82[$83] = st[$83];
             }
             ;
           }
           ;
-          $61.searchLoading = false;
-          $61.searchError = Nothing.value;
-          $61.searchResults = action2.value0.value0;
-          $61.searchOpen = true;
-          return $61;
+          $82.searchLoading = false;
+          $82.searchError = Nothing.value;
+          $82.searchResults = action2.value0.value0;
+          $82.searchOpen = true;
+          return $82;
         });
       }
       ;
-      throw new Error("Failed pattern match at Search.Component (line 99, column 31 - line 112, column 10): " + [action2.value0.constructor.name]);
+      throw new Error("Failed pattern match at Search.Component (line 131, column 31 - line 144, column 10): " + [action2.value0.constructor.name]);
+    }
+    ;
+    if (action2 instanceof ReceiveAiSearchResults) {
+      if (action2.value0 instanceof Left) {
+        return modify_4(function(st) {
+          var $88 = {};
+          for (var $89 in st) {
+            if ({}.hasOwnProperty.call(st, $89)) {
+              $88[$89] = st[$89];
+            }
+            ;
+          }
+          ;
+          $88.aiSearchLoading = false;
+          $88.aiSearchError = new Just(action2.value0.value0);
+          $88.aiSearchResults = [];
+          return $88;
+        });
+      }
+      ;
+      if (action2.value0 instanceof Right) {
+        return modify_4(function(st) {
+          var $92 = {};
+          for (var $93 in st) {
+            if ({}.hasOwnProperty.call(st, $93)) {
+              $92[$93] = st[$93];
+            }
+            ;
+          }
+          ;
+          $92.aiSearchLoading = false;
+          $92.aiSearchError = Nothing.value;
+          $92.aiSearchResults = action2.value0.value0;
+          $92.searchOpen = true;
+          return $92;
+        });
+      }
+      ;
+      throw new Error("Failed pattern match at Search.Component (line 146, column 33 - line 159, column 10): " + [action2.value0.constructor.name]);
+    }
+    ;
+    if (action2 instanceof SelectAiSearchResult) {
+      var details2 = unwrap7(action2.value0);
+      return discard6(modify_4(function(st) {
+        var $97 = {};
+        for (var $98 in st) {
+          if ({}.hasOwnProperty.call(st, $98)) {
+            $97[$98] = st[$98];
+          }
+          ;
+        }
+        ;
+        $97.searchOpen = false;
+        return $97;
+      }))(function() {
+        return bind8(get5)(function(st) {
+          var v2 = last(st.pericopes);
+          if (v2 instanceof Nothing) {
+            return pure15(unit);
+          }
+          ;
+          if (v2 instanceof Just) {
+            return bind8(liftAff2(fetchVerses(details2.address)(v2.value0.source)))(function(res) {
+              if (res instanceof Left) {
+                return pure15(unit);
+              }
+              ;
+              if (res instanceof Right) {
+                return insertPericope2(details2.address)(v2.value0.source)(res.value0);
+              }
+              ;
+              throw new Error("Failed pattern match at Search.Component (line 169, column 9 - line 171, column 84): " + [res.constructor.name]);
+            });
+          }
+          ;
+          throw new Error("Failed pattern match at Search.Component (line 165, column 5 - line 171, column 84): " + [v2.constructor.name]);
+        });
+      });
     }
     ;
     if (action2 instanceof SelectSearchResult) {
       var details2 = unwrap7(action2.value0);
       return discard6(modify_4(function(st) {
-        var $66 = {};
-        for (var $67 in st) {
-          if ({}.hasOwnProperty.call(st, $67)) {
-            $66[$67] = st[$67];
+        var $106 = {};
+        for (var $107 in st) {
+          if ({}.hasOwnProperty.call(st, $107)) {
+            $106[$107] = st[$107];
           }
           ;
         }
         ;
-        $66.searchOpen = false;
-        return $66;
+        $106.searchOpen = false;
+        return $106;
       }))(function() {
         return bind8(liftAff2(fetchVerses(details2.address)(details2.source)))(function(res) {
           if (res instanceof Left) {
@@ -11618,14 +11909,14 @@ var handleAction = function(insertPericope2) {
             return insertPericope2(details2.address)(details2.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Search.Component (line 118, column 5 - line 120, column 75): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Search.Component (line 177, column 5 - line 179, column 75): " + [res.constructor.name]);
         });
       });
     }
     ;
     if (action2 instanceof FocusSearchInput) {
       return modify_4(function(st) {
-        var $75 = st.searchPerformed || (st.searchLoading || function() {
+        var $115 = st.searchPerformed || (st.searchLoading || function() {
           if (st.searchError instanceof Just) {
             return true;
           }
@@ -11634,19 +11925,19 @@ var handleAction = function(insertPericope2) {
             return false;
           }
           ;
-          throw new Error("Failed pattern match at Search.Component (line 124, column 53 - line 126, column 29): " + [st.searchError.constructor.name]);
+          throw new Error("Failed pattern match at Search.Component (line 183, column 53 - line 185, column 29): " + [st.searchError.constructor.name]);
         }());
-        if ($75) {
-          var $76 = {};
-          for (var $77 in st) {
-            if ({}.hasOwnProperty.call(st, $77)) {
-              $76[$77] = st[$77];
+        if ($115) {
+          var $116 = {};
+          for (var $117 in st) {
+            if ({}.hasOwnProperty.call(st, $117)) {
+              $116[$117] = st[$117];
             }
             ;
           }
           ;
-          $76.searchOpen = true;
-          return $76;
+          $116.searchOpen = true;
+          return $116;
         }
         ;
         return st;
@@ -11655,16 +11946,16 @@ var handleAction = function(insertPericope2) {
     ;
     if (action2 instanceof CloseSearchResults) {
       return modify_4(function(st) {
-        var $79 = {};
-        for (var $80 in st) {
-          if ({}.hasOwnProperty.call(st, $80)) {
-            $79[$80] = st[$80];
+        var $119 = {};
+        for (var $120 in st) {
+          if ({}.hasOwnProperty.call(st, $120)) {
+            $119[$120] = st[$120];
           }
           ;
         }
         ;
-        $79.searchOpen = false;
-        return $79;
+        $119.searchOpen = false;
+        return $119;
       });
     }
     ;
@@ -11691,7 +11982,7 @@ var handleAction = function(insertPericope2) {
       return liftEffect7(stopPropagation(toEvent2(action2.value0)));
     }
     ;
-    throw new Error("Failed pattern match at Search.Component (line 78, column 38 - line 144, column 48): " + [action2.constructor.name]);
+    throw new Error("Failed pattern match at Search.Component (line 92, column 38 - line 203, column 48): " + [action2.constructor.name]);
   };
 };
 
@@ -11706,7 +11997,7 @@ var pericopeIsSymbol = {
 };
 var slot2 = /* @__PURE__ */ slot()(pericopeIsSymbol)(ordInt);
 var component1 = /* @__PURE__ */ component(monadAffAff);
-var map28 = /* @__PURE__ */ map(functorArray);
+var map29 = /* @__PURE__ */ map(functorArray);
 var discard7 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var $$void7 = /* @__PURE__ */ $$void(functorHalogenM);
@@ -11845,7 +12136,7 @@ var renderPericope = function(p2) {
 var render2 = function(st) {
   return div2([onClick(function(v) {
     return HandleDocumentClick.value;
-  })])([renderSearchSection(HandleSearch.create)(st), div_(map28(renderPericope)(st.pericopes)), renderFooter]);
+  })])([renderSearchSection(HandleSearch.create)(st), div_(map29(renderPericope)(st.pericopes)), renderFooter]);
 };
 var insertPericope = function(address2) {
   return function(source2) {
@@ -11885,10 +12176,14 @@ var initialState = function(v) {
     nextId: 1,
     searchInput: "",
     searchResults: [],
+    aiSearchResults: [],
+    aiSearchEnabled: false,
     searchOpen: false,
     searchPerformed: false,
     searchLoading: false,
-    searchError: Nothing.value
+    aiSearchLoading: false,
+    searchError: Nothing.value,
+    aiSearchError: Nothing.value
   };
 };
 var handle2 = function($copy_action) {
@@ -11932,7 +12227,7 @@ var handle2 = function($copy_action) {
               return insertPericope(v.address)(v.source)(res.value0);
             }
             ;
-            throw new Error("Failed pattern match at App.Main (line 119, column 7 - line 121, column 61): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at App.Main (line 123, column 7 - line 125, column 61): " + [res.constructor.name]);
           });
         });
       });
@@ -12032,7 +12327,7 @@ var handle2 = function($copy_action) {
           });
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 145, column 5 - line 150, column 16): " + [st.dragging.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 149, column 5 - line 154, column 16): " + [st.dragging.constructor.name]);
       });
     }
     ;
@@ -12057,11 +12352,11 @@ var handle2 = function($copy_action) {
                 return insertPericope(v.value0.address)(v.value0.source)(res.value0);
               }
               ;
-              throw new Error("Failed pattern match at App.Main (line 161, column 11 - line 163, column 51): " + [res.constructor.name]);
+              throw new Error("Failed pattern match at App.Main (line 165, column 11 - line 167, column 51): " + [res.constructor.name]);
             });
           }
           ;
-          throw new Error("Failed pattern match at App.Main (line 155, column 7 - line 163, column 51): " + [v.constructor.name]);
+          throw new Error("Failed pattern match at App.Main (line 159, column 7 - line 167, column 51): " + [v.constructor.name]);
         });
       }
       ;
@@ -12146,7 +12441,7 @@ var handle2 = function($copy_action) {
             return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at App.Main (line 192, column 7 - line 194, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at App.Main (line 196, column 7 - line 198, column 61): " + [res.constructor.name]);
         });
       }
       ;
@@ -12161,7 +12456,7 @@ var handle2 = function($copy_action) {
             return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at App.Main (line 198, column 7 - line 200, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at App.Main (line 202, column 7 - line 204, column 61): " + [res.constructor.name]);
         });
       }
       ;
@@ -12176,14 +12471,14 @@ var handle2 = function($copy_action) {
             return insertPericope(action2.value1.value0.address)(action2.value1.value0.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at App.Main (line 204, column 7 - line 206, column 61): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at App.Main (line 208, column 7 - line 210, column 61): " + [res.constructor.name]);
         });
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 152, column 23 - line 206, column 61): " + [action2.value1.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 156, column 23 - line 210, column 61): " + [action2.value1.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 107, column 17 - line 206, column 61): " + [action2.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 111, column 17 - line 210, column 61): " + [action2.constructor.name]);
   }
   ;
   while (!$tco_done) {

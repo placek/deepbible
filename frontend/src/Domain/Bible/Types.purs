@@ -3,6 +3,7 @@ module Domain.Bible.Types where
 import Prelude
 
 import Data.Argonaut (class DecodeJson, decodeJson, (.:))
+import Data.String (Pattern(..), Replacement(..), replace)
 import Data.Newtype (class Newtype)
 
 -- Core domain primitives
@@ -18,6 +19,19 @@ newtype VerseSearchResult =
     , text :: String
     }
 derive instance newtypeVerseSearchResult :: Newtype VerseSearchResult _
+
+newtype AiSearchResult =
+  AiSearchResult
+    { address :: Address
+    , explanation :: String
+    }
+derive instance newtypeAiSearchResult :: Newtype AiSearchResult _
+
+newtype AiSearchResponse =
+  AiSearchResponse
+    { output :: Array AiSearchResult }
+
+derive instance newtypeAiSearchResponse :: Newtype AiSearchResponse _
 
 newtype SourceInfo =
   SourceInfo
@@ -135,6 +149,20 @@ instance decodeVerseSearchResult :: DecodeJson VerseSearchResult where
     source <- obj .: "source"
     text <- obj .: "text"
     pure $ VerseSearchResult { address, source, text }
+
+instance decodeAiSearchResult :: DecodeJson AiSearchResult where
+  decodeJson j = do
+    obj <- decodeJson j
+    rawAddress <- obj .: "address"
+    let address = replace (Pattern ":") (Replacement ",") rawAddress
+    explanation <- obj .: "explanation"
+    pure $ AiSearchResult { address, explanation }
+
+instance decodeAiSearchResponse :: DecodeJson AiSearchResponse where
+  decodeJson j = do
+    obj <- decodeJson j
+    output <- obj .: "output"
+    pure $ AiSearchResponse { output }
 
 instance showVerse :: Show Verse where
   show (Verse { verse_id, text }) =

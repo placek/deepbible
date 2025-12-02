@@ -12,10 +12,14 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Domain.Bible.Types (Address, Commentary, CrossReference, Source, SourceInfo, Story, Verse, VerseId, VerseSearchResult)
+import Domain.Bible.Types (Address, AiSearchResponse(..), AiSearchResult, Commentary, CrossReference, Source, SourceInfo, Story,
+                          Verse, VerseId, VerseSearchResult)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
+
+aiExplainUrl :: String
+aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search"
 
 fetchVerses :: Address -> Source -> Aff (Either String (Array Verse))
 fetchVerses address source = do
@@ -86,3 +90,23 @@ searchVerses query = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left "Failed to search verses"
       Right verses -> pure $ Right verses
+
+fetchAiExplanations :: String -> Maybe Source -> Aff (Either String (Array AiSearchResult))
+fetchAiExplanations phrase maybeSource = do
+  let
+    payload =
+      case maybeSource of
+        Just source ->
+          ("phrase" := fromString phrase)
+            ~> ("source" := fromString source)
+            ~> jsonEmptyObject
+        Nothing ->
+          ("phrase" := fromString phrase) ~> jsonEmptyObject
+  res <- AX.post driver RF.json aiExplainUrl $ Just (RB.json payload)
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Right explanations -> pure $ Right explanations
+      Left _ -> case decodeJson json.body of
+        Right (AiSearchResponse { output }) -> pure $ Right output
+        Left _ -> pure $ Left "Failed to fetch AI explanations"
