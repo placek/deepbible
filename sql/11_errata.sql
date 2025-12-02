@@ -216,3 +216,7 @@ UPDATE grc._all_verses
 UPDATE pl._all_verses
   SET text = REPLACE(text, '<<', '<')
   WHERE text ~ '<<';
+
+-- add missing reference
+INSERT INTO public._cross_references (book_number, chapter, verse, b1, c1, v1, rate)
+VALUES (490, 1, 43, 100, 6, 9, 0)
