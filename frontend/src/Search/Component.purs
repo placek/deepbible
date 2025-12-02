@@ -66,15 +66,15 @@ renderSearchSection toParentAction st =
                       , HE.onClick (toParentAction <<< SearchInputClick)
                       , HE.onKeyDown (toParentAction <<< HandleSearchKey)
                       ]
-                  ]
-              , HH.label
-                  [ HP.class_ (HH.ClassName "search-ai-toggle") ]
-                  [ HH.input
-                      [ HP.attr (HH.AttrName "type") "checkbox"
-                      , HP.checked st.aiSearchEnabled
-                      , HE.onChecked (toParentAction <<< SetAiSearchEnabled)
+                  , HH.label
+                      [ HP.class_ (HH.ClassName "search-ai-toggle") ]
+                      [ HH.input
+                          [ HP.attr (HH.AttrName "type") "checkbox"
+                          , HP.checked st.aiSearchEnabled
+                          , HE.onChecked (toParentAction <<< SetAiSearchEnabled)
+                          ]
+                      , HH.text "AI"
                       ]
-                  , HH.text "AI"
                   ]
               ]
           ]

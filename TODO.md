@@ -10,7 +10,7 @@
       selected addresses)
 - Search:
   - [ ] allow users to search within commentaries
-  - [ ] show the AI generated suggestions when searching (based on the search
+  - [x] show the AI generated suggestions when searching (based on the search
       phrase - like "Where did Moses go after leaving Egypt?")
   - [ ] introduce the embedded search model for better results
   - [ ] allow users to search by the verse text (not only by the address)

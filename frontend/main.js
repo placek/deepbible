@@ -11667,9 +11667,9 @@ var renderSearchSection = function(toParentAction) {
       return toParentAction(SearchInputClick.create($130));
     }), onKeyDown(function($131) {
       return toParentAction(HandleSearchKey.create($131));
-    })])]), label4([class_("search-ai-toggle")])([input2([attr2("type")("checkbox"), checked2(st.aiSearchEnabled), onChecked(function($132) {
+    })]), label4([class_("search-ai-toggle")])([input2([attr2("type")("checkbox"), checked2(st.aiSearchEnabled), onChecked(function($132) {
       return toParentAction(SetAiSearchEnabled.create($132));
-    })]), text5("AI")])])])(append13(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
+    })]), text5("AI")])])])])(append13(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
   };
 };
 var handleAction = function(insertPericope2) {
