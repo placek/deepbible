@@ -11509,7 +11509,7 @@ var component = function(dictMonadAff) {
 
 // output/Search.Highlight/foreign.js
 function splitSearchInput(input3) {
-  const pattern2 = /(@\S+)|(~\S*(\s+\d+(,[\d\-.]+)?)?)/g;
+  const pattern2 = /(@\S+)|(~\S*(\s+\d+([,:][\d\-.]+)?)?)/g;
   const segments = [];
   let lastIndex = 0;
   let match;

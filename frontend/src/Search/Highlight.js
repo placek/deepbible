@@ -1,5 +1,5 @@
 export function splitSearchInput(input) {
-  const pattern = /(@\S+)|(~\S*(\s+\d+(,[\d\-.]+)?)?)/g;
+  const pattern = /(@\S+)|(~\S*(\s+\d+([,:][\d\-.]+)?)?)/g;
   const segments = [];
   let lastIndex = 0;
   let match;
