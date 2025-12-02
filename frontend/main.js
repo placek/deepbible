@@ -11550,7 +11550,7 @@ var stripTags = /* @__PURE__ */ function() {
         ;
       }
       ;
-      throw new Error("Failed pattern match at Search.Component (line 329, column 5 - line 335, column 50): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Search.Component (line 324, column 5 - line 330, column 50): " + [v.constructor.name]);
     };
   };
   var $126 = go2(false);
@@ -11600,7 +11600,7 @@ var renderSearchFeedback = function(st) {
       return false;
     }
     ;
-    throw new Error("Failed pattern match at Search.Component (line 210, column 40 - line 212, column 23): " + [st.aiSearchError.constructor.name]);
+    throw new Error("Failed pattern match at Search.Component (line 208, column 40 - line 210, column 23): " + [st.aiSearchError.constructor.name]);
   }();
   if (st.searchLoading) {
     return [div2(baseAttrs)([text5("Searching\u2026")])];
@@ -11627,14 +11627,14 @@ var renderSearchFeedback = function(st) {
     return [];
   }
   ;
-  throw new Error("Failed pattern match at Search.Component (line 215, column 6 - line 228, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name, aiLoading.constructor.name, aiErrored.constructor.name]);
+  throw new Error("Failed pattern match at Search.Component (line 213, column 6 - line 226, column 14): " + [st.searchLoading.constructor.name, st.searchError.constructor.name, aiLoading.constructor.name, aiErrored.constructor.name]);
 };
 var renderAiSearchResult = function(toParentAction) {
   return function(aiResult) {
     var details2 = unwrap7(aiResult);
     return li([class_("search-result search-result--ai"), onClick(function(v) {
       return toParentAction(new SelectAiSearchResult(aiResult));
-    })])([div2([class_("search-result-meta")])([div2([class_("search-result-address")])([text5(details2.address)])]), div2([class_("search-result-text")])([text5(details2.explanation)]), div2([class_("search-result-ai-label")])([text5("AI")])]);
+    })])([div2([class_("search-result-meta")])([div2([class_("search-result-address")])([text5(details2.address)])]), div2([class_("search-result-text")])([text5(details2.explanation)])]);
   };
 };
 var renderSearchResults = function(toParentAction) {
@@ -11805,7 +11805,7 @@ var handleAction = function(insertPericope2) {
         });
       }
       ;
-      throw new Error("Failed pattern match at Search.Component (line 131, column 31 - line 144, column 10): " + [action2.value0.constructor.name]);
+      throw new Error("Failed pattern match at Search.Component (line 129, column 31 - line 142, column 10): " + [action2.value0.constructor.name]);
     }
     ;
     if (action2 instanceof ReceiveAiSearchResults) {
@@ -11844,7 +11844,7 @@ var handleAction = function(insertPericope2) {
         });
       }
       ;
-      throw new Error("Failed pattern match at Search.Component (line 146, column 33 - line 159, column 10): " + [action2.value0.constructor.name]);
+      throw new Error("Failed pattern match at Search.Component (line 144, column 33 - line 157, column 10): " + [action2.value0.constructor.name]);
     }
     ;
     if (action2 instanceof SelectAiSearchResult) {
@@ -11877,11 +11877,11 @@ var handleAction = function(insertPericope2) {
                 return insertPericope2(details2.address)(v2.value0.source)(res.value0);
               }
               ;
-              throw new Error("Failed pattern match at Search.Component (line 169, column 9 - line 171, column 84): " + [res.constructor.name]);
+              throw new Error("Failed pattern match at Search.Component (line 167, column 9 - line 169, column 84): " + [res.constructor.name]);
             });
           }
           ;
-          throw new Error("Failed pattern match at Search.Component (line 165, column 5 - line 171, column 84): " + [v2.constructor.name]);
+          throw new Error("Failed pattern match at Search.Component (line 163, column 5 - line 169, column 84): " + [v2.constructor.name]);
         });
       });
     }
@@ -11909,7 +11909,7 @@ var handleAction = function(insertPericope2) {
             return insertPericope2(details2.address)(details2.source)(res.value0);
           }
           ;
-          throw new Error("Failed pattern match at Search.Component (line 177, column 5 - line 179, column 75): " + [res.constructor.name]);
+          throw new Error("Failed pattern match at Search.Component (line 175, column 5 - line 177, column 75): " + [res.constructor.name]);
         });
       });
     }
@@ -11925,7 +11925,7 @@ var handleAction = function(insertPericope2) {
             return false;
           }
           ;
-          throw new Error("Failed pattern match at Search.Component (line 183, column 53 - line 185, column 29): " + [st.searchError.constructor.name]);
+          throw new Error("Failed pattern match at Search.Component (line 181, column 53 - line 183, column 29): " + [st.searchError.constructor.name]);
         }());
         if ($115) {
           var $116 = {};
@@ -11982,7 +11982,7 @@ var handleAction = function(insertPericope2) {
       return liftEffect7(stopPropagation(toEvent2(action2.value0)));
     }
     ;
-    throw new Error("Failed pattern match at Search.Component (line 92, column 38 - line 203, column 48): " + [action2.constructor.name]);
+    throw new Error("Failed pattern match at Search.Component (line 90, column 38 - line 201, column 48): " + [action2.constructor.name]);
   };
 };
 

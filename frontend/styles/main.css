@@ -168,7 +168,10 @@ n, s, m {
 
 .search-status {
   margin-top: 0.5em;
-  font-style: italic;
+  font-size: small;
+  font-family: monospace;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .search-results {
@@ -185,6 +188,17 @@ n, s, m {
   gap: 0.75em;
   padding: 0.5em;
   cursor: pointer;
+}
+
+.search-result--ai:after {
+  content: "AI";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  font-size: x-small;
+  background-color: var(--panel-background);
+  color: var(--text-secondary);
+  padding: 0.1em 0.5em;
 }
 
 .search-result--ai {
@@ -208,16 +222,4 @@ n, s, m {
 .search-result-text {
   flex: 1 1 auto;
   font-size: 0.9em;
-}
-
-.search-result-ai-label {
-  position: absolute;
-  top: 0.5em;
-  right: 0.5em;
-  padding: 0.1em 0.45em;
-  font-size: 0.75em;
-  border-radius: 0.4em;
-  background: var(--panel-background);
-  border: 1px solid var(--text-muted);
-  color: var(--text-secondary);
 }

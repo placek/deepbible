@@ -2,8 +2,6 @@ module Search.Component where
 
 import Prelude
 
-import Control.Monad (when)
-
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -271,9 +269,6 @@ renderAiSearchResult toParentAction aiResult =
     , HH.div
         [ HP.class_ (HH.ClassName "search-result-text") ]
         [ HH.text details.explanation ]
-    , HH.div
-        [ HP.class_ (HH.ClassName "search-result-ai-label") ]
-        [ HH.text "AI" ]
     ]
 
 renderSearchResult
