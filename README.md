@@ -1,84 +1,58 @@
- # DeepBible
+# DeepBible
 
-DeepBible is a pipeline for downloading and processing biblical texts from ph4.org. It supports fetching multiple translations, grouping them by language, merging them into unified SQLite databases, generating helper SQL functions and materialized views, uploading to PostgreSQL.
+DeepBible helps you assemble multilingual Bible datasets and load them into PostgreSQL for search and analysis. It focuses on simple make targets so you can fetch sources, merge them per language, and publish helper views that are ready to query.
 
- ## Features
- - Download translations (SQLite3) from ph4.org.
- - Extract and group databases by language (default: Polish (`pl`), Latin (`la`), Koine Greek (`grc`), English (`en`)).
- - Merge grouped databases into a single SQLite3 database per language.
- - Generate SQL helper functions and materialized views for sanitized verse text.
- - Upload merged data tables (`_sources`, `_books`, `_all_verses`) to PostgreSQL schemas.
+## What you can do
+- Fetch Bible translations from ph4.org as SQLite3 files.
+- Group source databases by language (Polish `pl`, Latin `la`, Koine Greek `grc`, English `en`, or any language present in the sources).
+- Merge grouped databases into a single SQLite3 file per language with unified verse, book, source, story, and commentary tables.
+- Download and prepare cross references for verse-to-verse links.
+- Upload merged tables to PostgreSQL schemas named after each language code.
+- Generate helper SQL for materialized views, unified `public` views, and full-text search indexes.
 
- ## Prerequisites
- - [direnv](https://direnv.net/) (optional, for environment variable management)
- - [Nix](https://nixos.org/) (optional, for reproducible development environment via `shell.nix`)
- - `curl`, `p7zip` (`p7zip-full`)
- - `sqlite3`, `sqlitebrowser` (for inspection)
- - PostgreSQL server
+## Before you start
+- PostgreSQL server and `psql` access.
+- `curl`, `p7zip` (`p7zip-full`), `sqlite3`.
+- Optional: `direnv` and Nix (`nix-shell`) if you want the supplied environment.
+- Set `DATABASE_URL` (e.g., `postgresql://postgres:secret@localhost:5432/deepbible`).
 
- ## Setup
- 1. Clone the repository:
-    ```bash
-    git clone git@github.com:placek/deepbible.git
-    cd deepbible
-    ```
- 2. Set environment variables for PostgreSQL and Ollama. Create a `.env` file in the project root:
-    ```bash
-    DATABASE_URL=postgresql://postgres:secret@localhost:5432/deepbible
-    ```
-    Load the variables with:
-    ```bash
-    source .env
-    ```
-    Or use `direnv` by adding to `.envrc`:
-    ```bash
-    dotenv .env
-    ```
- 3. Enter the development environment:
-    ```bash
-    nix-shell
-    ```
-    Or install dependencies manually:
-    ```bash
-    sudo apt-get update
-    sudo apt-get install -y sqlite3 p7zip-full postgresql pgloader
-    ```
+## Typical workflow
+1) Enter the project directory and load environment variables (e.g., `source .env` or use `direnv`).
+2) Fetch all available translations and extract them:
+```bash
+make fetch
+```
+3) Group translations by language. Run once per language you want:
+```bash
+make data/grouped/pl
+make data/grouped/la
+make data/grouped/grc
+make data/grouped/en
+```
+4) Merge grouped databases into one SQLite3 file per language:
+```bash
+make data/merged/pl.SQLite3
+make data/merged/la.SQLite3
+make data/merged/grc.SQLite3
+make data/merged/en.SQLite3
+```
+5) Build cross-reference data (optional but useful for linking verses):
+```bash
+make cross-references
+```
+6) Upload merged tables to PostgreSQL (creates schemas like `pl`, `la`, etc.):
+```bash
+make upload
+```
+7) Apply helper SQL to publish `public` views and text search indexes:
+```bash
+make apply-helpers
+```
 
- ## Usage
- ### 1. Fetch and extract translations
- ```bash
- make fetch
- ```
- ### 2. Group by language
- ```bash
- make data/grouped/pl
- make data/grouped/la
- make data/grouped/grc
- make data/grouped/en
- ```
- ### 3. Merge databases
- ```bash
- make data/merged/pl.SQLite3
- make data/merged/la.SQLite3
- make data/merged/grc.SQLite3
- make data/merged/en.SQLite3
- ```
- ### 4. Upload to PostgreSQL
- ```bash
- make upload
- ```
- This uploads the `_sources`, `_books`, and `_all_verses` tables to schemas named by each language code.
+## What gets created
+- **SQLite outputs:** one merged SQLite3 database per language in `data/merged/` plus an optional cross-reference database in `data/cross_references/`.
+- **PostgreSQL schemas:** `_sources`, `_books`, `_all_verses`, `_stories`, and `_commentaries` tables per language schema.
+- **Public helpers:** materialized view `public._all_verses` with full-text search, views for books and sources, and union views for stories and commentaries.
 
- ## Directory Structure
- ```
- .
- ├── Makefile            # Pipeline tasks (fetch, group, merge, upload, embed)
- ├── build/              # Makefile components
- ├── sql/                # Raw SQL scripts for postgres
- ├── shell.nix           # Nix development shell
- ├── TODO.md             # Roadmap and feature list
- └── README.md           # Project overview and usage
- ```
-
- ## Contributing
- Contributions are welcome! Please open issues or pull requests.
+## Need help?
+Run `make` targets with `-n` to see the commands without executing them, or open an issue/PR with questions or suggestions.
