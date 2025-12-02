@@ -45,37 +45,46 @@ renderSearchSection
   -> AppState
   -> H.ComponentHTML parentAction slots Aff
 renderSearchSection toParentAction st =
+  let
+    aiToggle =
+      if st.aiStatusUp then
+        [ HH.label
+            [ HP.class_ (HH.ClassName "search-ai-toggle") ]
+            [ HH.input
+                [ HP.attr (HH.AttrName "type") "checkbox"
+                , HP.checked st.aiSearchEnabled
+                , HE.onChecked (toParentAction <<< SetAiSearchEnabled)
+                ]
+            , HH.text "AI"
+            ]
+        ]
+      else
+        []
+  in
   HH.div
     [ HP.class_ (HH.ClassName "search-section") ]
     ( [ HH.div
           [ HP.class_ (HH.ClassName "search-input-group") ]
               [ HH.div
                   [ HP.class_ (HH.ClassName "search-input-wrapper") ]
-                  [ HH.div
-                      [ HP.class_ (HH.ClassName "search-input-highlight")
-                      , HP.attr (HH.AttrName "aria-hidden") "true"
-                      ]
-                      (renderSearchInputHighlights st.searchInput)
-                  , HH.input
-                      [ HP.class_ (HH.ClassName "search-input")
-                      , HP.attr (HH.AttrName "type") "text"
-                      , HP.placeholder "search verses, e.g. '@NVUL ~J 3,10- Deus'"
-                      , HP.value st.searchInput
-                      , HE.onValueInput (toParentAction <<< UpdateSearchInput)
-                      , HE.onFocus \_ -> toParentAction FocusSearchInput
-                      , HE.onClick (toParentAction <<< SearchInputClick)
-                      , HE.onKeyDown (toParentAction <<< HandleSearchKey)
-                      ]
-                  , HH.label
-                      [ HP.class_ (HH.ClassName "search-ai-toggle") ]
-                      [ HH.input
-                          [ HP.attr (HH.AttrName "type") "checkbox"
-                          , HP.checked st.aiSearchEnabled
-                          , HE.onChecked (toParentAction <<< SetAiSearchEnabled)
-                          ]
-                      , HH.text "AI"
-                      ]
-                  ]
+                  ( [ HH.div
+                        [ HP.class_ (HH.ClassName "search-input-highlight")
+                        , HP.attr (HH.AttrName "aria-hidden") "true"
+                        ]
+                        (renderSearchInputHighlights st.searchInput)
+                    , HH.input
+                        [ HP.class_ (HH.ClassName "search-input")
+                        , HP.attr (HH.AttrName "type") "text"
+                        , HP.placeholder "search verses, e.g. '@NVUL ~J 3,10- Deus'"
+                        , HP.value st.searchInput
+                        , HE.onValueInput (toParentAction <<< UpdateSearchInput)
+                        , HE.onFocus \_ -> toParentAction FocusSearchInput
+                        , HE.onClick (toParentAction <<< SearchInputClick)
+                        , HE.onKeyDown (toParentAction <<< HandleSearchKey)
+                        ]
+                    ]
+                    <> aiToggle
+                  )
               ]
           ]
         <> renderSearchFeedback st
@@ -94,7 +103,7 @@ handleAction insertPericope action = case action of
   SubmitSearch -> do
     st <- H.get
     let defaultAiSource = _.source <$> A.last st.pericopes
-    let aiSearchActive = st.aiSearchEnabled
+    let aiSearchActive = st.aiStatusUp && st.aiSearchEnabled
     let query = trim st.searchInput
     if query == "" then
       pure unit
@@ -118,12 +127,14 @@ handleAction insertPericope action = case action of
       res <- H.liftAff $ searchVerses query
       handleAction insertPericope (ReceiveSearchResults res)
 
-  SetAiSearchEnabled enabled ->
-    H.modify_ \st -> st
-      { aiSearchEnabled = enabled
-      , aiSearchResults = if enabled then st.aiSearchResults else []
-      , aiSearchLoading = if enabled then st.aiSearchLoading else false
-      , aiSearchError = if enabled then st.aiSearchError else Nothing
+  SetAiSearchEnabled enabled -> do
+    st <- H.get
+    let aiEnabled = st.aiStatusUp && enabled
+    H.put st
+      { aiSearchEnabled = aiEnabled
+      , aiSearchResults = if aiEnabled then st.aiSearchResults else []
+      , aiSearchLoading = if aiEnabled then st.aiSearchLoading else false
+      , aiSearchError = if aiEnabled then st.aiSearchError else Nothing
       }
 
   ReceiveSearchResults res -> case res of
@@ -204,12 +215,13 @@ renderSearchFeedback :: forall action slots. AppState -> Array (H.ComponentHTML 
 renderSearchFeedback st =
   let
     baseAttrs = [ HP.class_ (HH.ClassName "search-status") ]
-    aiLoading = st.aiSearchEnabled && st.aiSearchLoading
-    aiErrored = st.aiSearchEnabled && (case st.aiSearchError of
+    aiEnabled = st.aiStatusUp && st.aiSearchEnabled
+    aiLoading = aiEnabled && st.aiSearchLoading
+    aiErrored = aiEnabled && (case st.aiSearchError of
       Just _ -> true
       Nothing -> false
     )
-    hasAiResults = st.aiSearchEnabled && not (A.null st.aiSearchResults)
+    hasAiResults = aiEnabled && not (A.null st.aiSearchResults)
   in case st.searchLoading, st.searchError, aiLoading, aiErrored of
        true, _, _, _ ->
          [ HH.div baseAttrs [ HH.text "Searching…" ] ]
@@ -232,7 +244,7 @@ renderSearchResults
   -> Array (H.ComponentHTML parentAction slots Aff)
 renderSearchResults toParentAction st =
   let
-    aiResults = if st.aiSearchEnabled then st.aiSearchResults else []
+    aiResults = if st.aiStatusUp && st.aiSearchEnabled then st.aiSearchResults else []
     results =
       (aiResults <#> renderAiSearchResult toParentAction)
         <> (st.searchResults <#> renderSearchResult toParentAction)

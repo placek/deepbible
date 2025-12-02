@@ -13,6 +13,7 @@ type AppState =
   , searchInput :: String
   , searchResults :: Array VerseSearchResult
   , aiSearchResults :: Array AiSearchResult
+  , aiStatusUp :: Boolean
   , aiSearchEnabled :: Boolean
   , searchOpen :: Boolean
   , searchPerformed :: Boolean

@@ -7,6 +7,7 @@ import Affjax.RequestBody as RB
 import Affjax.ResponseFormat as RF
 import Affjax.Web (driver)
 import Data.Argonaut ((:=), decodeJson, jsonEmptyObject, (~>))
+import Data.Argonaut.Decode.Error (JsonDecodeError)
 import Data.Argonaut.Core (fromString)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -20,6 +21,9 @@ baseUrl = "https://api.bible.placki.cloud"
 
 aiExplainUrl :: String
 aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search"
+
+aiStatusUrl :: String
+aiStatusUrl = "https://n8n.placki.cloud/webhook/deepbible/status"
 
 fetchVerses :: Address -> Source -> Aff (Either String (Array Verse))
 fetchVerses address source = do
@@ -110,3 +114,15 @@ fetchAiExplanations phrase maybeSource = do
       Left _ -> case decodeJson json.body of
         Right (AiSearchResponse { output }) -> pure $ Right output
         Left _ -> pure $ Left "Failed to fetch AI explanations"
+
+checkAiStatus :: Aff Boolean
+checkAiStatus = do
+  let
+    payload = ("status" := fromString "up") ~> jsonEmptyObject
+  res <- AX.post driver RF.json aiStatusUrl $ Just (RB.json payload)
+  case res of
+    Left _ -> pure false
+    Right json -> case decodeJson json.body :: Either JsonDecodeError { status :: String } of
+      Right { status }
+        | status == "up" -> pure true
+      _ -> pure false
