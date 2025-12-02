@@ -268,8 +268,8 @@ DECLARE
   v_verse             integer;
   v_position          numeric;
 BEGIN
-  v_language      := NULLIF(split_part(p_verse_id, '/', 1), '');
-  v_source_number := NULLIF(split_part(p_verse_id, '/', 2), '');
+  v_language         := NULLIF(split_part(p_verse_id, '/', 1), '');
+  v_source_number    := NULLIF(split_part(p_verse_id, '/', 2), '');
   v_book_number_text := NULLIF(split_part(p_verse_id, '/', 3), '');
   v_chapter_text     := NULLIF(split_part(p_verse_id, '/', 4), '');
   v_verse_text       := NULLIF(split_part(p_verse_id, '/', 5), '');
