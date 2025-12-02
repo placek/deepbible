@@ -26,11 +26,11 @@ DECLARE
   new_output text;
 BEGIN
   LOOP
-    new_output := regexp_replace(output, '<(S|m|f|n|h)>[^<>]*</\1>', '', 'g');
+    new_output := regexp_replace(output, '<(S|m|f|n|h|e)>[^<>]*</\1>', '', 'ig');
     EXIT WHEN new_output = output;
     output := new_output;
   END LOOP;
-  RETURN output;
+  RETURN regexp_replace(output, '\s+', ' ', 'g');
 END;
 $BODY$;
 
@@ -156,8 +156,8 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-DROP FUNCTION IF EXISTS public.fetch_verses_by_address(text, text);
-CREATE OR REPLACE FUNCTION public.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text)
+DROP FUNCTION IF EXISTS public.fetch_verses_by_address(text, text, boolean);
+CREATE OR REPLACE FUNCTION public.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text, p_raw boolean DEFAULT false)
   RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -183,7 +183,10 @@ BEGIN
     v.language,
     v.source,
     v.address,
-    text_without_format(v.text) AS "text"
+    CASE
+    WHEN p_raw THEN public.raw_text(v.text)
+    ELSE public. text_without_format(v.text)
+    END AS text
   FROM addresses a
   JOIN public._all_verses v
     ON v.book_number = a.book_number
@@ -192,6 +195,53 @@ BEGIN
   WHERE
     p_source IS NULL OR v.source = p_source
   ORDER BY book_number, chapter, verse, language, source, verse_id;
+END;
+$BODY$;
+
+-- full-text search for verses
+DROP FUNCTION IF EXISTS public.search_verses(text);
+CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
+  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+DECLARE
+  v_source  text;
+  v_address text;
+  v_term    text;
+BEGIN
+  v_source := substring(search_phrase from '@(\S+)');
+  v_address := substring(search_phrase from '~(\S*(\s+\d+([,:][\d\-\.]+)?)?)');
+  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S*(\s+\d+([,:][\d\-\.]+)?)?)', '', 'gi'));
+
+  RAISE NOTICE 'search_verses: source=%, address=%, term=%', v_source, v_address, v_term;
+
+  IF v_term IS NULL OR v_term !~ '\w' THEN
+    v_term := NULL;
+  END IF;
+
+  IF v_address IS NOT NULL THEN
+  RETURN QUERY
+    SELECT *
+    FROM public.fetch_verses_by_address(v_address, v_source, true) v
+    WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
+    LIMIT 500;
+
+  ELSE
+  RETURN QUERY
+    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, public.raw_text(v.text)
+    FROM public._all_verses v
+    WHERE (v_source  IS NULL OR v.source = v_source)
+      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
+    ORDER BY CASE
+             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
+             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
+             END DESC
+    LIMIT 500;
+  END IF;
+
 END;
 $BODY$;
 
@@ -246,53 +296,6 @@ BEGIN
     AND v_position BETWEEN (ac.chapter_number_from * 1000 + ac.verse_number_from)
                        AND (ac.chapter_number_to   * 1000 + ac.verse_number_to)
   ORDER BY ac.chapter_number_from, ac.verse_number_from, ac.marker;
-END;
-$BODY$;
-
--- full-text search for verses
-DROP FUNCTION IF EXISTS public.search_verses(text);
-CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
-  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
-  LANGUAGE 'plpgsql'
-  COST 100
-  VOLATILE PARALLEL UNSAFE
-  ROWS 1000
-AS $BODY$
-DECLARE
-  v_source  text;
-  v_address text;
-  v_term    text;
-BEGIN
-  v_source := substring(search_phrase from '@(\S+)');
-  v_address := substring(search_phrase from '~(\S*(\s+\d+(,[\d\-\.]+)?)?)');
-  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S*(\s+\d+(,[\d\-\.]+)?)?)', '', 'gi'));
-
-  RAISE NOTICE 'search_verses: source=%, address=%, term=%', v_source, v_address, v_term;
-
-  IF v_term IS NULL OR v_term !~ '\w' THEN
-    v_term := NULL;
-  END IF;
-
-  IF v_address IS NOT NULL THEN
-  RETURN QUERY
-    SELECT *
-    FROM public.fetch_verses_by_address(v_address, v_source) v
-    WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
-    LIMIT 500;
-
-  ELSE
-  RETURN QUERY
-    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, v.text
-    FROM public._all_verses v
-    WHERE (v_source  IS NULL OR v.source = v_source)
-      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
-    ORDER BY CASE
-             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
-             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
-             END DESC
-    LIMIT 500;
-  END IF;
-
 END;
 $BODY$;
 
