@@ -16,6 +16,8 @@ body {
   border: none;
   background: transparent;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
 }
 
 .icon-button:focus-visible {
@@ -52,7 +54,7 @@ body {
 
 .didascalia .address.editing input,
 .didascalia .source.editing input {
-  border: none;
+  border: 1px solid var(--text-muted);
 }
 
 .margin .selected-address {
@@ -81,7 +83,7 @@ body {
 }
 
 .search-input-group input {
-  border: none;
+  border: 1px solid var(--text-muted);
   position: relative;
   z-index: 1;
 }

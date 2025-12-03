@@ -197,6 +197,11 @@ h2 {
   color: var(--text-primary);
 }
 
+.note .textus {
+  padding: 0;
+  display: flex;
+}
+
 .note-add {
   align-self: center;
   margin: 0.25em auto;
