@@ -110,6 +110,187 @@ render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   let
     addressText = selectedAddressText st.pericope
+
+    addressNode =
+      if st.editingAddress then
+        HH.div
+          [ HP.class_ (HH.ClassName "address editing")
+          , HE.onClick SwallowDidascaliaClick
+          ]
+          [ HH.input
+              [ HP.value st.pericope.address
+              , HE.onValueInput SetAddress
+              , HE.onKeyDown \ke -> case key ke of
+                  "Enter" -> SubmitAddress
+                  "Escape" -> CancelAddressEdit
+                  _ -> Noop
+              , HP.autofocus true
+              ]
+          ]
+      else
+        HH.div
+          [ HP.class_ (HH.ClassName "address")
+          , HE.onClick HandleAddressClick
+          ]
+          [ HH.text st.pericope.address ]
+
+    sourceNode =
+      if st.editingSource then
+        let
+          sourceList = case st.sources of
+            Nothing ->
+              [ HH.div [ HP.class_ (HH.ClassName "source-loading") ]
+                  [ HH.text "Loading sources..." ]
+              ]
+            Just infos ->
+              if A.null infos then
+                [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
+                    [ HH.text "Unable to load sources." ]
+                ]
+              else
+                let
+                  filterValue = toLower st.pericope.source
+                  filterPattern = Pattern filterValue
+                  matchesFilter infoRec =
+                    let
+                      info = unwrap infoRec
+                      haystack = toLower info.name <> " " <> toLower info.description_short
+                    in
+                    filterValue == "" || contains filterPattern haystack
+                  filteredInfos = infos # A.filter matchesFilter
+                in
+                if A.null filteredInfos then
+                  [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
+                      [ HH.text "No sources match your search." ]
+                  ]
+                else
+                  let
+                    languages = Set.toUnfoldable (Set.fromFoldable (filteredInfos <#> (unwrap >>> _.language))) :: Array String
+                    renderOption infoRec =
+                      let
+                        info = unwrap infoRec
+                        isActive = info.name == st.pericope.source
+                        cls = "source-option" <> if isActive then " active" else ""
+                      in
+                      HH.li
+                        [ HP.class_ (HH.ClassName cls)
+                        , HE.onClick \_ -> SelectSource info.name
+                        ]
+                        [ HH.div [ HP.class_ (HH.ClassName "source-option-name") ] [ HH.text info.name ]
+                        , HH.div [ HP.class_ (HH.ClassName "source-option-description") ] [ HH.text info.description_short ]
+                        ]
+                    renderGroup lang =
+                      let
+                        entries = filteredInfos # A.filter (\infoRec -> (unwrap infoRec).language == lang)
+                        sorted = A.sortBy (comparing (unwrap >>> _.name)) entries
+                      in
+                      HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
+                        [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
+                        , HH.ul [ HP.class_ (HH.ClassName "source-options list-reset") ] (renderOption <$> sorted)
+                        ]
+                    sortedLanguages = A.sort languages
+                  in
+                  [ HH.div [ HP.class_ (HH.ClassName "source-list list") ] (renderGroup <$> sortedLanguages)
+                  ]
+        in
+        HH.div
+          [ HP.class_ (HH.ClassName "source editing")
+          , HE.onClick SwallowDidascaliaClick
+          ]
+          ([ HH.input
+                [ HP.value st.pericope.source
+                , HE.onValueInput SetSource
+                , HP.autofocus true
+                , HE.onKeyDown \ke ->
+                    case key ke of
+                      "Enter" -> SubmitSource
+                      "Escape" -> CloseSourceList
+                      _ -> Noop
+                ]
+            ] <> sourceList)
+      else
+        HH.div
+          [ HP.class_ (HH.ClassName "source")
+          , HE.onClick HandleSourceClick
+          ]
+          [ HH.text st.pericope.source ]
+
+    renderSelectedAddress =
+      [ HH.div
+        [ HP.class_ (HH.ClassName "selected-address")
+        , HE.onClick HandleSelectedAddressClick
+        ]
+        [ HH.text addressText ]
+      ]
+
+    renderCrossRefs = case st.crossRefs of
+      CrossRefsIdle ->
+        [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
+            [ ]
+        ]
+
+      CrossRefsLoading ->
+        [ HH.div [ HP.class_ (HH.ClassName "cross-references-loading") ]
+            [ HH.text "Loading cross references..." ]
+        ]
+      CrossRefsLoaded payload ->
+        let
+          storyNodes =
+            if A.null payload.stories then
+              []
+            else
+              [ HH.div [ HP.class_ (HH.ClassName "stories") ]
+                  (renderStory <$> payload.stories)
+              ]
+          crossReferenceNodes =
+            if A.null payload.references then
+              [ ]
+            else
+              [ HH.div [ HP.class_ (HH.ClassName "cross-references") ]
+                  (renderRef <$> payload.references)
+              ]
+          commentaryNodes =
+            if A.null payload.commentaries then
+              []
+            else
+              [ HH.div [ HP.class_ (HH.ClassName "commentaries") ]
+                  (renderCommentary <$> payload.commentaries)
+              ]
+        in
+          storyNodes <> crossReferenceNodes <> commentaryNodes
+
+    renderRef (CrossReference ref) =
+      HH.div
+        [ HP.class_ (HH.ClassName "cross-reference")
+        , HE.onClick \_ -> OpenCrossReference ref.reference
+        ]
+        [ HH.text ref.reference ]
+
+    renderCommentary (Commentary commentary) =
+      HH.div
+        [ HP.class_ (HH.ClassName "commentary")
+        ]
+        [ HH.span [ HP.class_ (HH.ClassName "commentary-marker") ]
+            [ HH.text commentary.marker ]
+        , HH.span
+            [ HP.class_ (HH.ClassName "commentary-text")
+            , HP.prop (HH.PropName "innerHTML") commentary.text
+            ]
+            []
+        ]
+
+    renderStory (Story story) =
+      HH.div
+        [ HP.class_ (HH.ClassName "story")
+        ]
+        [ HH.div [ HP.class_ (HH.ClassName "story-title") ] [ HH.text story.title ]
+        , HH.a
+            [ HP.class_ (HH.ClassName "story-address")
+            , HP.href "javascript:void(0)"
+            , HE.onClick \_ -> OpenStory { source: story.source, address: story.address }
+            ]
+            [ HH.text story.address ]
+        ]
   in
   HH.div [ HP.class_ (HH.ClassName "pericope"), HE.onClick HandlePericopeClick ]
     [ HH.div
@@ -120,129 +301,24 @@ render st =
         , HE.onDragOver DragOver
         , HE.onDrop Drop
         ]
-        [ let
-            addressNode =
-              if st.editingAddress then
-                HH.div
-                  [ HP.class_ (HH.ClassName "address editing")
-                  , HE.onClick SwallowDidascaliaClick
-                  ]
-                  [ HH.input
-                      [ HP.value st.pericope.address
-                      , HE.onValueInput SetAddress
-                      , HE.onKeyDown \ke -> case key ke of
-                          "Enter" -> SubmitAddress
-                          "Escape" -> CancelAddressEdit
-                          _ -> Noop
-                      , HP.autofocus true
-                      ]
-                  ]
-              else
-                HH.div
-                  [ HP.class_ (HH.ClassName "address")
-                  , HE.onClick HandleAddressClick
-                  ]
-                  [ HH.text st.pericope.address ]
-          in
-            HH.div [ HP.class_ (HH.ClassName "didascalia-header") ]
-              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
-              [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
-                  [ HH.text "☰" ]
-              , HH.button
-                  [ HP.class_ (HH.ClassName "didascalia-duplicate icon-button")
-                  , HP.title "duplicate pericope"
-                  , HE.onClick \_ -> Duplicate
-                  ]
-                  [ HH.text "⧉" ]
-              , HH.button
-                  [ HP.class_ (HH.ClassName "didascalia-remove icon-button")
-                  , HP.title "remove pericope"
-                  , HE.onClick \_ -> Remove
-                  ]
-                  [ HH.text "✕" ]
-              ]
-            , addressNode
+        [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
+            [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ]
+                [ HH.text "☰" ]
+            , HH.button
+                [ HP.class_ (HH.ClassName "didascalia-duplicate icon-button")
+                , HP.title "duplicate pericope"
+                , HE.onClick \_ -> Duplicate
+                ]
+                [ HH.text "⧉" ]
+            , HH.button
+                [ HP.class_ (HH.ClassName "didascalia-remove icon-button")
+                , HP.title "remove pericope"
+                , HE.onClick \_ -> Remove
+                ]
+                [ HH.text "✕" ]
             ]
-
-        , if st.editingSource then
-            let
-              sourceList = case st.sources of
-                Nothing ->
-                  [ HH.div [ HP.class_ (HH.ClassName "source-loading") ]
-                      [ HH.text "Loading sources..." ]
-                  ]
-                Just infos ->
-                  if A.null infos then
-                    [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
-                        [ HH.text "Unable to load sources." ]
-                    ]
-                  else
-                    let
-                      filterValue = toLower st.pericope.source
-                      filterPattern = Pattern filterValue
-                      matchesFilter infoRec =
-                        let
-                          info = unwrap infoRec
-                          haystack = toLower info.name <> " " <> toLower info.description_short
-                        in
-                        filterValue == "" || contains filterPattern haystack
-                      filteredInfos = infos # A.filter matchesFilter
-                    in
-                    if A.null filteredInfos then
-                      [ HH.div [ HP.class_ (HH.ClassName "source-empty") ]
-                          [ HH.text "No sources match your search." ]
-                      ]
-                    else
-                      let
-                        languages = Set.toUnfoldable (Set.fromFoldable (filteredInfos <#> (unwrap >>> _.language))) :: Array String
-                        renderOption infoRec =
-                          let
-                            info = unwrap infoRec
-                            isActive = info.name == st.pericope.source
-                            cls = "source-option" <> if isActive then " active" else ""
-                          in
-                          HH.li
-                            [ HP.class_ (HH.ClassName cls)
-                            , HE.onClick \_ -> SelectSource info.name
-                            ]
-                            [ HH.div [ HP.class_ (HH.ClassName "source-option-name") ] [ HH.text info.name ]
-                            , HH.div [ HP.class_ (HH.ClassName "source-option-description") ] [ HH.text info.description_short ]
-                            ]
-                        renderGroup lang =
-                          let
-                            entries = filteredInfos # A.filter (\infoRec -> (unwrap infoRec).language == lang)
-                            sorted = A.sortBy (comparing (unwrap >>> _.name)) entries
-                          in
-                          HH.div [ HP.class_ (HH.ClassName "source-language-group") ]
-                            [ HH.h4 [ HP.class_ (HH.ClassName "source-language") ] [ HH.text lang ]
-                            , HH.ul [ HP.class_ (HH.ClassName "source-options list-reset") ] (renderOption <$> sorted)
-                            ]
-                        sortedLanguages = A.sort languages
-                      in
-                      [ HH.div [ HP.class_ (HH.ClassName "source-list list") ] (renderGroup <$> sortedLanguages)
-                      ]
-            in
-            HH.div
-              [ HP.class_ (HH.ClassName "source editing")
-              , HE.onClick SwallowDidascaliaClick
-              ]
-              ([ HH.input
-                    [ HP.value st.pericope.source
-                    , HE.onValueInput SetSource
-                    , HP.autofocus true
-                    , HE.onKeyDown \ke ->
-                        case key ke of
-                          "Enter" -> SubmitSource
-                          "Escape" -> CloseSourceList
-                          _ -> Noop
-                    ]
-                ] <> sourceList)
-          else
-            HH.div
-              [ HP.class_ (HH.ClassName "source")
-              , HE.onClick HandleSourceClick
-              ]
-              [ HH.text st.pericope.source ]
+        , addressNode
+        , sourceNode
         ]
 
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
@@ -257,82 +333,8 @@ render st =
             ]
             []
         )
-    , let
-        renderSelectedAddress =
-          [ HH.div
-            [ HP.class_ (HH.ClassName "selected-address")
-            , HE.onClick HandleSelectedAddressClick
-            ]
-            [ HH.text addressText ]
-          ]
 
-        renderCrossRefs = case st.crossRefs of
-          CrossRefsIdle ->
-            [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
-                [ ]
-            ]
-
-          CrossRefsLoading ->
-            [ HH.div [ HP.class_ (HH.ClassName "cross-references-loading") ]
-                [ HH.text "Loading cross references..." ]
-            ]
-          CrossRefsLoaded payload ->
-            let
-              storyNodes =
-                if A.null payload.stories then
-                  []
-                else
-                  [ HH.div [ HP.class_ (HH.ClassName "stories") ]
-                      (renderStory <$> payload.stories)
-                  ]
-              crossReferenceNodes =
-                if A.null payload.references then
-                  [ ]
-                else
-                  [ HH.div [ HP.class_ (HH.ClassName "cross-references") ]
-                      (renderRef <$> payload.references)
-                  ]
-              commentaryNodes =
-                if A.null payload.commentaries then
-                  []
-                else
-                  [ HH.div [ HP.class_ (HH.ClassName "commentaries") ]
-                      (renderCommentary <$> payload.commentaries)
-                  ]
-            in
-              storyNodes <> crossReferenceNodes <> commentaryNodes
-        renderRef (CrossReference ref) =
-          HH.div
-            [ HP.class_ (HH.ClassName "cross-reference")
-            , HE.onClick \_ -> OpenCrossReference ref.reference
-            ]
-            [ HH.text ref.reference ]
-        renderCommentary (Commentary commentary) =
-          HH.div
-            [ HP.class_ (HH.ClassName "commentary")
-            ]
-            [ HH.span [ HP.class_ (HH.ClassName "commentary-marker") ]
-                [ HH.text commentary.marker ]
-            , HH.span
-                [ HP.class_ (HH.ClassName "commentary-text")
-                , HP.prop (HH.PropName "innerHTML") commentary.text
-                ]
-                []
-            ]
-        renderStory (Story story) =
-          HH.div
-            [ HP.class_ (HH.ClassName "story")
-            ]
-            [ HH.div [ HP.class_ (HH.ClassName "story-title") ] [ HH.text story.title ]
-            , HH.a
-                [ HP.class_ (HH.ClassName "story-address")
-                , HP.href "javascript:void(0)"
-                , HE.onClick \_ -> OpenStory { source: story.source, address: story.address }
-                ]
-                [ HH.text story.address ]
-            ]
-      in
-      HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs)
+    , HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs)
     ]
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit

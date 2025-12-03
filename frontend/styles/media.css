@@ -1,11 +1,10 @@
 @media (max-width: 570px) {
-  .pericope {
+  .pericope, .note {
     flex-direction: column;
   }
 
   .didascalia, .didascalia-header, .cross-references {
     flex-direction: row;
-    flex-wrap: wrap;
   }
 
   .didascalia .address, .cross-reference {

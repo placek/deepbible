@@ -200,6 +200,7 @@ h2 {
 .note .textus {
   padding: 0;
   display: flex;
+  width: 100%;
 }
 
 .note-add {
