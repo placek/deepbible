@@ -7,6 +7,11 @@
     flex-direction: row;
   }
 
+  .cross-references {
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+
   .didascalia .address, .cross-reference {
     text-wrap-mode: nowrap;
   }
@@ -14,6 +19,7 @@
   .didascalia,
   .margin {
     padding: 0 1em;
+    width: auto;
   }
 }
 
