@@ -1,8 +1,26 @@
 // output/App.UrlState/foreign.js
-var loadSeeds = () => {
-  if (typeof window === "undefined") {
-    return [];
+var HASH_KEY = "state";
+var textEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+var textDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+var base64urlEncode = (bytes) => {
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
+  const base64 = btoa(binary);
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+};
+var base64urlDecode = (encoded) => {
+  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(normalized.length + (4 - normalized.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i2 = 0; i2 < binary.length; i2++) {
+    bytes[i2] = binary.charCodeAt(i2);
+  }
+  return bytes;
+};
+var readLegacySeeds = () => {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("pericopes");
   if (!raw) {
@@ -11,13 +29,11 @@ var loadSeeds = () => {
   const seeds = [];
   const entries = raw.split("|");
   for (const entry of entries) {
-    if (!entry) {
+    if (!entry)
       continue;
-    }
     const parts = entry.split("~");
-    if (parts.length !== 2) {
+    if (parts.length !== 2)
       continue;
-    }
     const [addressPart, sourcePart] = parts;
     try {
       const address2 = decodeURIComponent(addressPart).replace(/_/gi, " ").replace(/\*/gi, ",");
@@ -26,8 +42,63 @@ var loadSeeds = () => {
     } catch (_err) {
     }
   }
-  const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-  window.history.replaceState({ pericopes: seeds }, "", currentUrl);
+  return seeds;
+};
+var encodeSeeds = (seeds) => {
+  if (!Array.isArray(seeds) || seeds.length === 0 || !window.pako || !textEncoder) {
+    return "";
+  }
+  const state3 = { pericopes: seeds };
+  const json3 = JSON.stringify(state3);
+  const compressed = window.pako.deflate(textEncoder.encode(json3));
+  return base64urlEncode(compressed);
+};
+var decodeSeeds = (encoded) => {
+  if (!encoded || !window.pako || !textDecoder) {
+    return [];
+  }
+  try {
+    const inflated = window.pako.inflate(base64urlDecode(encoded));
+    const json3 = textDecoder.decode(inflated);
+    const parsed = JSON.parse(json3);
+    if (parsed && Array.isArray(parsed.pericopes)) {
+      return parsed.pericopes.map((seed) => ({
+        address: typeof seed.address === "string" ? seed.address : "",
+        source: typeof seed.source === "string" ? seed.source : ""
+      })).filter((seed) => seed.address || seed.source);
+    }
+  } catch (_err) {
+  }
+  return [];
+};
+var currentHashValue = () => {
+  const raw = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  if (!raw)
+    return "";
+  if (raw.startsWith(`${HASH_KEY}=`)) {
+    return raw.slice(HASH_KEY.length + 1);
+  }
+  return raw;
+};
+var buildUrl = (hashValue) => {
+  const params = new URLSearchParams(window.location.search);
+  params.delete("pericopes");
+  const search2 = params.toString();
+  const hash2 = hashValue ? `#${HASH_KEY}=${hashValue}` : "";
+  return `${window.location.pathname}${search2 ? `?${search2}` : ""}${hash2}`;
+};
+var loadSeeds = () => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  const hashValue = currentHashValue();
+  let seeds = decodeSeeds(hashValue);
+  if (seeds.length === 0) {
+    seeds = readLegacySeeds();
+  }
+  const encoded = encodeSeeds(seeds);
+  const newUrl = buildUrl(encoded);
+  window.history.replaceState({ pericopes: seeds }, "", newUrl);
   if (!window.__deepbibleHistoryListener) {
     window.addEventListener("popstate", () => {
       window.location.reload();
@@ -40,31 +111,14 @@ var storeSeeds = (seeds) => () => {
   if (typeof window === "undefined") {
     return;
   }
-  const params = new URLSearchParams(window.location.search);
-  if (!Array.isArray(seeds) || seeds.length === 0) {
-    params.delete("pericopes");
-  } else {
-    const encoded = [];
-    for (const seed of seeds) {
-      if (!seed) {
-        continue;
-      }
-      const address2 = typeof seed.address === "string" ? seed.address.replace(/\s/gi, "_").replace(/,/gi, "*") : "";
-      const source2 = typeof seed.source === "string" ? seed.source : "";
-      encoded.push(
-        encodeURIComponent(address2) + "~" + encodeURIComponent(source2)
-      );
-    }
-    if (encoded.length === 0) {
-      params.delete("pericopes");
-    } else {
-      params.set("pericopes", encoded.join("|"));
-    }
-  }
-  const search2 = params.toString();
-  const newUrl = window.location.pathname + (search2 ? "?" + search2 : "") + window.location.hash;
-  const currentUrl = window.location.pathname + window.location.search + window.location.hash;
-  const state3 = { pericopes: seeds };
+  const sanitized = Array.isArray(seeds) ? seeds.map((seed) => ({
+    address: typeof seed.address === "string" ? seed.address : "",
+    source: typeof seed.source === "string" ? seed.source : ""
+  })).filter((seed) => seed.address || seed.source) : [];
+  const encoded = encodeSeeds(sanitized);
+  const newUrl = buildUrl(encoded);
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const state3 = { pericopes: sanitized };
   if (currentUrl === newUrl) {
     window.history.replaceState(state3, "", newUrl);
   } else {
