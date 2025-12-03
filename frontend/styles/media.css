@@ -12,6 +12,10 @@
     gap: 0.5em;
   }
 
+  .didascalia input {
+    width: 8em !important;
+  }
+
   .didascalia .address, .cross-reference {
     text-wrap-mode: nowrap;
   }
