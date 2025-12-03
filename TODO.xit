@@ -6,12 +6,11 @@ UI/UX Improvements
     use local storage to persist settings
 [ ] allow users to customize their color scheme
 [ ] allow users to set default language(s)
+[x] allow user to add some notes
 
 Margin and didascalia
 [ ] make the links in the commentaries clickable (opening the new pericopes)
-[ ] allow user to add some commentaries
-    use local storage to persist user commentaries
-[ ] allow users to highlight verses with different colors
+[~] allow users to highlight verses with different colors
     use local storage to persist user highlights
 
 Search and AI
