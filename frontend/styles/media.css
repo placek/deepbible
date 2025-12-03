@@ -20,6 +20,13 @@
     text-wrap-mode: nowrap;
   }
 
+  .note-add {
+    width: 1.5em;
+    height: 1.5em;
+    font-size: medium;
+    margin: -1em auto 0 auto;
+  }
+
   .didascalia,
   .margin {
     padding: 0 1em;
