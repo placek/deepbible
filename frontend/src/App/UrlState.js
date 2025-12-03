@@ -40,7 +40,7 @@ const readLegacySeeds = () => {
     try {
       const address = decodeURIComponent(addressPart).replace(/_/gi, " ").replace(/\*/gi, ",");
       const source = decodeURIComponent(sourcePart);
-      seeds.push({ address, source });
+      seeds.push({ kind: "pericope", address, source, content: "" });
     } catch (_err) {
       // ignore malformed entries
     }
@@ -48,11 +48,38 @@ const readLegacySeeds = () => {
   return seeds;
 };
 
+const sanitizeSeed = seed => {
+  const kind = typeof seed.kind === "string" ? seed.kind : "";
+  if (kind === "pericope") {
+    const address = typeof seed.address === "string" ? seed.address : "";
+    const source = typeof seed.source === "string" ? seed.source : "";
+    if (!address && !source) return null;
+    return {
+      kind,
+      address,
+      source,
+      content: "",
+    };
+  }
+
+  if (kind === "note") {
+    const content = typeof seed.content === "string" ? seed.content : "";
+    return {
+      kind,
+      address: "",
+      source: "",
+      content: content ?? "",
+    };
+  }
+
+  return null;
+};
+
 const encodeSeeds = seeds => {
   if (!Array.isArray(seeds) || seeds.length === 0 || !window.pako || !textEncoder) {
     return "";
   }
-  const state = { pericopes: seeds };
+  const state = { items: seeds };
   const json = JSON.stringify(state);
   const compressed = window.pako.deflate(textEncoder.encode(json));
   return base64urlEncode(compressed);
@@ -66,11 +93,11 @@ const decodeSeeds = encoded => {
     const inflated = window.pako.inflate(base64urlDecode(encoded));
     const json = textDecoder.decode(inflated);
     const parsed = JSON.parse(json);
+    if (parsed && Array.isArray(parsed.items)) {
+      return parsed.items.map(sanitizeSeed).filter(Boolean);
+    }
     if (parsed && Array.isArray(parsed.pericopes)) {
-      return parsed.pericopes.map(seed => ({
-        address: typeof seed.address === "string" ? seed.address : "",
-        source: typeof seed.source === "string" ? seed.source : "",
-      })).filter(seed => seed.address || seed.source);
+      return parsed.pericopes.map(seed => sanitizeSeed({ kind: "pericope", ...seed })).filter(Boolean);
     }
   } catch (_err) {
     // ignore malformed state
@@ -112,7 +139,7 @@ export const loadSeeds = () => {
   const encoded = encodeSeeds(seeds);
   const newUrl = buildUrl(encoded);
 
-  window.history.replaceState({ pericopes: seeds }, "", newUrl);
+  window.history.replaceState({ items: seeds }, "", newUrl);
 
   if (!window.__deepbibleHistoryListener) {
     window.addEventListener("popstate", () => {
@@ -130,18 +157,13 @@ export const storeSeeds = seeds => () => {
   }
 
   const sanitized = Array.isArray(seeds)
-    ? seeds
-      .map(seed => ({
-        address: typeof seed.address === "string" ? seed.address : "",
-        source: typeof seed.source === "string" ? seed.source : "",
-      }))
-      .filter(seed => seed.address || seed.source)
+    ? seeds.map(sanitizeSeed).filter(Boolean)
     : [];
 
   const encoded = encodeSeeds(sanitized);
   const newUrl = buildUrl(encoded);
   const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  const state = { pericopes: sanitized };
+  const state = { items: sanitized };
 
   if (currentUrl === newUrl) {
     window.history.replaceState(state, "", newUrl);

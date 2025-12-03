@@ -21,10 +21,12 @@ import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
 
-import App.State (AppState)
-import App.UrlState (loadSeeds, pericopesToSeeds, storeSeeds)
+import App.State (AppState, Item(..))
+import App.UrlState (ItemSeed, itemsToSeeds, loadSeeds, storeSeeds)
 import Domain.Bible.Types (Verse)
+import Domain.Note.Types (Note, NoteId)
 import Domain.Pericope.Types (Pericope, PericopeId)
+import Note.Component as N
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -32,10 +34,15 @@ main = HA.runHalogenAff do
   runUI component unit body
 
 type ChildSlots =
-  ( pericope :: H.Slot P.Query P.Output PericopeId )
+  ( pericope :: H.Slot P.Query P.Output PericopeId
+  , note :: H.Slot N.Query N.Output NoteId
+  )
 
 pericopeSlot :: Proxy "pericope"
 pericopeSlot = Proxy
+
+noteSlot :: Proxy "note"
+noteSlot = Proxy
 
 type RootQuery :: Type -> Type
 type RootQuery = Const Void
@@ -52,20 +59,25 @@ component =
     }
 
 -- Actions
+data ChildMessage
+  = PericopeMsg PericopeId P.Output
+  | NoteMsg NoteId N.Output
+
 data Action
   = Initialize
   | AddPericope String String (Array Verse)
-  | ChildMsg PericopeId P.Output
-  | StartDrag PericopeId
-  | OverDrag PericopeId
-  | LeaveDrag PericopeId
-  | DropOn PericopeId
+  | AddNoteAt Int
+  | ChildMsg ChildMessage
+  | StartDrag Int
+  | OverDrag Int
+  | LeaveDrag Int
+  | DropOn Int
   | HandleSearch Search.Action
   | HandleDocumentClick
 
 initialState :: Unit -> AppState
 initialState _ =
-  { pericopes: []
+  { items: []
   , dragging: Nothing
   , droppingOver: Nothing
   , nextId: 1
@@ -84,17 +96,41 @@ initialState _ =
 
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
+  let
+    items = A.concat (A.mapWithIndex renderItem st.items)
+  in
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
     [ Search.renderSearchSection HandleSearch st
-    , HH.div_
-        (renderPericope <$> st.pericopes)
+    , HH.div_ items
     , renderFooter
     ]
 
+renderItem :: Int -> Item -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderItem index item = case item of
+  PericopeItem p ->
+    [ renderAddNoteButton index "Add note above"
+    , renderPericope p
+    , renderAddNoteButton (index + 1) "Add note below"
+    ]
+  NoteItem note ->
+    [ renderNote note ]
+
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
-  HH.slot pericopeSlot p.id P.component p (ChildMsg p.id)
+  HH.slot pericopeSlot p.id P.component p (\out -> ChildMsg (PericopeMsg p.id out))
+
+renderNote :: Note -> H.ComponentHTML Action ChildSlots Aff
+renderNote n =
+  HH.slot noteSlot n.id N.component n (\out -> ChildMsg (NoteMsg n.id out))
+
+renderAddNoteButton :: Int -> String -> H.ComponentHTML Action ChildSlots Aff
+renderAddNoteButton index label =
+  HH.button
+    [ HP.class_ (HH.ClassName "note-add")
+    , HE.onClick \_ -> AddNoteAt index
+    ]
+    [ HH.text label ]
 
 renderFooter :: H.ComponentHTML Action ChildSlots Aff
 renderFooter =
@@ -115,20 +151,19 @@ handle action = case action of
     H.modify_ \st -> st { aiStatusUp = aiStatusUp }
     urlSeeds <- H.liftEffect loadSeeds
     let defaultSeeds =
-          [ { address: "J 3,16-17", source: "NVUL" }
-          , { address: "J 3,16-17", source: "NA28" }
-          , { address: "J 3,16-17", source: "BT_03" }
-          , { address: "J 3,16-17", source: "TRO+" }
+          [ pericopeSeed "J 3,16-17" "NVUL"
+          , pericopeSeed "J 3,16-17" "NA28"
+          , pericopeSeed "J 3,16-17" "BT_03"
+          , pericopeSeed "J 3,16-17" "TRO+"
           ]
         seeds = if A.null urlSeeds then defaultSeeds else urlSeeds
-    for_ seeds \{ address, source } -> do
-      res <- H.liftAff $ fetchVerses address source
-      case res of
-        Left _ -> pure unit
-        Right verses -> insertPericope address source verses
+    for_ seeds loadSeed
 
   AddPericope addr src verses ->
     insertPericope addr src verses
+
+  AddNoteAt index ->
+    insertNoteAt index ""
 
   HandleSearch searchAction ->
     Search.handleAction insertPericope searchAction
@@ -136,7 +171,9 @@ handle action = case action of
   HandleDocumentClick -> do
     Search.handleAction insertPericope Search.CloseSearchResults
     st <- H.get
-    for_ st.pericopes cancelEditing
+    for_ st.items \item -> case item of
+      PericopeItem p -> cancelEditing p
+      _ -> pure unit
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
@@ -152,66 +189,90 @@ handle action = case action of
     case st.dragging of
       Nothing -> pure unit
       Just fromId -> do
-        let ps = reorder fromId targetId st.pericopes
-        H.put st { pericopes = ps, dragging = Nothing, droppingOver = Nothing }
+        let items = reorder fromId targetId st.items
+        H.put st { items = items, dragging = Nothing, droppingOver = Nothing }
         syncUrl
 
-  ChildMsg pid out -> case out of
-    P.DidDuplicate { id: baseId } -> do
-      st <- H.get
-      case A.find (\q -> q.id == baseId) st.pericopes of
-        Nothing -> pure unit
-        Just p -> do
-          let addr = p.address
-              src  = p.source
-          res <- H.liftAff $ fetchVerses addr src
-          case res of
-            Left _ -> pure unit
-            Right vs -> insertPericope addr src vs
+  ChildMsg msg -> case msg of
+    PericopeMsg pid out -> case out of
+      P.DidDuplicate { id: baseId } -> do
+        st <- H.get
+        case findPericope baseId st.items of
+          Nothing -> pure unit
+          Just p -> do
+            let addr = p.address
+                src  = p.source
+            res <- H.liftAff $ fetchVerses addr src
+            case res of
+              Left _ -> pure unit
+              Right vs -> insertPericope addr src vs
 
-    P.DidRemove rid -> do
-      H.modify_ \st ->
-        if A.length st.pericopes > 1 then
-          st { pericopes = A.filter (\q -> q.id /= rid) st.pericopes }
-        else
-          st
-      syncUrl
+      P.DidRemove rid -> do
+        H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
+        syncUrl
 
-    P.DidStartDrag _ ->
-      handle (StartDrag pid)
+      P.DidStartDrag _ ->
+        handle (StartDrag pid)
 
-    P.DidDragOver _ ->
-      handle (OverDrag pid)
+      P.DidDragOver _ ->
+        handle (OverDrag pid)
 
-    P.DidDragLeave _ ->
-      handle (LeaveDrag pid)
+      P.DidDragLeave _ ->
+        handle (LeaveDrag pid)
 
-    P.DidReorder _ ->
-      handle (DropOn pid)
+      P.DidReorder _ ->
+        handle (DropOn pid)
 
-    P.DidUpdate updated -> do
-      H.modify_ \st -> st
-        { pericopes = st.pericopes <#> \q -> if q.id == updated.id then updated else q }
-      syncUrl
+      P.DidUpdate updated -> do
+        H.modify_ \st -> st
+          { items = st.items <#> updatePericope updated }
+        syncUrl
 
-    P.DidLoadCrossReference { source, address } -> do
-      res <- H.liftAff $ fetchVerses address source
-      case res of
-        Left _ -> pure unit
-        Right verses -> insertPericope address source verses
+      P.DidLoadCrossReference { source, address } -> do
+        res <- H.liftAff $ fetchVerses address source
+        case res of
+          Left _ -> pure unit
+          Right verses -> insertPericope address source verses
 
-    P.DidCreatePericopeFromSelection { source, address } -> do
-      res <- H.liftAff $ fetchVerses address source
-      case res of
-        Left _ -> pure unit
-        Right verses -> insertPericope address source verses
+      P.DidCreatePericopeFromSelection { source, address } -> do
+        res <- H.liftAff $ fetchVerses address source
+        case res of
+          Left _ -> pure unit
+          Right verses -> insertPericope address source verses
 
-    P.DidLoadStory { source, address } -> do
-      res <- H.liftAff $ fetchVerses address source
-      case res of
-        Left _ -> pure unit
-        Right verses -> insertPericope address source verses
+      P.DidLoadStory { source, address } -> do
+        res <- H.liftAff $ fetchVerses address source
+        case res of
+          Left _ -> pure unit
+          Right verses -> insertPericope address source verses
 
+    NoteMsg nid out -> case out of
+      N.DidDuplicate { id: baseId } -> do
+        st <- H.get
+        case findNote baseId st.items of
+          Nothing -> pure unit
+          Just { index, note } -> insertNoteAt (index + 1) note.content
+
+      N.DidRemove rid -> do
+        H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
+        syncUrl
+
+      N.DidStartDrag _ ->
+        handle (StartDrag nid)
+
+      N.DidDragOver _ ->
+        handle (OverDrag nid)
+
+      N.DidDragLeave _ ->
+        handle (LeaveDrag nid)
+
+      N.DidReorder _ ->
+        handle (DropOn nid)
+
+      N.DidUpdate updated -> do
+        H.modify_ \st -> st
+          { items = st.items <#> updateNote updated }
+        syncUrl
   where
   cancelEditing
     :: Pericope
@@ -219,12 +280,48 @@ handle action = case action of
   cancelEditing p =
     void $ H.query pericopeSlot p.id (P.CancelEditing unit)
 
--- Reorder helper (total, no partial indexing)
-reorder :: PericopeId -> PericopeId -> Array Pericope -> Array Pericope
+  pericopeSeed :: String -> String -> ItemSeed
+  pericopeSeed address source =
+    { kind: "pericope"
+    , address
+    , source
+    , content: ""
+    }
+
+  loadSeed :: ItemSeed -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+  loadSeed seed = case seed.kind of
+    "note" -> insertNoteAtEnd seed.content
+    _ ->
+      if seed.address /= "" && seed.source /= "" then do
+        res <- H.liftAff $ fetchVerses seed.address seed.source
+        case res of
+          Left _ -> pure unit
+          Right verses -> insertPericope seed.address seed.source verses
+      else
+        pure unit
+
+-- Helpers
+itemId :: Item -> Int
+itemId = case _ of
+  PericopeItem p -> p.id
+  NoteItem n -> n.id
+
+updatePericope :: Pericope -> Item -> Item
+updatePericope updated = case _ of
+  PericopeItem p | p.id == updated.id -> PericopeItem updated
+  other -> other
+
+updateNote :: Note -> Item -> Item
+updateNote updated = case _ of
+  NoteItem n | n.id == updated.id -> NoteItem updated
+  other -> other
+
+reorder :: Int -> Int -> Array Item -> Array Item
 reorder fromId toId arr =
   let
-    fromIx = A.findIndex (\p -> p.id == fromId) arr
-    toIx   = A.findIndex (\p -> p.id == toId) arr
+    findIndexById id = A.findIndex (\item -> itemId item == id) arr
+    fromIx = findIndexById fromId
+    toIx   = findIndexById toId
   in case fromIx, toIx of
        Just i, Just j ->
          case A.index arr i, A.deleteAt i arr of
@@ -232,6 +329,26 @@ reorder fromId toId arr =
              fromMaybe arr' (A.insertAt j item arr')
            _, _ -> arr
        _, _ -> arr
+
+insertNoteAtEnd
+  :: String
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+insertNoteAtEnd content = do
+  st <- H.get
+  insertNoteAt (A.length st.items) content
+
+insertNoteAt
+  :: Int
+  -> String
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+insertNoteAt index content = do
+  st <- H.get
+  let nid = st.nextId
+      note = { id: nid, content }
+      clampedIndex = max 0 (min index (A.length st.items))
+      items = fromMaybe (A.snoc st.items (NoteItem note)) (A.insertAt clampedIndex (NoteItem note) st.items)
+  H.put st { items = items, nextId = st.nextId + 1 }
+  syncUrl
 
 insertPericope
   :: String
@@ -249,12 +366,24 @@ insertPericope address source verses = do
         , selected: Set.empty
         }
   H.put st
-    { pericopes = A.snoc st.pericopes pericope
+    { items = A.snoc st.items (PericopeItem pericope)
     , nextId = st.nextId + 1
     }
   syncUrl
 
+findPericope :: PericopeId -> Array Item -> Maybe Pericope
+findPericope pid items = A.findMap (case _ of
+  PericopeItem p | p.id == pid -> Just p
+  _ -> Nothing) items
+
+findNote :: NoteId -> Array Item -> Maybe { index :: Int, note :: Note }
+findNote nid items = do
+  index <- A.findIndex (\item -> itemId item == nid) items
+  case A.index items index of
+    Just (NoteItem note) -> Just { index, note }
+    _ -> Nothing
+
 syncUrl :: H.HalogenM AppState Action ChildSlots Void Aff Unit
 syncUrl = do
   st <- H.get
-  H.liftEffect $ storeSeeds (pericopesToSeeds st.pericopes)
+  H.liftEffect $ storeSeeds (itemsToSeeds st.items)

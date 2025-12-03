@@ -1,7 +1,7 @@
 module App.UrlState
-  ( PericopeSeed
+  ( ItemSeed
   , loadSeeds
-  , pericopesToSeeds
+  , itemsToSeeds
   , storeSeeds
   ) where
 
@@ -9,17 +9,39 @@ import Prelude
 
 import Effect (Effect)
 
+import App.State (Item(..))
+import Domain.Note.Types (Note)
 import Domain.Pericope.Types (Pericope)
 
-type PericopeSeed =
-  { address :: String
+type ItemSeed =
+  { kind :: String
+  , address :: String
   , source :: String
+  , content :: String
   }
 
-pericopesToSeeds :: Array Pericope -> Array PericopeSeed
-pericopesToSeeds ps =
-  (\p -> { address: p.address, source: p.source }) <$> ps
+itemsToSeeds :: Array Item -> Array ItemSeed
+itemsToSeeds ps = ps <#> case _ of
+  PericopeItem p -> pericopeSeed p
+  NoteItem n -> noteSeed n
+  
+  where
+  pericopeSeed :: Pericope -> ItemSeed
+  pericopeSeed p =
+    { kind: "pericope"
+    , address: p.address
+    , source: p.source
+    , content: ""
+    }
 
-foreign import loadSeeds :: Effect (Array PericopeSeed)
+  noteSeed :: Note -> ItemSeed
+  noteSeed n =
+    { kind: "note"
+    , address: ""
+    , source: ""
+    , content: n.content
+    }
 
-foreign import storeSeeds :: Array PericopeSeed -> Effect Unit
+foreign import loadSeeds :: Effect (Array ItemSeed)
+
+foreign import storeSeeds :: Array ItemSeed -> Effect Unit

@@ -107,3 +107,16 @@ body {
 .verse s::before {
   content: "#";
 }
+
+.note-header {
+  cursor: grab;
+  user-select: none;
+}
+
+.note-header:active {
+  cursor: grabbing;
+}
+
+.note-add {
+  user-select: none;
+}

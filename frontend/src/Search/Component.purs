@@ -18,7 +18,7 @@ import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
-import App.State (AppState)
+import App.State (AppState, pericopesFromItems)
 import Domain.Bible.Types (AiSearchResult, Verse, VerseSearchResult)
 import Infrastructure.Api (fetchAiExplanations, fetchVerses, searchVerses)
 import Search.Highlight (splitSearchInput, toMaybeColor)
@@ -102,7 +102,7 @@ handleAction insertPericope action = case action of
 
   SubmitSearch -> do
     st <- H.get
-    let defaultAiSource = _.source <$> A.last st.pericopes
+    let defaultAiSource = _.source <$> A.last (pericopesFromItems st.items)
     let aiSearchActive = st.aiStatusUp && st.aiSearchEnabled
     let query = trim st.searchInput
     if query == "" then
@@ -171,7 +171,7 @@ handleAction insertPericope action = case action of
     let details = unwrap aiResult
     H.modify_ \st -> st { searchOpen = false }
     st <- H.get
-    case A.last st.pericopes of
+    case A.last (pericopesFromItems st.items) of
       Nothing -> pure unit
       Just lastPericope -> do
         res <- H.liftAff $ fetchVerses details.address lastPericope.source
