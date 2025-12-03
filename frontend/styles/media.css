@@ -1,9 +1,4 @@
 @media (max-width: 570px) {
-  .didascalia, .margin {
-    max-width: 3em;
-    padding: 1em 0.2em;
-  }
-
   .didascalia .didascalia-header {
     flex-direction: column;
   }
@@ -13,9 +8,8 @@
     gap: 0.5em;
   }
 
-  .didascalia .address, .didascalia .source, .margin .selected-address {
+  .didascalia *, .margin * {
     font-size: x-small;
-    text-align: center;
   }
 
   .didascalia .address.editing input,
