@@ -97,7 +97,11 @@ initialState _ =
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   let
-    items = A.concat (A.mapWithIndex renderItem st.items)
+    items =
+      A.concat
+        ( [ [ renderAddNoteButton 0 ] ]
+            <> A.mapWithIndex renderItemWithAddButton st.items
+        )
   in
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
@@ -106,15 +110,19 @@ render st =
     , renderFooter
     ]
 
-renderItem :: Int -> Item -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderItem index item = case item of
-  PericopeItem p ->
-    [ renderAddNoteButton index "Add note above"
-    , renderPericope p
-    , renderAddNoteButton (index + 1) "Add note below"
-    ]
-  NoteItem note ->
-    [ renderNote note ]
+renderItemWithAddButton
+  :: Int
+  -> Item
+  -> Array (H.ComponentHTML Action ChildSlots Aff)
+renderItemWithAddButton index item =
+  [ renderItem item
+  , renderAddNoteButton (index + 1)
+  ]
+
+renderItem :: Item -> H.ComponentHTML Action ChildSlots Aff
+renderItem item = case item of
+  PericopeItem p -> renderPericope p
+  NoteItem note -> renderNote note
 
 renderPericope :: Pericope -> H.ComponentHTML Action ChildSlots Aff
 renderPericope p =
@@ -124,13 +132,13 @@ renderNote :: Note -> H.ComponentHTML Action ChildSlots Aff
 renderNote n =
   HH.slot noteSlot n.id N.component n (\out -> ChildMsg (NoteMsg n.id out))
 
-renderAddNoteButton :: Int -> String -> H.ComponentHTML Action ChildSlots Aff
-renderAddNoteButton index label =
+renderAddNoteButton :: Int -> H.ComponentHTML Action ChildSlots Aff
+renderAddNoteButton index =
   HH.button
     [ HP.class_ (HH.ClassName "note-add")
     , HE.onClick \_ -> AddNoteAt index
     ]
-    [ HH.text label ]
+    [ HH.text "+" ]
 
 renderFooter :: H.ComponentHTML Action ChildSlots Aff
 renderFooter =

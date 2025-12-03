@@ -204,13 +204,20 @@ h2 {
 
 .note-add {
   align-self: center;
-  margin: 0.25em auto;
+  margin: -1em auto;
   user-select: none;
   background-color: var(--page-background);
-  border: 1px solid var(--text-muted);
-  padding: .4em .8em;
-  color: var(--text-primary);
-  margin-right: 1em;
+  border: none;
+  color: var(--text-muted);
+  font-size: larger;
+  border-radius: 50%;
+  width: 2em;
+  height: 2em;
+  cursor: pointer;
+  display: block;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
 .didascalia-remove,
@@ -299,6 +306,7 @@ h2 {
 
 .cross-reference {
   margin: 0;
+  cursor: pointer;
 }
 
 .commentary-marker {

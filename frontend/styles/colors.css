@@ -65,10 +65,11 @@ input {
 
 .selected-address,
 .verse.selected {
-  text-decoration-style: dotted;
+  text-decoration-style: solid;
   text-decoration-thickness: 1px;
   text-decoration-line: underline;
   text-decoration-color: var(--highlight-positive);
+  color: var(--highlight-positive);
 }
 
 .selected-address {
@@ -150,13 +151,6 @@ input {
 .search-result--ai:after {
   background-color: var(--panel-background);
   color: var(--text-secondary);
-}
-
-.story-title {
-  text-decoration-style: dotted;
-  text-decoration-thickness: 1px;
-  text-decoration-line: underline;
-  text-decoration-color: var(--story-color);
 }
 
 .cross-references-loading,
