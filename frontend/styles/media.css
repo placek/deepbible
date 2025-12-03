@@ -1,20 +1,20 @@
 @media (max-width: 570px) {
-  .didascalia .didascalia-header {
+  .pericope {
     flex-direction: column;
   }
 
-  .didascalia-handle-group {
+  .didascalia, .didascalia-header, .cross-references {
     flex-direction: row;
-    gap: 0.5em;
+    flex-wrap: wrap;
   }
 
-  .didascalia *, .margin * {
-    font-size: x-small;
+  .didascalia .address, .cross-reference {
+    text-wrap-mode: nowrap;
   }
 
-  .didascalia .address.editing input,
-  .didascalia .source.editing input {
-    max-width: 100%;
+  .didascalia,
+  .margin {
+    padding: 0 1em;
   }
 }
 
