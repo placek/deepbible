@@ -343,3 +343,11 @@ h2 {
   display: flex;
   justify-content: center;
 }
+
+.xrefs {
+  display: none;
+}
+
+.rdg {
+  margin-top: 1em;
+}
