@@ -10483,11 +10483,11 @@ var Receive2 = /* @__PURE__ */ function() {
   return Receive4;
 }();
 var render = function(st) {
-  return div2([class_("note")])([div2([class_("note-header"), draggable2(true), onDragStart(DragStart.create), onDragOver(DragOver.create), onDragLeave(DragLeave.create), onDrop(Drop.create)])([div2([class_("note-title")])([text5("Note")]), div2([class_("note-actions")])([button([class_("note-duplicate icon-button"), title2("duplicate note"), onClick(function(v) {
+  return div2([class_("note")])([div2([class_("didascalia"), draggable2(true), onDragStart(DragStart.create), onDragOver(DragOver.create), onDragLeave(DragLeave.create), onDrop(Drop.create)])([div2([class_("didascalia-header")])([div2([class_("didascalia-handle-group")])([div2([class_("didascalia-handle")])([text5("\u2630")]), button([class_("note-duplicate icon-button"), title2("duplicate note"), onClick(function(v) {
     return Duplicate.value;
   })])([text5("\u29C9")]), button([class_("note-remove icon-button"), title2("remove note"), onClick(function(v) {
     return Remove.value;
-  })])([text5("\u2715")])])]), textarea([class_("note-body"), value14(st.note.content), onValueInput(SetContent.create), placeholder3("Write a note...")])]);
+  })])([text5("\u2715")])]), div2([class_("note-title")])([text5("Note")])])]), div2([class_("textus")])([textarea([class_("note-body"), value14(st.note.content), onValueInput(SetContent.create), placeholder3("Write a note...")])]), div2([class_("margin")])([])]);
 };
 var handleQuery = function(dictMonadAff) {
   return function(v) {
@@ -10612,7 +10612,7 @@ var handle = function(dictMonadAff) {
       });
     }
     ;
-    throw new Error("Failed pattern match at Note.Component (line 91, column 10 - line 132, column 32): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Note.Component (line 97, column 10 - line 138, column 32): " + [v.constructor.name]);
   };
 };
 var component = function(dictMonadAff) {

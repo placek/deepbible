@@ -129,15 +129,6 @@ h2 {
   align-items: flex-start;
 }
 
-.note {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  max-width: 70em;
-  width: 100%;
-  margin: 0.5em auto;
-}
-
 .didascalia {
   width: 6em;
   padding: 1em 0;
@@ -172,15 +163,20 @@ h2 {
   gap: 0.25em;
 }
 
+.note {
+  display: flex;
+  gap: 1em;
+  max-width: 70em;
+  width: 100%;
+  margin: 0.5em auto;
+  align-items: flex-start;
+}
+
 .note-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.5em;
-}
-
-.note-title {
-  font-weight: bold;
 }
 
 .note-actions {
@@ -197,7 +193,7 @@ h2 {
   background-color: var(--page-background);
   border-color: var(--text-muted);
   font-family: 'greek';
-  font-size: larger;
+  font-size: large;
   color: var(--text-primary);
 }
 

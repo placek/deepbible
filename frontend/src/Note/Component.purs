@@ -56,35 +56,41 @@ render :: forall m. State -> H.ComponentHTML Action () m
 render st =
   HH.div [ HP.class_ (HH.ClassName "note") ]
     [ HH.div
-        [ HP.class_ (HH.ClassName "note-header")
+        [ HP.class_ (HH.ClassName "didascalia")
         , HP.draggable true
         , HE.onDragStart DragStart
         , HE.onDragOver DragOver
         , HE.onDragLeave DragLeave
         , HE.onDrop Drop
         ]
-        [ HH.div [ HP.class_ (HH.ClassName "note-title") ] [ HH.text "Note" ]
-        , HH.div [ HP.class_ (HH.ClassName "note-actions") ]
-            [ HH.button
-                [ HP.class_ (HH.ClassName "note-duplicate icon-button")
-                , HP.title "duplicate note"
-                , HE.onClick \_ -> Duplicate
+        [ HH.div [ HP.class_ (HH.ClassName "didascalia-header") ]
+            [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle-group") ]
+                [ HH.div [ HP.class_ (HH.ClassName "didascalia-handle") ] [ HH.text "☰" ]
+                , HH.button
+                    [ HP.class_ (HH.ClassName "note-duplicate icon-button")
+                    , HP.title "duplicate note"
+                    , HE.onClick \_ -> Duplicate
+                    ]
+                    [ HH.text "⧉" ]
+                , HH.button
+                    [ HP.class_ (HH.ClassName "note-remove icon-button")
+                    , HP.title "remove note"
+                    , HE.onClick \_ -> Remove
+                    ]
+                    [ HH.text "✕" ]
                 ]
-                [ HH.text "⧉" ]
-            , HH.button
-                [ HP.class_ (HH.ClassName "note-remove icon-button")
-                , HP.title "remove note"
-                , HE.onClick \_ -> Remove
-                ]
-                [ HH.text "✕" ]
+            , HH.div [ HP.class_ (HH.ClassName "note-title") ] [ HH.text "Note" ]
             ]
         ]
-    , HH.textarea
-        [ HP.class_ (HH.ClassName "note-body")
-        , HP.value st.note.content
-        , HE.onValueInput SetContent
-        , HP.placeholder "Write a note..."
+    , HH.div [ HP.class_ (HH.ClassName "textus") ]
+        [ HH.textarea
+            [ HP.class_ (HH.ClassName "note-body")
+            , HP.value st.note.content
+            , HE.onValueInput SetContent
+            , HP.placeholder "Write a note..."
+            ]
         ]
+    , HH.div [ HP.class_ (HH.ClassName "margin") ] []
     ]
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
