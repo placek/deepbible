@@ -45,60 +45,65 @@ AS $BODY$
   SELECT regexp_replace(public.text_without_metadata(public.text_without_format(input)), '</?(J|i)>', '', 'g')
 $BODY$;
 
--- splits text into words with associated metadata (strong, morph, footnote, note, header)
-DROP FUNCTION IF EXISTS public.words_with_metadata(text);
-CREATE OR REPLACE FUNCTION public.words_with_metadata(input text)
+-- extracts words with metadata into jsonb
+DROP FUNCTION IF EXISTS public.collect_tags(text);
+CREATE OR REPLACE FUNCTION public.collect_tags(input text)
   RETURNS jsonb
-  LANGUAGE 'plpgsql'
+  LANGUAGE plpgsql
   COST 100
   VOLATILE PARALLEL UNSAFE
 AS $BODY$
 DECLARE
-  result   jsonb := '[]'::jsonb;
-  word     text;
-  tags     text;   -- all tags that follow the word (space-separated in the source)
-  strong   text;
-  morph    text;
-  footnote text;
-  note     text;
-  header   text;
-  cleaned  text;
+  cleaned text;
+  result  jsonb;
 BEGIN
+  -- optional, keep your preprocessing if it's still desired
   cleaned := public.text_without_format(input);
   cleaned := replace(cleaned, '<i>', '[');
   cleaned := replace(cleaned, '</i>', ']');
 
-  -- 1st group = the word (no whitespace or '<')
-  -- 2nd group = zero or more following tags belonging to that word
-  FOR word, tags IN
-    SELECT m[1], m[2]
+  WITH matches AS (
+    SELECT
+      (m)[1] AS tag,
+      (m)[2] AS val
     FROM regexp_matches(
       cleaned,
-      '([^\s<]+)' ||
-      '((?:\s*(?:<S>[^<]+</S>|<m>[^<]+</m>|<f>[^<]+</f>|<n>[^<]+</n>|<h>[^<]+</h>))*)',
+      '<([A-Za-z][A-Za-z0-9]*)>([^<]+)</\1>',
       'g'
     ) AS m
-  LOOP
-    -- pull fields from the collected tags blob
-    strong   := substring(tags from '<S>([^<]+)</S>');
-    morph    := substring(tags from '<m>([^<]+)</m>');
-    footnote := substring(tags from '<f>([^<]+)</f>');
-    note     := substring(tags from '<n>([^<]+)</n>');
-    header   := substring(tags from '<h>([^<]+)</h>');
-
-    result := result || jsonb_build_array(
-      jsonb_strip_nulls(jsonb_build_object(
-        'text',     word,
-        'strong',   strong,
-        'morph',    morph,
-        'footnote', footnote,
-        'note',     note,
-        'header',   header
-      ))
-    );
-  END LOOP;
+  ),
+  agg AS (
+    SELECT
+      tag,
+      array_agg(val) AS vals
+    FROM matches
+    GROUP BY tag
+  )
+  SELECT
+    COALESCE(jsonb_object_agg(tag, to_jsonb(vals)), '{}'::jsonb)
+  INTO result
+  FROM agg;
 
   RETURN result;
+END;
+$BODY$;
+
+-- fetches a verse along with its metadata
+DROP FUNCTION IF EXISTS public.fetch_verse_with_metadata(text);
+CREATE OR REPLACE FUNCTION public.fetch_verse_with_metadata(p_verse_id text)
+  RETURNS TABLE(verse_id text, metadata jsonb)
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+BEGIN
+  RETURN QUERY
+  SELECT
+    v.id AS verse_id,
+    public.collect_tags(v.text) AS metadata
+  FROM public._all_verses v
+  WHERE v.id = p_verse_id;
 END;
 $BODY$;
 
