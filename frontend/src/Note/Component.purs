@@ -8,9 +8,12 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Note.Markdown (markdownToHtml)
 import Web.Event.Event (preventDefault, stopPropagation)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent as DragEv
+import Web.UIEvent.KeyboardEvent (KeyboardEvent)
+import Web.UIEvent.KeyboardEvent as KeyboardEv
 
 import Domain.Note.Types (Note, NoteId)
 
@@ -28,11 +31,15 @@ data Output
 
 type State =
   { note :: Note
+  , isEditing :: Boolean
   }
 
 data Action
   = Noop
   | SetContent String
+  | StartEditing
+  | StopEditing
+  | KeyDown KeyboardEvent
   | Duplicate
   | Remove
   | DragStart DragEvent
@@ -43,7 +50,7 @@ data Action
 
 component :: forall m. MonadAff m => H.Component Query Note Output m
 component = H.mkComponent
-  { initialState: \note -> { note }
+  { initialState: \note -> { note, isEditing: false }
   , render
   , eval: H.mkEval $ H.defaultEval
       { handleAction = handle
@@ -83,15 +90,30 @@ render st =
             ]
         ]
     , HH.div [ HP.class_ (HH.ClassName "textus") ]
-        [ HH.textarea
-            [ HP.class_ (HH.ClassName "note-body")
-            , HP.value st.note.content
-            , HE.onValueInput SetContent
-            , HP.placeholder "Write a note..."
-            ]
-        ]
+        [ renderBody st ]
     , HH.div [ HP.class_ (HH.ClassName "margin") ] []
     ]
+
+renderBody :: forall m. State -> H.ComponentHTML Action () m
+renderBody st =
+  if st.isEditing then
+    HH.textarea
+      [ HP.class_ (HH.ClassName "note-body")
+      , HP.value st.note.content
+      , HE.onValueInput SetContent
+      , HE.onKeyDown KeyDown
+      , HE.onBlur \_ -> StopEditing
+      , HP.placeholder "Write a note..."
+      , HP.autofocus true
+      ]
+  else
+    HH.div
+      [ HP.class_ (HH.ClassName "note-body note-render")
+      , HP.prop (HH.PropName "innerHTML") (markdownToHtml st.note.content)
+      , HP.attr (HH.AttrName "data-placeholder") "Write a note..."
+      , HE.onClick \_ -> StartEditing
+      ]
+      []
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handle = case _ of
@@ -102,6 +124,18 @@ handle = case _ of
     H.modify_ \st -> st { note = st.note { content = content } }
     st <- H.get
     H.raise (DidUpdate st.note)
+
+  StartEditing ->
+    H.modify_ _ { isEditing = true }
+
+  StopEditing ->
+    H.modify_ _ { isEditing = false }
+
+  KeyDown ev -> do
+    let key = KeyboardEv.key ev
+    when (key == "Escape") do
+      H.liftEffect $ preventDefault (KeyboardEv.toEvent ev)
+      H.modify_ _ { isEditing = false }
 
   Duplicate -> do
     st <- H.get

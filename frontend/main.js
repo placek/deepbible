@@ -4702,6 +4702,7 @@ var toEventTarget = unsafeCoerce2;
 var input = "input";
 var domcontentloaded = "DOMContentLoaded";
 var change = "change";
+var blur2 = "blur";
 
 // output/Halogen.Aff.Util/index.js
 var bind2 = /* @__PURE__ */ bind(bindAff);
@@ -7581,6 +7582,12 @@ var onKeyDown = /* @__PURE__ */ function() {
   };
 }();
 var focusHandler = unsafeCoerce2;
+var onBlur = /* @__PURE__ */ function() {
+  var $55 = handler2(blur2);
+  return function($56) {
+    return $55(focusHandler($56));
+  };
+}();
 var onFocus = /* @__PURE__ */ function() {
   var $57 = handler2(focus2);
   return function($58) {
@@ -7613,11 +7620,11 @@ var onDrop = /* @__PURE__ */ function() {
   };
 }();
 var addForeignPropHandler = function(key2) {
-  return function(prop4) {
+  return function(prop5) {
     return function(reader) {
       return function(f) {
         var go2 = function(a2) {
-          return composeKleisliFlipped3(reader)(readProp2(prop4))(unsafeToForeign(a2));
+          return composeKleisliFlipped3(reader)(readProp2(prop5))(unsafeToForeign(a2));
         };
         return handler$prime(key2)(composeKleisli2(currentTarget)(function(e) {
           return either($$const(Nothing.value))(function($85) {
@@ -10320,17 +10327,37 @@ var fetchAiExplanations = function(phrase) {
   };
 };
 
+// output/Note.Markdown/foreign.js
+var markdownToHtml = (markdown) => {
+  const value17 = typeof markdown === "string" ? markdown : "";
+  if (globalThis.marked && typeof globalThis.marked.parse === "function") {
+    return globalThis.marked.parse(value17, { breaks: true });
+  }
+  const escaped = value17.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return escaped.replace(/\n/g, "<br>");
+};
+
 // output/Web.HTML.Event.DragEvent/index.js
 var toEvent = unsafeCoerce2;
 
+// output/Web.UIEvent.KeyboardEvent/foreign.js
+function key(e) {
+  return e.key;
+}
+
+// output/Web.UIEvent.KeyboardEvent/index.js
+var toEvent2 = unsafeCoerce2;
+
 // output/Note.Component/index.js
 var value14 = /* @__PURE__ */ value12(isPropString);
+var prop3 = /* @__PURE__ */ prop2(isPropString);
 var discard5 = /* @__PURE__ */ discard(discardUnit);
 var discard12 = /* @__PURE__ */ discard5(bindHalogenM);
 var modify_3 = /* @__PURE__ */ modify_2(monadStateHalogenM);
 var pure14 = /* @__PURE__ */ pure(applicativeHalogenM);
 var bind8 = /* @__PURE__ */ bind(bindHalogenM);
 var get4 = /* @__PURE__ */ get(monadStateHalogenM);
+var when4 = /* @__PURE__ */ when(applicativeHalogenM);
 var DidDuplicate = /* @__PURE__ */ function() {
   function DidDuplicate3(value0) {
     this.value0 = value0;
@@ -10418,6 +10445,30 @@ var SetContent = /* @__PURE__ */ function() {
   };
   return SetContent2;
 }();
+var StartEditing = /* @__PURE__ */ function() {
+  function StartEditing2() {
+  }
+  ;
+  StartEditing2.value = new StartEditing2();
+  return StartEditing2;
+}();
+var StopEditing = /* @__PURE__ */ function() {
+  function StopEditing2() {
+  }
+  ;
+  StopEditing2.value = new StopEditing2();
+  return StopEditing2;
+}();
+var KeyDown = /* @__PURE__ */ function() {
+  function KeyDown2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  KeyDown2.create = function(value0) {
+    return new KeyDown2(value0);
+  };
+  return KeyDown2;
+}();
 var Duplicate = /* @__PURE__ */ function() {
   function Duplicate3() {
   }
@@ -10482,26 +10533,37 @@ var Receive2 = /* @__PURE__ */ function() {
   };
   return Receive4;
 }();
+var renderBody = function(st) {
+  if (st.isEditing) {
+    return textarea([class_("note-body"), value14(st.note.content), onValueInput(SetContent.create), onKeyDown(KeyDown.create), onBlur(function(v) {
+      return StopEditing.value;
+    }), placeholder3("Write a note..."), autofocus6(true)]);
+  }
+  ;
+  return div2([class_("note-body note-render"), prop3("innerHTML")(markdownToHtml(st.note.content)), attr2("data-placeholder")("Write a note..."), onClick(function(v) {
+    return StartEditing.value;
+  })])([]);
+};
 var render = function(st) {
   return div2([class_("note")])([div2([class_("didascalia"), draggable2(true), onDragStart(DragStart.create), onDragOver(DragOver.create), onDragLeave(DragLeave.create), onDrop(Drop.create)])([div2([class_("didascalia-header")])([div2([class_("didascalia-handle-group")])([div2([class_("didascalia-handle")])([text5("\u2630")]), button([class_("note-duplicate icon-button"), title2("duplicate note"), onClick(function(v) {
     return Duplicate.value;
   })])([text5("\u29C9")]), button([class_("note-remove icon-button"), title2("remove note"), onClick(function(v) {
     return Remove.value;
-  })])([text5("\u2715")])]), div2([class_("note-title")])([text5("Note")])])]), div2([class_("textus")])([textarea([class_("note-body"), value14(st.note.content), onValueInput(SetContent.create), placeholder3("Write a note...")])]), div2([class_("margin")])([])]);
+  })])([text5("\u2715")])]), div2([class_("note-title")])([text5("Note")])])]), div2([class_("textus")])([renderBody(st)]), div2([class_("margin")])([])]);
 };
 var handleQuery = function(dictMonadAff) {
   return function(v) {
     return discard12(modify_3(function(v1) {
-      var $27 = {};
-      for (var $28 in v1) {
-        if ({}.hasOwnProperty.call(v1, $28)) {
-          $27[$28] = v1[$28];
+      var $36 = {};
+      for (var $37 in v1) {
+        if ({}.hasOwnProperty.call(v1, $37)) {
+          $36[$37] = v1[$37];
         }
         ;
       }
       ;
-      $27.note = v.value0;
-      return $27;
+      $36.note = v.value0;
+      return $36;
     }))(function() {
       return pure14(new Just(v.value1));
     });
@@ -10516,32 +10578,80 @@ var handle = function(dictMonadAff) {
     ;
     if (v instanceof SetContent) {
       return discard12(modify_3(function(st) {
-        var $36 = {};
-        for (var $37 in st) {
-          if ({}.hasOwnProperty.call(st, $37)) {
-            $36[$37] = st[$37];
+        var $45 = {};
+        for (var $46 in st) {
+          if ({}.hasOwnProperty.call(st, $46)) {
+            $45[$46] = st[$46];
           }
           ;
         }
         ;
-        $36.note = function() {
-          var $33 = {};
-          for (var $34 in st.note) {
-            if ({}.hasOwnProperty.call(st.note, $34)) {
-              $33[$34] = st["note"][$34];
+        $45.note = function() {
+          var $42 = {};
+          for (var $43 in st.note) {
+            if ({}.hasOwnProperty.call(st.note, $43)) {
+              $42[$43] = st["note"][$43];
             }
             ;
           }
           ;
-          $33.content = v.value0;
-          return $33;
+          $42.content = v.value0;
+          return $42;
         }();
-        return $36;
+        return $45;
       }))(function() {
         return bind8(get4)(function(st) {
           return raise(new DidUpdate(st.note));
         });
       });
+    }
+    ;
+    if (v instanceof StartEditing) {
+      return modify_3(function(v1) {
+        var $49 = {};
+        for (var $50 in v1) {
+          if ({}.hasOwnProperty.call(v1, $50)) {
+            $49[$50] = v1[$50];
+          }
+          ;
+        }
+        ;
+        $49.isEditing = true;
+        return $49;
+      });
+    }
+    ;
+    if (v instanceof StopEditing) {
+      return modify_3(function(v1) {
+        var $52 = {};
+        for (var $53 in v1) {
+          if ({}.hasOwnProperty.call(v1, $53)) {
+            $52[$53] = v1[$53];
+          }
+          ;
+        }
+        ;
+        $52.isEditing = false;
+        return $52;
+      });
+    }
+    ;
+    if (v instanceof KeyDown) {
+      var key2 = key(v.value0);
+      return when4(key2 === "Escape")(discard12(liftEffect9(preventDefault(toEvent2(v.value0))))(function() {
+        return modify_3(function(v1) {
+          var $55 = {};
+          for (var $56 in v1) {
+            if ({}.hasOwnProperty.call(v1, $56)) {
+              $55[$56] = v1[$56];
+            }
+            ;
+          }
+          ;
+          $55.isEditing = false;
+          return $55;
+        });
+      }));
     }
     ;
     if (v instanceof Duplicate) {
@@ -10599,27 +10709,28 @@ var handle = function(dictMonadAff) {
     ;
     if (v instanceof Receive2) {
       return modify_3(function(v1) {
-        var $44 = {};
-        for (var $45 in v1) {
-          if ({}.hasOwnProperty.call(v1, $45)) {
-            $44[$45] = v1[$45];
+        var $63 = {};
+        for (var $64 in v1) {
+          if ({}.hasOwnProperty.call(v1, $64)) {
+            $63[$64] = v1[$64];
           }
           ;
         }
         ;
-        $44.note = v.value0;
-        return $44;
+        $63.note = v.value0;
+        return $63;
       });
     }
     ;
-    throw new Error("Failed pattern match at Note.Component (line 97, column 10 - line 138, column 32): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Note.Component (line 119, column 10 - line 172, column 32): " + [v.constructor.name]);
   };
 };
 var component = function(dictMonadAff) {
   return mkComponent({
     initialState: function(note2) {
       return {
-        note: note2
+        note: note2,
+        isEditing: false
       };
     },
     render,
@@ -10627,8 +10738,8 @@ var component = function(dictMonadAff) {
       initialize: defaultEval.initialize,
       finalize: defaultEval.finalize,
       handleAction: handle(dictMonadAff),
-      receive: function($48) {
-        return Just.create(Receive2.create($48));
+      receive: function($67) {
+        return Just.create(Receive2.create($67));
       },
       handleQuery: handleQuery(dictMonadAff)
     })
@@ -10649,13 +10760,8 @@ var annotateCommentaryLinks = (source2) => (html2) => {
   return template.innerHTML;
 };
 
-// output/Web.UIEvent.KeyboardEvent/foreign.js
-function key(e) {
-  return e.key;
-}
-
 // output/Web.UIEvent.MouseEvent/index.js
-var toEvent2 = unsafeCoerce2;
+var toEvent3 = unsafeCoerce2;
 
 // output/Pericope.Component/index.js
 var bind9 = /* @__PURE__ */ bind(bindHalogenM);
@@ -10667,7 +10773,7 @@ var get5 = /* @__PURE__ */ get(monadStateHalogenM);
 var show3 = /* @__PURE__ */ show(showInt);
 var mapFlipped4 = /* @__PURE__ */ mapFlipped(functorArray);
 var member3 = /* @__PURE__ */ member2(ordString);
-var when4 = /* @__PURE__ */ when(applicativeHalogenM);
+var when5 = /* @__PURE__ */ when(applicativeHalogenM);
 var $$delete6 = /* @__PURE__ */ $$delete2(ordString);
 var insert9 = /* @__PURE__ */ insert2(ordString);
 var toUnfoldable5 = /* @__PURE__ */ toUnfoldable2(unfoldableArray);
@@ -10678,7 +10784,7 @@ var fromFoldable6 = /* @__PURE__ */ fromFoldable(foldableArray)(ordString);
 var sort2 = /* @__PURE__ */ sort(ordString);
 var append12 = /* @__PURE__ */ append(semigroupArray);
 var value15 = /* @__PURE__ */ value12(isPropString);
-var prop3 = /* @__PURE__ */ prop2(isPropString);
+var prop4 = /* @__PURE__ */ prop2(isPropString);
 var SetData = /* @__PURE__ */ function() {
   function SetData2(value0, value1) {
     this.value0 = value0;
@@ -11217,7 +11323,7 @@ var handle2 = function(dictMonadAff) {
     }
     ;
     if (v instanceof HandleAddressClick) {
-      return discard13(liftEffect9(stopPropagation(toEvent2(v.value0))))(function() {
+      return discard13(liftEffect9(stopPropagation(toEvent3(v.value0))))(function() {
         return modify_4(function(st) {
           var $137 = {};
           for (var $138 in st) {
@@ -11235,7 +11341,7 @@ var handle2 = function(dictMonadAff) {
     }
     ;
     if (v instanceof HandleSourceClick) {
-      return discard13(liftEffect9(stopPropagation(toEvent2(v.value0))))(function() {
+      return discard13(liftEffect9(stopPropagation(toEvent3(v.value0))))(function() {
         return discard13(modify_4(function(st) {
           var $141 = {};
           for (var $142 in st) {
@@ -11297,10 +11403,10 @@ var handle2 = function(dictMonadAff) {
     }
     ;
     if (v instanceof HandleSelectedAddressClick) {
-      return discard13(liftEffect9(stopPropagation(toEvent2(v.value0))))(function() {
+      return discard13(liftEffect9(stopPropagation(toEvent3(v.value0))))(function() {
         return bind9(get5)(function(st) {
           var addressText = selectedAddressText(st.pericope);
-          return when4(addressText !== "")(raise(new DidCreatePericopeFromSelection({
+          return when5(addressText !== "")(raise(new DidCreatePericopeFromSelection({
             source: st.pericope.source,
             address: addressText
           })));
@@ -11309,7 +11415,7 @@ var handle2 = function(dictMonadAff) {
     }
     ;
     if (v instanceof SwallowDidascaliaClick) {
-      return liftEffect9(stopPropagation(toEvent2(v.value0)));
+      return liftEffect9(stopPropagation(toEvent3(v.value0)));
     }
     ;
     if (v instanceof SetAddress) {
@@ -11603,11 +11709,11 @@ var handle2 = function(dictMonadAff) {
               if (selectedVerse instanceof Just) {
                 return bind9(liftAff4(fetchCrossReferences(selectedIds[0])))(function(refsRes) {
                   return bind9(stillSelected(selectedIds[0]))(function(stillAfterRefs) {
-                    return when4(stillAfterRefs)(bind9(liftAff4(fetchCommentaries(selectedIds[0])))(function(commRes) {
+                    return when5(stillAfterRefs)(bind9(liftAff4(fetchCommentaries(selectedIds[0])))(function(commRes) {
                       return bind9(stillSelected(selectedIds[0]))(function(stillAfterCommentaries) {
-                        return when4(stillAfterCommentaries)(bind9(liftAff4(fetchRenderedStories(selectedVerse.value0.source)(selectedVerse.value0.address)))(function(storiesRes) {
+                        return when5(stillAfterCommentaries)(bind9(liftAff4(fetchRenderedStories(selectedVerse.value0.source)(selectedVerse.value0.address)))(function(storiesRes) {
                           return bind9(stillSelected(selectedIds[0]))(function(stillAfterStories) {
-                            return when4(stillAfterStories)(function() {
+                            return when5(stillAfterStories)(function() {
                               var stories = function() {
                                 if (storiesRes instanceof Left) {
                                   return [];
@@ -11777,8 +11883,8 @@ var handle2 = function(dictMonadAff) {
 };
 var cancelEdits = function(dictMonadAff) {
   return bind9(get5)(function(st) {
-    return discard13(when4(st.editingAddress)(handle2(dictMonadAff)(CancelAddressEdit.value)))(function() {
-      return when4(st.editingSource)(handle2(dictMonadAff)(CancelSourceEdit.value));
+    return discard13(when5(st.editingAddress)(handle2(dictMonadAff)(CancelAddressEdit.value)))(function() {
+      return when5(st.editingSource)(handle2(dictMonadAff)(CancelSourceEdit.value));
     });
   });
 };
@@ -11912,7 +12018,7 @@ var render2 = function(st) {
     })])([text5(v.reference)]);
   };
   var renderCommentary = function(v) {
-    return div2([class_("commentary")])([span3([class_("commentary-marker")])([text5(v.marker)]), span3([class_("commentary-text"), prop3("innerHTML")(v.text)])([])]);
+    return div2([class_("commentary")])([span3([class_("commentary-marker")])([text5(v.marker)]), span3([class_("commentary-text"), prop4("innerHTML")(v.text)])([])]);
   };
   var renderCrossRefs = function() {
     if (st.crossRefs instanceof CrossRefsIdle) {
@@ -11985,7 +12091,7 @@ var render2 = function(st) {
       }
       ;
       return "";
-    }()), attr2("data-chapter")(show3(v.chapter)), attr2("data-verse")(show3(v.verse)), prop3("innerHTML")(v.text), onClick(function(v2) {
+    }()), attr2("data-chapter")(show3(v.chapter)), attr2("data-verse")(show3(v.verse)), prop4("innerHTML")(v.text), onClick(function(v2) {
       return new ToggleSelect(v.verse_id);
     })])([]);
   })), div2([class_("margin")])(append12(renderSelectedAddress)(renderCrossRefs))]);
@@ -12054,7 +12160,7 @@ var get6 = /* @__PURE__ */ get(monadStateHalogenM);
 var map29 = /* @__PURE__ */ map(functorMaybe);
 var pure16 = /* @__PURE__ */ pure(applicativeHalogenM);
 var discard7 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
-var when5 = /* @__PURE__ */ when(applicativeHalogenM);
+var when6 = /* @__PURE__ */ when(applicativeHalogenM);
 var liftAff2 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var liftEffect7 = /* @__PURE__ */ liftEffect(/* @__PURE__ */ monadEffectHalogenM(monadEffectAff));
@@ -12376,7 +12482,7 @@ var handleAction = function(insertPericope2) {
           $69.aiSearchResults = [];
           return $69;
         }))(function() {
-          return discard7(when5(aiSearchActive)(bind10(fork(bind10(liftAff2(fetchAiExplanations(query3)(defaultAiSource)))(function(aiRes) {
+          return discard7(when6(aiSearchActive)(bind10(fork(bind10(liftAff2(fetchAiExplanations(query3)(defaultAiSource)))(function(aiRes) {
             return handleAction(insertPericope2)(new ReceiveAiSearchResults(aiRes));
           })))(function() {
             return pure16(unit);
@@ -12632,13 +12738,13 @@ var handleAction = function(insertPericope2) {
     }
     ;
     if (action2 instanceof SearchInputClick) {
-      return discard7(liftEffect7(stopPropagation(toEvent2(action2.value0))))(function() {
+      return discard7(liftEffect7(stopPropagation(toEvent3(action2.value0))))(function() {
         return handleAction(insertPericope2)(FocusSearchInput.value);
       });
     }
     ;
     if (action2 instanceof SearchResultsClick) {
-      return liftEffect7(stopPropagation(toEvent2(action2.value0)));
+      return liftEffect7(stopPropagation(toEvent3(action2.value0)));
     }
     ;
     throw new Error("Failed pattern match at Search.Component (line 99, column 38 - line 212, column 48): " + [action2.constructor.name]);

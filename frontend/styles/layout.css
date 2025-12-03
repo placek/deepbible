@@ -196,6 +196,22 @@ h2 {
   color: var(--text-primary);
 }
 
+.note-render {
+  cursor: text;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.note-render:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.note-render p {
+  margin: 0 0 0.5em;
+}
+
 .note .textus {
   padding: 0;
   display: flex;

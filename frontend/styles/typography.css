@@ -178,3 +178,18 @@ n, s, m {
 .search-result--ai:after {
   font-size: x-small;
 }
+
+.note-render * {
+  color: var(--text-primary);
+  text-align: left;
+  text-shadow: none;
+}
+.note-render h1,
+.note-render h2,
+.note-render h3,
+.note-render h4,
+.note-render h5,
+.note-render h6 {
+  margin: 1em 0 0 0;
+  padding: 0;
+}
