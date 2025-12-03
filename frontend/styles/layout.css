@@ -344,10 +344,11 @@ h2 {
   justify-content: center;
 }
 
+.vuhead,
 .xrefs {
   display: none;
 }
 
-.rdg {
+.rdg + .rdg {
   margin-top: 1em;
 }
