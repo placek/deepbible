@@ -3,8 +3,12 @@ include build/cross_references.mk
 include build/merge.mk
 include build/upload.mk
 include build/helpers.mk
+include build/frontend.mk
 
-.PHONY: all clean
+.PHONY: all clean info
+
+info:
+	@$(call say,"deepbible")
 
 all: clean upload apply-helpers
 
