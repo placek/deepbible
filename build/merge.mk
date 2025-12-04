@@ -155,7 +155,12 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      echo "  s.chapter," >> $$tmp_sql; \
 	      echo "  s.verse," >> $$tmp_sql; \
 	      echo "  $${stories_title_expr} AS title" >> $$tmp_sql; \
-	      echo "FROM source.stories s;" >> $$tmp_sql; \
+	      echo "FROM source.stories s" >> $$tmp_sql; \
+	      echo "WHERE s.book_number IS NULL" >> $$tmp_sql; \
+	      echo "   OR (" >> $$tmp_sql; \
+	      echo "        TRIM(CAST(s.book_number AS TEXT)) != ''" >> $$tmp_sql; \
+	      echo "        AND TRIM(CAST(s.book_number AS TEXT)) GLOB '[0-9][0-9]*'" >> $$tmp_sql; \
+	      echo "       );" >> $$tmp_sql; \
 	    fi; \
 	    \
 	    has_verses=$$(sqlite3 "$$db" "SELECT 1 FROM sqlite_master WHERE type='table' AND name='verses' LIMIT 1;"); \

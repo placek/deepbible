@@ -9,6 +9,7 @@ sqls := $(helpers_dir)/01_all_verses.sql \
 				$(helpers_dir)/03_sources.sql \
 				$(helpers_dir)/04_commentaries.sql \
 				$(helpers_dir)/05_stories.sql \
+				$(helpers_dir)/06_dictionary_entries.sql \
 				$(helpers_dir)/11_errata.sql \
 				$(helpers_dir)/12_functions.sql \
 				$(helpers_dir)/13_postgrest.sql
@@ -88,6 +89,18 @@ $(helpers_dir)/05_stories.sql: $(helpers_dir)
 	)
 	@echo >> "$@"
 	@echo "ORDER BY language, source_number, book_number, chapter, verse;" >> "$@"
+	@echo >> "$@"
+
+# generates the dictionary_entries.sql file with view for all languages
+$(helpers_dir)/06_dictionary_entries.sql: $(helpers_dir)
+	@echo "-- all dictionary entries for public schema" > "$@"
+	@echo "CREATE OR REPLACE VIEW public._all_dictionary_entries AS" >> "$@"
+	@$(foreach lang,$(langs), \
+	  printf "SELECT * FROM $(lang)._dictionary_entries" >> "$@"; \
+	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
+	)
+	@echo >> "$@"
+	@echo "ORDER BY language, source_number;" >> "$@"
 	@echo >> "$@"
 
 # combine helpers pieces
