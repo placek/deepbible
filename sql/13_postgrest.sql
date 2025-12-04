@@ -18,7 +18,7 @@ GRANT SELECT ON public._rendered_stories TO web_anon;
 GRANT EXECUTE ON FUNCTION public.fetch_commentaries(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.fetch_cross_references(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.fetch_rendered_stories(text, text) TO web_anon;
+GRANT EXECUTE ON FUNCTION public.fetch_verse_with_metadata(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.fetch_verses_by_address(text, text, boolean) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.parse_address(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION public.search_verses(text) TO web_anon;
-GRANT EXECUTE ON FUNCTION public.fetch_verse_with_metadata(text) TO web_anon;
