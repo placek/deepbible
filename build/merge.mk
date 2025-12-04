@@ -18,6 +18,7 @@ $(merged_dir):
 $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	@{ \
 	  tmp_sql=$$(mktemp); \
+	  source_map=$$(mktemp); \
 	  echo 'PRAGMA foreign_keys=OFF;' >> $$tmp_sql; \
 	  \
 	  echo "CREATE TABLE IF NOT EXISTS _sources (" >> $$tmp_sql; \
@@ -29,7 +30,8 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  echo "  description_long TEXT," >> $$tmp_sql; \
 	  echo "  origin TEXT," >> $$tmp_sql; \
 	  echo "  chapter_string TEXT," >> $$tmp_sql; \
-	  echo "  chapter_string_ps TEXT" >> $$tmp_sql; \
+	  echo "  chapter_string_ps TEXT," >> $$tmp_sql; \
+	  echo "  UNIQUE(name)" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
 	  \
 	  echo "CREATE TABLE IF NOT EXISTS _books (" >> $$tmp_sql; \
@@ -93,10 +95,16 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	  echo "  PRIMARY KEY (language, source_number, topic)" >> $$tmp_sql; \
 	  echo ");" >> $$tmp_sql; \
 	  \
-	  idx=0; \
+	  idx=1; \
 	  dbs=$$(find "$<" -type f -name '*.SQLite3' | sort); \
 	  for db in $$dbs; do \
-	    name=$$(basename "$$db" .SQLite3); \
+	    name=$$(basename "$$db" .SQLite3 | cut -d. -f1); \
+	    source_idx=$$(awk -v target="$$name" '$$1 == target { print $$2; exit }' "$$source_map"); \
+	    if [ -z "$$source_idx" ]; then \
+	      source_idx=$$idx; \
+	      echo "$$name $$idx" >> "$$source_map"; \
+	      idx=$$((idx+1)); \
+	    fi; \
 	    echo "ATTACH '$$db' AS source;" >> $$tmp_sql; \
 	    has_info=$$(sqlite3 "$$db" "SELECT 1 FROM sqlite_master WHERE type='table' AND name='info' LIMIT 1;"); \
 	    if [ "$$has_info" = "1" ]; then \
@@ -113,10 +121,10 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      info_chapter_string_ps_expr="NULL"; \
 	    fi; \
 	    \
-	    echo "INSERT INTO _sources (id, language, source_number, name, description_short, description_long, origin, chapter_string, chapter_string_ps)" >> $$tmp_sql; \
-	    echo "SELECT ('$*/' || $$idx) AS id," >> $$tmp_sql; \
-	    echo "       '$*'        AS language," >> $$tmp_sql; \
-	    echo "       $$idx       AS source_number," >> $$tmp_sql; \
+	    echo "INSERT OR IGNORE INTO _sources (id, language, source_number, name, description_short, description_long, origin, chapter_string, chapter_string_ps)" >> $$tmp_sql; \
+	    echo "SELECT ('$*/' || $$source_idx) AS id," >> $$tmp_sql; \
+	    echo "       '$*'         AS language," >> $$tmp_sql; \
+	    echo "       $$source_idx AS source_number," >> $$tmp_sql; \
 	    echo "       '$$name'    AS name," >> $$tmp_sql; \
 	    echo "       $${info_description_expr} AS description_short," >> $$tmp_sql; \
 	    echo "       $${info_detailed_expr} AS description_long," >> $$tmp_sql; \
@@ -127,9 +135,9 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    has_books=$$(sqlite3 "$$db" "SELECT 1 FROM sqlite_master WHERE type='table' AND name='books' LIMIT 1;"); \
 	    if [ "$$has_books" = "1" ]; then \
 	      echo "INSERT OR IGNORE INTO _books (id, language, source_number, book_number, short_name, long_name)" >> $$tmp_sql; \
-	      echo "SELECT ('$*/' || $$idx || '/' || b.book_number) AS id," >> $$tmp_sql; \
-	      echo "       '$*'  AS language," >> $$tmp_sql; \
-	      echo "       $$idx AS source_number," >> $$tmp_sql; \
+	      echo "SELECT ('$*/' || $$source_idx || '/' || b.book_number) AS id," >> $$tmp_sql; \
+	      echo "       '$*'       AS language," >> $$tmp_sql; \
+	      echo "       $$source_idx AS source_number," >> $$tmp_sql; \
 	      echo "       b.book_number, b.short_name, COALESCE(b.long_name, b.short_name) AS long_name" >> $$tmp_sql; \
 	      echo "FROM source.books b;" >> $$tmp_sql; \
 	    fi; \
@@ -150,7 +158,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      echo "INSERT INTO _stories (language, source_number, book_number, chapter, verse, title)" >> $$tmp_sql; \
 	      echo "SELECT" >> $$tmp_sql; \
 	      echo "  '$*' AS language," >> $$tmp_sql; \
-	      echo "  CAST($$idx AS INTEGER) AS source_number," >> $$tmp_sql; \
+	      echo "  CAST($$source_idx AS INTEGER) AS source_number," >> $$tmp_sql; \
 	      echo "  s.book_number," >> $$tmp_sql; \
 	      echo "  s.chapter," >> $$tmp_sql; \
 	      echo "  s.verse," >> $$tmp_sql; \
@@ -169,13 +177,13 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      echo "  id, language, source, book, book_name, address," >> $$tmp_sql; \
 	      echo "  source_number, book_number, chapter, verse, text)" >> $$tmp_sql; \
 	      echo "SELECT" >> $$tmp_sql; \
-	      echo "  ('$*/' || $$idx || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id," >> $$tmp_sql; \
+	      echo "  ('$*/' || $$source_idx || '/' || v.book_number || '/' || v.chapter || '/' || v.verse) AS id," >> $$tmp_sql; \
 	      echo "  '$*' AS language," >> $$tmp_sql; \
 	      echo "  (SELECT '$$name') AS source," >> $$tmp_sql; \
 	      echo "  b.short_name AS book," >> $$tmp_sql; \
 	      echo "  COALESCE(b.long_name, b.short_name) AS book_name," >> $$tmp_sql; \
 	      echo "  (b.short_name || ' ' || v.chapter || ',' || v.verse) AS address," >> $$tmp_sql; \
-	      echo "  CAST($$idx AS INTEGER)        AS source_number," >> $$tmp_sql; \
+	      echo "  CAST($$source_idx AS INTEGER)        AS source_number," >> $$tmp_sql; \
 	      echo "  CAST(v.book_number AS INTEGER) AS book_number," >> $$tmp_sql; \
 	      echo "  CAST(v.chapter     AS INTEGER) AS chapter," >> $$tmp_sql; \
 	      echo "  CAST(v.verse       AS INTEGER) AS verse," >> $$tmp_sql; \
@@ -198,7 +206,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      echo "  language, source_number, topic, definition, lexeme, transliteration, pronunciation, short_definition)" >> $$tmp_sql; \
 	      echo "SELECT" >> $$tmp_sql; \
 	      echo "  '$*' AS language," >> $$tmp_sql; \
-	      echo "  CAST($$idx AS INTEGER) AS source_number," >> $$tmp_sql; \
+	      echo "  CAST($$source_idx AS INTEGER) AS source_number," >> $$tmp_sql; \
 	      echo "  d.topic," >> $$tmp_sql; \
 	      echo "  d.definition," >> $$tmp_sql; \
 	      echo "  $${dict_lexeme_expr} AS lexeme," >> $$tmp_sql; \
@@ -217,7 +225,7 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	      echo "  chapter_number_to, verse_number_to, is_preceding, marker, text)" >> $$tmp_sql; \
 	      echo "SELECT" >> $$tmp_sql; \
 	      echo "  '$*' AS language," >> $$tmp_sql; \
-	      echo "  CAST($$idx AS TEXT) AS source_number," >> $$tmp_sql; \
+	      echo "  CAST($$source_idx AS TEXT) AS source_number," >> $$tmp_sql; \
 	      echo "  c.book_number," >> $$tmp_sql; \
 	      echo "  c.chapter_number_from," >> $$tmp_sql; \
 	      echo "  c.verse_number_from," >> $$tmp_sql; \
@@ -230,10 +238,8 @@ $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
 	    fi; \
 	    \
 	    echo "DETACH source;" >> $$tmp_sql; \
-	    \
-	    idx=$$((idx+1)); \
 	  done; \
 	  \
 	  sqlite3 "$@" < "$$tmp_sql"; \
-	  rm -f "$$tmp_sql"; \
+	  rm -f "$$tmp_sql" "$$source_map"; \
 	}
