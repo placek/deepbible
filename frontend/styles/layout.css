@@ -5,6 +5,22 @@ body {
   align-items: center;
 }
 
+.list-reset {
+  margin: 0;
+  padding: 0;
+}
+
+.icon-button {
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.icon-button:focus-visible {
+  outline: none;
+}
+
 h2 {
   margin-top: -1em;
   margin-bottom: 0;
@@ -46,6 +62,10 @@ h2 {
   width: 100%;
   padding: 0.5em 0.75em;
   box-sizing: border-box;
+  border-width: 1px;
+  border-style: solid;
+  position: relative;
+  z-index: 1;
 }
 
 .search-input-group input,
@@ -57,6 +77,14 @@ h2 {
   position: absolute;
   inset: 0;
   padding: 0.5em 3.25em 0.5em 0.75em;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.search-input-group input:focus-visible,
+.didascalia .address.editing input:focus-visible,
+.didascalia .source.editing input:focus-visible {
+  outline: none;
 }
 
 .search-status {
@@ -73,6 +101,12 @@ h2 {
   transform: translateY(-50%);
   padding: 0.15em 0.5em;
   border-radius: 0.35em;
+  user-select: none;
+  z-index: 2;
+}
+
+.search-ai-toggle input {
+  margin: 0;
 }
 
 .search-results {
@@ -93,15 +127,16 @@ h2 {
   gap: 0.75em;
   padding: 0.5em;
   position: relative;
+  cursor: pointer;
 }
 
 .search-result--ai {
   position: relative;
   align-items: flex-start;
+  cursor: default;
 }
 
 .search-result--ai:after {
-  content: "AI";
   position: absolute;
   top: -1px;
   right: -1px;
@@ -135,6 +170,8 @@ h2 {
   flex-direction: column;
   align-items: center;
   gap: 1em;
+  user-select: none;
+  cursor: default;
 }
 
 .didascalia-header {
@@ -147,12 +184,24 @@ h2 {
 .didascalia .address,
 .didascalia .source {
   width: 100%;
+  cursor: pointer;
 }
 
 .didascalia .address.editing input,
 .didascalia .source.editing input {
   width: 100%;
   box-sizing: border-box;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.didascalia-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.didascalia:active .didascalia-handle {
+  cursor: grabbing;
 }
 
 .didascalia-handle-group {
@@ -176,6 +225,12 @@ h2 {
   justify-content: space-between;
   align-items: center;
   gap: 0.5em;
+  cursor: grab;
+  user-select: none;
+}
+
+.note-header:active {
+  cursor: grabbing;
 }
 
 .note-actions {
@@ -188,27 +243,24 @@ h2 {
   width: 100%;
   padding: 0.75em;
   box-sizing: border-box;
-  background-color: var(--page-background);
-  border-color: var(--text-muted);
-  font-family: 'greek';
-  font-size: large;
-  color: var(--text-primary);
 }
 
 .note-render {
   cursor: text;
-  white-space: normal;
-  line-height: 1.5;
-}
-
-.note-render:empty::before {
-  content: attr(data-placeholder);
-  color: var(--text-muted);
-  font-style: italic;
 }
 
 .note-render p {
   margin: 0 0 0.5em;
+}
+
+.note-render h1,
+.note-render h2,
+.note-render h3,
+.note-render h4,
+.note-render h5,
+.note-render h6 {
+  margin: 1em 0 0 0;
+  padding: 0;
 }
 
 .note .textus {
@@ -221,10 +273,7 @@ h2 {
   align-self: center;
   margin: -1em auto;
   user-select: none;
-  background-color: var(--page-background);
   border: none;
-  color: var(--text-muted);
-  font-size: larger;
   border-radius: 50%;
   width: 2em;
   height: 2em;
@@ -232,7 +281,6 @@ h2 {
   display: block;
   position: relative;
   z-index: 1;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 
 .didascalia-remove,
@@ -246,12 +294,17 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 1em;
+  user-select: none;
 }
 
 .margin > * {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+}
+
+.margin .selected-address {
+  cursor: pointer;
 }
 
 .stories,
@@ -296,6 +349,7 @@ h2 {
 
 .source-language {
   padding: 0.5em;
+  cursor: default;
 }
 
 .source-options {
@@ -312,6 +366,7 @@ h2 {
 
 .source-option {
   padding: 0.5em;
+  cursor: pointer;
 }
 
 .textus {
@@ -322,6 +377,10 @@ h2 {
 .cross-reference {
   margin: 0;
   cursor: pointer;
+}
+
+.commentary-text a {
+  pointer-events: none;
 }
 
 .commentary-marker {

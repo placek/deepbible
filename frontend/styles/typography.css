@@ -9,6 +9,10 @@ body {
   font-size: 1.1rem;
 }
 
+.list-reset {
+  list-style: none;
+}
+
 h2 {
   text-align: center;
   font-size: larger;
@@ -39,6 +43,10 @@ h2 {
   hyphens: none;           /* no auto-hyphenation */ 
 }
 
+.search-input-highlight {
+  white-space: pre-wrap;
+}
+
 .search-input-group input,
 .didascalia .address.editing input,
 .didascalia .source.editing input {
@@ -66,6 +74,21 @@ h2 {
   font-size: 1.2em;
   font-family: greek;
   text-align: justify;
+}
+
+.note-body {
+  font-family: 'greek';
+  font-size: large;
+}
+
+.note-render {
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.note-render:empty::before {
+  content: attr(data-placeholder);
+  font-style: italic;
 }
 
 n, s, m {
@@ -108,28 +131,21 @@ n, s, m {
   content: attr(data-verse);
 }
 
-.verse e {
-  text-shadow: none;
+.verse s::before {
+  content: "#";
 }
 
 .verse s {
   font-size: xx-small;
   text-decoration: none;
-  text-shadow: none;
 }
 
 .verse m {
   font-size: xx-small;
-  text-shadow: none;
 }
 
 .verse n {
   font-size: xx-small;
-  text-shadow: none;
-}
-
-.verse f {
-  text-shadow: none;
 }
 
 .app-footer {
@@ -156,6 +172,13 @@ n, s, m {
   text-decoration: none;
 }
 
+.selected-address,
+.verse.selected {
+  text-decoration-style: solid;
+  text-decoration-thickness: 1px;
+  text-decoration-line: underline;
+}
+
 .search-ai-toggle {
   font-size: 0.9em;
 }
@@ -177,20 +200,24 @@ n, s, m {
 
 .search-result--ai:after {
   font-size: x-small;
+  content: "AI";
 }
 
 .note-render * {
-  color: var(--text-primary);
   text-align: left;
-  text-shadow: none;
 }
 
-.note-render h1,
-.note-render h2,
-.note-render h3,
-.note-render h4,
-.note-render h5,
-.note-render h6 {
-  margin: 1em 0 0 0;
-  padding: 0;
+.note-add {
+  font-size: larger;
+}
+
+@media (max-width: 570px) {
+  .didascalia .address,
+  .cross-reference {
+    text-wrap-mode: nowrap;
+  }
+
+  .note-add {
+    font-size: medium;
+  }
 }

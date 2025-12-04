@@ -24,6 +24,11 @@
 body {
   background-color: var(--panel-background);
   color: var(--text-primary);
+  background-image: url(./logo.svg);
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: 40em;
+  background-attachment: fixed;
 }
 
 h2 {
@@ -56,6 +61,10 @@ input {
   color: var(--text-muted);
 }
 
+.icon-button {
+  background: transparent;
+}
+
 .didascalia-handle:hover,
 .didascalia-handle:focus-visible,
 .icon-button:hover,
@@ -65,9 +74,6 @@ input {
 
 .selected-address,
 .verse.selected {
-  text-decoration-style: solid;
-  text-decoration-thickness: 1px;
-  text-decoration-line: underline;
   text-decoration-color: var(--highlight-positive);
   color: var(--highlight-positive);
 }
@@ -130,6 +136,12 @@ input {
   background-color: transparent;
   color: transparent;
   caret-color: var(--text-secondary);
+  border-color: var(--text-muted);
+}
+
+.didascalia .address.editing input,
+.didascalia .source.editing input {
+  border-color: var(--text-muted);
 }
 
 .search-input-highlight {
@@ -151,6 +163,27 @@ input {
 .search-result--ai:after {
   background-color: var(--panel-background);
   color: var(--text-secondary);
+}
+
+.note-body {
+  background-color: var(--page-background);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.note-add {
+  background-color: var(--page-background);
+  color: var(--text-muted);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.note-render:empty::before {
+  color: var(--text-muted);
+}
+
+.note-render * {
+  color: var(--text-primary);
+  text-shadow: none;
 }
 
 .cross-references-loading,
@@ -183,4 +216,12 @@ input {
 
 .verse j {
   color: var(--jesus-color);
+}
+
+.verse e,
+.verse f,
+.verse m,
+.verse n,
+.verse s {
+  text-shadow: none;
 }
