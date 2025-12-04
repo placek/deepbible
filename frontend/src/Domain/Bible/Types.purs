@@ -2,8 +2,9 @@ module Domain.Bible.Types where
 
 import Prelude
 
-import Data.Argonaut (class DecodeJson, decodeJson, (.:))
+import Data.Argonaut (class DecodeJson, decodeJson, (.:), (.:?))
 import Data.String (Pattern(..), Replacement(..), replace)
+import Data.Maybe (fromMaybe)
 import Data.Newtype (class Newtype)
 
 -- Core domain primitives
@@ -111,8 +112,12 @@ instance decodeSourceInfo :: DecodeJson SourceInfo where
   decodeJson j = do
     obj <- decodeJson j
     name <- obj .: "name"
-    description_short <- obj .: "description_short"
-    language <- obj .: "language"
+    description_short <- do
+      maybeDescription <- obj .:? "description_short"
+      pure $ fromMaybe "" maybeDescription
+    language <- do
+      maybeLanguage <- obj .:? "language"
+      pure $ fromMaybe "unknown" maybeLanguage
     pure $ SourceInfo { name, description_short, language }
 
 instance decodeCrossReference :: DecodeJson CrossReference where

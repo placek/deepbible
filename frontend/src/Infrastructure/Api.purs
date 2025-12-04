@@ -39,7 +39,9 @@ fetchVerses address source = do
 
 fetchSources :: Aff (Either String (Array SourceInfo))
 fetchSources = do
-  let url = baseUrl <> "/_all_sources"
+  let
+    -- PostgREST requires an explicit select list; keep it minimal to avoid decoding failures.
+    url = baseUrl <> "/_all_sources?select=name,description_short,language"
   res <- AX.get driver RF.json url
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
