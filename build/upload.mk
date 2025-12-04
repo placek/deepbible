@@ -9,7 +9,7 @@ endif
 upload_tables ?= _sources _books _all_verses _stories _commentaries _dictionary_entries
 
 upload-cross-references: $(cross_refs_db)
-	@echo ">> uploading cross-references"
+	@$(call say,uploading cross-references)
 	SQLITE_PATH="$$(realpath $<)"; \
 	PGURL="$(DATABASE_URL)"; \
 	TABLES="'_cross_references'"; \
@@ -19,7 +19,7 @@ upload-cross-references: $(cross_refs_db)
 
 # uploads the merged SQLite3 database to the PostgreSQL database
 upload-%: $(merged_dir)/%.SQLite3 upload-cross-references
-	@echo ">> uploading SQLite3 DB for language: $* (tables: $(upload_tables)) using $(DATABASE_URL)"
+	@$(call say,uploading SQLite3 DB for language: $* (tables: $(upload_tables)) using $(DATABASE_URL))
 	@SCHEMA="$*"; \
 	SQLITE_PATH="$$(realpath "$<")"; \
 	PGURL="$(DATABASE_URL)"; \
@@ -30,4 +30,4 @@ upload-%: $(merged_dir)/%.SQLite3 upload-cross-references
 
 # uploads the SQLite3 databases for all languages
 upload: $(addprefix upload-,$(langs))
-	@echo ">> uploading SQLite3 DBs for languages: $(langs) (tables: $(upload_tables))"
+	@$(call say,uploading SQLite3 DBs for languages: $(langs) (tables: $(upload_tables)))

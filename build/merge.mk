@@ -8,14 +8,17 @@ endif
 .PHONY: clean-merged
 
 clean-merged:
+	@$(call say,cleaning merged SQLite3 artifacts)
 	-rm -rf $(merged_dir)
 
 # creates necessary directories
 $(merged_dir):
+	@$(call say,ensuring merged directory $@ exists)
 	@mkdir -p $@
 
 # merges the SQLite3 databases for each language into one _all_verses table (no temp tables, no SQLite views)
 $(merged_dir)/%.SQLite3: $(grouped_dir)/% | $(merged_dir)
+	@$(call say,merging grouped SQLite3 DBs for language $*)
 	@{ \
 	  tmp_sql=$$(mktemp); \
 	  source_map=$$(mktemp); \

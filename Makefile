@@ -9,4 +9,4 @@ include build/helpers.mk
 all: clean upload apply-helpers
 
 clean: clean-download clean-merged clean-helpers clean-cross-references
-	@echo ">> clean complete"
+	@$(call say,clean complete)

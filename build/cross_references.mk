@@ -7,25 +7,29 @@ endif
 .PHONY: cross-references clean-cross-references
 
 clean-cross-references:
+	@$(call say,cleaning cross references artifacts)
 	-rm -rf $(cross_refs_dir)
 
 # creates necessary directories
 $(cross_refs_dir):
+	@$(call say,ensuring cross references directory $@ exists)
 	@mkdir -p $@
 
 # downloads and extracts the cross references file
 $(cross_refs_zip): | $(cross_refs_dir)
+	@$(call say,downloading cross references archive)
 	curl -fL -o "$@" "$(cross_refs_url)"
 
 # extracts the cross references text file
 $(cross_refs_txt): $(cross_refs_zip)
+	@$(call say,extracting cross references text)
 	-7z x -y -o"$(subst .zip,,$<)" "$<"
 	mv "$(subst .zip,,$<)/cross_references.txt" "$@"
 	sed -i.bak '1d' "$@"
 
 # converts the cross references text file to SQL
 $(cross_refs_sql): $(cross_refs_txt)
-	@echo ">> generating SQL for cross references..."
+	@$(call say,generating SQL for cross references...)
 	@echo "BEGIN TRANSACTION;" > "$@"
 	@echo "CREATE TABLE IF NOT EXISTS cr (vfrom TEXT, vto TEXT, votes TEXT);" >> "$@"
 	@echo ".mode tabs" >> "$@"
@@ -87,5 +91,5 @@ $(cross_refs_sql): $(cross_refs_txt)
 
 # creates the cross references SQLite3 database
 $(cross_refs_db): $(cross_refs_sql)
-	@echo ">> creating cross references SQLite3 database..."
+	@$(call say,creating cross references SQLite3 database...)
 	sqlite3 "$@" < "$<"

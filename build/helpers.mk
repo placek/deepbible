@@ -17,18 +17,22 @@ sqls := $(helpers_dir)/01_all_verses.sql \
 .PHONY: clean-helpers apply-helpers
 
 clean-helpers:
+	@$(call say,cleaning helpers directory)
 	-rm -rf $(helpers_dir)
 
 # creates necessary directories
 $(helpers_dir):
+	@$(call say,ensuring helpers directory $@ exists)
 	@mkdir -p $@
 
 # copies the sql files from sql_dir to helpers_dir (only *.sql)
 $(helpers_dir)/%.sql: $(sql_dir)/%.sql | $(helpers_dir)
+	@$(call say,copying $(notdir $<) into $(helpers_dir))
 	@cp $< $@
 
 # generates the all_verses.sql file with materialized view for all languages
 $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
+	@$(call say,generating public._all_verses helper SQL)
 	@echo "-- all verses for public schema" > "$@"
 	@echo "DROP INDEX IF EXISTS public.idx__all_verses_text_search;" >> "$@"
 	@echo "DROP MATERIALIZED VIEW IF EXISTS public._all_verses;" >> "$@"
@@ -46,6 +50,7 @@ $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
 
 # generates the books.sql file with view for all languages
 $(helpers_dir)/02_books.sql: $(helpers_dir)
+	@$(call say,generating public._all_books helper SQL)
 	@echo "-- all books for public schema" > "$@"
 	@echo "CREATE OR REPLACE VIEW public._all_books AS" >> "$@"
 	@$(foreach lang,$(langs), \
@@ -58,6 +63,7 @@ $(helpers_dir)/02_books.sql: $(helpers_dir)
 
 # generates the sources.sql file with view for all languages
 $(helpers_dir)/03_sources.sql: $(helpers_dir)
+	@$(call say,generating public._all_sources helper SQL)
 	@echo "-- all sources for public schema" > "$@"
 	@echo "CREATE OR REPLACE VIEW public._all_sources AS" >> "$@"
 	@$(foreach lang,$(langs), \
@@ -70,6 +76,7 @@ $(helpers_dir)/03_sources.sql: $(helpers_dir)
 
 # generates the commentaries.sql file with view for all languages
 $(helpers_dir)/04_commentaries.sql: $(helpers_dir)
+	@$(call say,generating public._all_commentaries helper SQL)
 	@echo "-- all commentaries for public schema" > "$@"
 	@echo "CREATE OR REPLACE VIEW public._all_commentaries AS" >> "$@"
 	@$(foreach lang,$(langs), \
@@ -81,6 +88,7 @@ $(helpers_dir)/04_commentaries.sql: $(helpers_dir)
 
 # generates the stories.sql file with view for all languages
 $(helpers_dir)/05_stories.sql: $(helpers_dir)
+	@$(call say,generating public._all_stories helper SQL)
 	@echo "-- all stories for public schema" > "$@"
 	@echo "CREATE OR REPLACE VIEW public._all_stories AS" >> "$@"
 	@$(foreach lang,$(langs), \
@@ -93,6 +101,7 @@ $(helpers_dir)/05_stories.sql: $(helpers_dir)
 
 # generates the dictionary_entries.sql file with view for all languages
 $(helpers_dir)/06_dictionary_entries.sql: $(helpers_dir)
+	@$(call say,generating public._all_dictionary_entries helper SQL)
 	@echo "-- all dictionary entries for public schema" > "$@"
 	@echo "CREATE OR REPLACE VIEW public._all_dictionary_entries AS" >> "$@"
 	@$(foreach lang,$(langs), \
@@ -105,11 +114,12 @@ $(helpers_dir)/06_dictionary_entries.sql: $(helpers_dir)
 
 # combine helpers pieces
 $(helpers_dir)/_helpers.sql: $(sqls) | $(helpers_dir)
+	@$(call say,combining helper SQL pieces)
 	@cat $^ > "$@"
 
 # apply (define helpers_sql if you use it)
 helpers_sql := $(helpers_dir)/_helpers.sql
 
 apply-helpers: $(helpers_sql)
-	@echo ">> applying helpers"
+	@$(call say,applying helpers)
 	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f "$(helpers_sql)"

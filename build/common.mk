@@ -18,3 +18,10 @@ cross_refs_txt := $(cross_refs_dir)/cross_references.txt
 cross_refs_sql := $(cross_refs_dir)/cross_references.sql
 cross_refs_db := $(cross_refs_dir)/cross_references.SQLite3
 books_db := data/cross_references_books.SQLite3
+
+ansi_bold_green := \033[1;32m
+ansi_reset := \033[0m
+
+define say
+	@printf '$(ansi_bold_green)%s$(ansi_reset)\n' "$(1)"
+endef
