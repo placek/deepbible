@@ -3,17 +3,25 @@
     flex-direction: column;
   }
 
-  .didascalia, .didascalia-header, .cross-references {
+  .didascalia, .didascalia-header, .cross-references, .dictionary {
     flex-direction: row;
   }
 
-  .cross-references {
+  .cross-references, .dictionary {
     flex-wrap: wrap;
     gap: 0.5em;
   }
 
   .didascalia input {
     width: 8em !important;
+  }
+
+  .dictionary-tooltip {
+    position: fixed;
+    bottom: 0.5em;
+    left: 0.5em;
+    top: auto;
+    right: auto;
   }
 
   .note-add {
