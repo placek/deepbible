@@ -540,3 +540,94 @@ BEGIN
 
 END;
 $BODY$;
+
+-- convert greek text to beta code
+DROP FUNCTION IF EXISTS public.greek_to_betacode(text);
+CREATE OR REPLACE FUNCTION public.greek_to_betacode(p_input text)
+  RETURNS text
+  LANGUAGE 'plpgsql'
+  COST 100
+  IMMUTABLE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+  s        text;
+  result   text := '';
+  i        integer := 1;
+  len      integer;
+  ch       text;
+  lower_ch text;
+  letter   text;
+BEGIN
+  IF p_input IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  -- Normalize to NFD: base letter + combining diacritics
+  s := normalize(p_input, NFD);
+  len := char_length(s);
+
+  WHILE i <= len LOOP
+    ch := substr(s, i, 1);
+    lower_ch := lower(ch);
+    letter := NULL;
+
+    CASE
+      -- combining diacritics → produce nothing
+      WHEN ch IN (
+        U&'\0313', -- COMBINING COMMA ABOVE (smooth breathing)
+        U&'\0314', -- COMBINING REVERSED COMMA ABOVE (rough breathing)
+        U&'\0301', -- COMBINING ACUTE
+        U&'\0300', -- COMBINING GRAVE
+        U&'\0342', -- COMBINING PERISPOMENI (circumflex)
+        U&'\0302', -- COMBINING CIRCUMFLEX
+        U&'\0308', -- COMBINING DIAERESIS
+        U&'\0345', -- COMBINING IOTA SUBSCRIPT
+        U&'\0304', -- COMBINING MACRON
+        U&'\0306'  -- COMBINING BREVE
+      ) THEN
+        letter := ''  ;  -- skip
+
+      -- Greek base letters → beta code a–z
+      WHEN lower_ch = 'α' THEN letter := 'a';
+      WHEN lower_ch = 'β' THEN letter := 'b';
+      WHEN lower_ch = 'γ' THEN letter := 'g';
+      WHEN lower_ch = 'δ' THEN letter := 'd';
+      WHEN lower_ch = 'ε' THEN letter := 'e';
+      WHEN lower_ch = 'ζ' THEN letter := 'z';
+      WHEN lower_ch = 'η' THEN letter := 'h';
+      WHEN lower_ch = 'θ' THEN letter := 'q';
+      WHEN lower_ch = 'ι' THEN letter := 'i';
+      WHEN lower_ch = 'κ' THEN letter := 'k';
+      WHEN lower_ch = 'λ' THEN letter := 'l';
+      WHEN lower_ch = 'μ' THEN letter := 'm';
+      WHEN lower_ch = 'ν' THEN letter := 'n';
+      WHEN lower_ch = 'ξ' THEN letter := 'c';
+      WHEN lower_ch = 'ο' THEN letter := 'o';
+      WHEN lower_ch = 'π' THEN letter := 'p';
+      WHEN lower_ch = 'ρ' THEN letter := 'r';
+      WHEN lower_ch = 'σ' THEN letter := 's';
+      WHEN lower_ch = 'ς' THEN letter := 's';  -- final sigma
+      WHEN lower_ch = 'τ' THEN letter := 't';
+      WHEN lower_ch = 'υ' THEN letter := 'u';
+      WHEN lower_ch = 'φ' THEN letter := 'f';
+      WHEN lower_ch = 'χ' THEN letter := 'x';
+      WHEN lower_ch = 'ψ' THEN letter := 'y';
+      WHEN lower_ch = 'ω' THEN letter := 'w';
+      WHEN lower_ch = 'ϝ' THEN letter := 'v';  -- digamma (optional)
+
+      -- everything else → space
+      ELSE
+        letter := ' ';
+    END CASE;
+
+    -- append only when letter is non-empty (skip diacritics)
+    IF letter IS NOT NULL AND letter <> '' THEN
+      result := result || letter;
+    END IF;
+
+    i := i + 1;
+  END LOOP;
+
+  RETURN result;
+END;
+$BODY$;
