@@ -645,7 +645,7 @@ WITH
   words AS (
     SELECT DISTINCT verse_word
     FROM (
-      SELECT unnest(string_to_array(greek_to_betacode(public.raw_text(v.text)), ' ')) AS verse_word
+      SELECT unnest(string_to_array(trim(regexp_replace(greek_to_betacode(public.text_without_format(v.text)), '\s+', ' ', 'g')), ' ')) AS verse_word
       FROM public._all_verses v
       WHERE v.id = p_verse_id
     ) t
@@ -680,7 +680,7 @@ WITH
     parse,
     COALESCE(
       (
-        SELECT array_agg(greek_to_betacode(f))
+        SELECT array_agg(f)
         FROM unnest(forms_raw) f
       ),
       '{}'
