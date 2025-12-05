@@ -13,8 +13,8 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Domain.Bible.Types (Address, AiSearchResponse(..), AiSearchResult, Commentary, CrossReference, Source, SourceInfo, Story,
-                          Verse, VerseId, VerseSearchResult)
+import Domain.Bible.Types (Address, AiSearchResponse(..), AiSearchResult, Commentary, CrossReference, DictionaryEntry, Source, SourceInfo,
+                          Story, Verse, VerseId, VerseSearchResult)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
@@ -84,6 +84,18 @@ fetchRenderedStories source address = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left $ "Failed to fetch stories: " <> address
       Right stories -> pure $ Right stories
+
+fetchVerseDictionary :: VerseId -> Aff (Either String (Array DictionaryEntry))
+fetchVerseDictionary verseId = do
+  let
+    url = baseUrl <> "/rpc/verse_dictionary"
+    payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
+  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left $ "Failed to fetch verse dictionary: " <> verseId
+      Right entries -> pure $ Right entries
 
 searchVerses :: String -> Aff (Either String (Array VerseSearchResult))
 searchVerses query = do

@@ -82,6 +82,38 @@ input {
   color: var(--highlight-positive);
 }
 
+.dictionary-word {
+  color: var(--text-secondary);
+}
+
+.dictionary-entry.active .dictionary-word {
+  color: var(--highlight-positive);
+}
+
+.dictionary-tooltip {
+  background-color: var(--page-background);
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
+}
+
+.dictionary-loading,
+.dictionary-empty {
+  color: var(--text-muted);
+}
+
+.dictionary-forms-label {
+  color: var(--text-muted);
+}
+
+.dictionary-form-item {
+  background-color: var(--panel-background);
+  color: var(--text-secondary);
+}
+
+.dictionary-form-item.empty {
+  color: var(--text-muted);
+}
+
 .address,
 .search-result-address,
 .address input {

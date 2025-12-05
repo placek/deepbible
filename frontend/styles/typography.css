@@ -57,6 +57,33 @@ h2 {
   font-size: small;
 }
 
+.dictionary-word {
+  font-size: small;
+}
+
+.dictionary-loading,
+.dictionary-empty {
+  font-size: x-small;
+}
+
+.dictionary-tooltip {
+  font-size: small;
+}
+
+.dictionary-topic {
+  font-weight: bold;
+}
+
+.dictionary-forms-label {
+  font-size: x-small;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dictionary-form-item {
+  font-size: x-small;
+}
+
 .source {
   font-size: x-small;
 }

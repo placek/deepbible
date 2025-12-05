@@ -72,6 +72,17 @@ newtype Story =
 
 derive instance newtypeStory :: Newtype Story _
 
+newtype DictionaryEntry =
+  DictionaryEntry
+    { topic :: String
+    , word :: String
+    , meaning :: String
+    , parse :: String
+    , forms :: Array String
+    }
+
+derive instance newtypeDictionaryEntry :: Newtype DictionaryEntry _
+
 -- A verse as returned by /rpc/verses_by_address
 newtype Verse =
   Verse
@@ -146,6 +157,22 @@ instance decodeStory :: DecodeJson Story where
     a <- obj .: "a"
     b <- obj .: "b"
     pure $ Story { source, book, title, address, a, b }
+
+instance decodeDictionaryEntry :: DecodeJson DictionaryEntry where
+  decodeJson j = do
+    obj <- decodeJson j
+    topic <- obj .:? "topic"
+    word <- obj .:? "word"
+    meaning <- obj .:? "meaning"
+    parse <- obj .:? "parse"
+    forms <- obj .:? "forms"
+    pure $ DictionaryEntry
+      { topic: fromMaybe "" topic
+      , word: fromMaybe "" word
+      , meaning: fromMaybe "" meaning
+      , parse: fromMaybe "" parse
+      , forms: fromMaybe [] forms
+      }
 
 instance decodeVerseSearchResult :: DecodeJson VerseSearchResult where
   decodeJson j = do

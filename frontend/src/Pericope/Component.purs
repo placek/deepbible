@@ -8,16 +8,17 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Set as Set
-import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower)
+import Data.String (Pattern(..), contains, joinWith, lastIndexOf, toLower, trim)
 import Data.String.CodeUnits as CU
-import Domain.Bible.Types (Address, Commentary(..), CrossReference(..), Source, SourceInfo, Story(..), Verse(..), VerseId)
+import Domain.Bible.Types (Address, Commentary(..), CrossReference(..), DictionaryEntry(..), Source, SourceInfo, Story(..), Verse(..),
+                          VerseId)
 import Domain.Pericope.Types (Pericope, PericopeId)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Infrastructure.Api (fetchCommentaries, fetchCrossReferences, fetchRenderedStories, fetchSources, fetchVerses)
+import Infrastructure.Api (fetchCommentaries, fetchCrossReferences, fetchRenderedStories, fetchSources, fetchVerseDictionary, fetchVerses)
 import Web.Event.Event (preventDefault, stopPropagation)
 import Web.HTML.Event.DragEvent (DragEvent)
 import Web.HTML.Event.DragEvent as DragEv
@@ -53,12 +54,19 @@ type State =
   , originalAddress :: Maybe Address
   , originalSource :: Maybe Source
   , crossRefs :: CrossRefState
+  , dictionary :: DictionaryState
+  , activeDictionaryTopic :: Maybe String
   }
 
 data CrossRefState
   = CrossRefsIdle
   | CrossRefsLoading
   | CrossRefsLoaded { references :: Array CrossReference, commentaries :: Array Commentary, stories :: Array Story }
+
+data DictionaryState
+  = DictionaryIdle
+  | DictionaryLoading
+  | DictionaryLoaded (Array DictionaryEntry)
 
 component :: forall m. MonadAff m => H.Component Query Pericope Output m
 component = H.mkComponent
@@ -70,6 +78,8 @@ component = H.mkComponent
       , originalAddress: Nothing
       , originalSource: Nothing
       , crossRefs: CrossRefsIdle
+      , dictionary: DictionaryIdle
+      , activeDictionaryTopic: Nothing
       }
   , render
   , eval: H.mkEval $ H.defaultEval
@@ -105,6 +115,7 @@ data Action
   | Receive Pericope
   | OpenCrossReference Address
   | OpenStory { source :: Source, address :: Address }
+  | ToggleDictionaryTopic MouseEvent String
 
 render :: forall m. State -> H.ComponentHTML Action () m
 render st =
@@ -223,6 +234,59 @@ render st =
         [ HH.text addressText ]
       ]
 
+    renderDictionary =
+      case st.dictionary of
+        DictionaryIdle ->
+          []
+        DictionaryLoading ->
+          []
+        DictionaryLoaded entries ->
+          if A.null entries then
+            []
+          else
+            [ HH.div [ HP.class_ (HH.ClassName "dictionary") ]
+                (renderDictionaryEntry <$> entries)
+            ]
+
+    renderDictionaryEntry (DictionaryEntry entry) =
+      let
+        isActive = st.activeDictionaryTopic == Just entry.topic
+        formsList =
+          if A.null entry.forms then
+            [ HH.li [ HP.class_ (HH.ClassName "dictionary-form-item empty") ] [ HH.text "—" ] ]
+          else
+            entry.forms <#> \form ->
+              HH.li [ HP.class_ (HH.ClassName "dictionary-form-item") ]
+                [ HH.text (trim form) ]
+        tooltip =
+          if isActive then
+            [ HH.div [ HP.class_ (HH.ClassName "dictionary-tooltip") ]
+                [ HH.div [ HP.class_ (HH.ClassName "dictionary-topic") ]
+                    [ HH.text entry.topic ]
+                , HH.div [ HP.class_ (HH.ClassName "dictionary-meaning") ]
+                    [ HH.text entry.meaning ]
+                , HH.div [ HP.class_ (HH.ClassName "dictionary-parse") ]
+                    [ HH.text entry.parse ]
+                , HH.div [ HP.class_ (HH.ClassName "dictionary-forms") ]
+                    [ HH.span [ HP.class_ (HH.ClassName "dictionary-forms-label") ]
+                        [ HH.text "Forms" ]
+                    , HH.ul [ HP.class_ (HH.ClassName "dictionary-forms-list list-reset") ] formsList
+                    ]
+                ]
+            ]
+          else
+            []
+      in
+      HH.div
+        [ HP.class_ (HH.ClassName ("dictionary-entry" <> if isActive then " active" else "")) ]
+        ( [ HH.button
+              [ HP.class_ (HH.ClassName "dictionary-word")
+              , HE.onClick \ev -> ToggleDictionaryTopic ev entry.topic
+              ]
+              [ HH.text entry.word ]
+          ] <> tooltip
+        )
+
     renderCrossRefs = case st.crossRefs of
       CrossRefsIdle ->
         [ HH.div [ HP.class_ (HH.ClassName "cross-references-empty") ]
@@ -334,7 +398,7 @@ render st =
             []
         )
 
-    , HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs)
+    , HH.div [ HP.class_ (HH.ClassName "margin") ] (renderSelectedAddress <> renderCrossRefs <> renderDictionary)
     ]
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
@@ -451,10 +515,13 @@ handle = case _ of
           sel1 =
             if Set.member vid sel0 then Set.delete vid sel0 else Set.insert vid sel0
           nextCrossRefState = if Set.size sel1 == 1 then CrossRefsLoading else CrossRefsIdle
+          nextDictionaryState = if Set.size sel1 == 1 then DictionaryLoading else DictionaryIdle
         in
         st
           { pericope = st.pericope { selected = sel1 }
           , crossRefs = nextCrossRefState
+          , dictionary = nextDictionaryState
+          , activeDictionaryTopic = Nothing
           }
       st <- H.get
       H.raise (DidUpdate st.pericope)
@@ -470,6 +537,16 @@ handle = case _ of
           case selectedVerse of
             Nothing -> pure unit
             Just (Verse v) -> do
+              dictionaryRes <- H.liftAff $ fetchVerseDictionary only
+              stillAfterDictionary <- stillSelected only
+              when stillAfterDictionary do
+                let dictionaryEntries = case dictionaryRes of
+                      Left _ -> []
+                      Right entries -> entries
+                H.modify_ _
+                  { dictionary = DictionaryLoaded dictionaryEntries
+                  , activeDictionaryTopic = Nothing
+                  }
               refsRes <- H.liftAff $ fetchCrossReferences only
               stillAfterRefs <- stillSelected only
               when stillAfterRefs do
@@ -529,10 +606,19 @@ handle = case _ of
     H.modify_ \st ->
       let
         shouldCloseSource = st.editingSource && p.source == st.pericope.source
+        shouldResetSelection = Set.isEmpty p.selected
+        nextCrossRefs =
+          if shouldResetSelection then CrossRefsIdle else st.crossRefs
+        nextDictionary =
+          if shouldResetSelection then DictionaryIdle else st.dictionary
+        nextTopic =
+          if shouldResetSelection then Nothing else st.activeDictionaryTopic
       in
       st
         { pericope = p
-        , crossRefs = CrossRefsIdle
+        , crossRefs = nextCrossRefs
+        , dictionary = nextDictionary
+        , activeDictionaryTopic = nextTopic
         , editingSource = if shouldCloseSource then false else st.editingSource
         , originalSource = if shouldCloseSource then Nothing else st.originalSource
         }
@@ -543,6 +629,15 @@ handle = case _ of
 
   OpenStory payload -> do
     H.raise (DidLoadStory payload)
+
+  ToggleDictionaryTopic ev topic -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    H.modify_ \st ->
+      let
+        next =
+          if st.activeDictionaryTopic == Just topic then Nothing else Just topic
+      in
+      st { activeDictionaryTopic = next }
 
 handleQuery
   :: forall a m
@@ -582,6 +677,8 @@ launchFetch address source = do
       H.modify_ \st -> st
         { pericope = st.pericope { verses = vs, selected = Set.empty }
         , crossRefs = CrossRefsIdle
+        , dictionary = DictionaryIdle
+        , activeDictionaryTopic = Nothing
         }
       st' <- H.get
       H.raise (DidUpdate st'.pericope)

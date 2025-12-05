@@ -641,64 +641,49 @@ CREATE OR REPLACE FUNCTION public.verse_dictionary(p_verse_id text)
   STABLE PARALLEL UNSAFE
   ROWS 1000
 AS $BODY$
-  WITH words AS (
-    SELECT DISTINCT
-           unnest(
-             string_to_array(
-               greek_to_betacode(public.raw_text(v.text)),
-               ' '
-             )
-           ) AS word
-    FROM public._all_verses v
-    WHERE v.id = p_verse_id
+WITH
+  words AS (
+    SELECT DISTINCT verse_word
+    FROM (
+      SELECT unnest(string_to_array(greek_to_betacode(public.raw_text(v.text)), ' ')) AS verse_word
+      FROM public._all_verses v
+      WHERE v.id = p_verse_id
+    ) t
+    WHERE btrim(verse_word) <> ''
   ),
   dict AS (
     SELECT
-        d.topic,
-        xmlparse(content '<root>' || d.definition || '</root>') AS x
-    FROM public._all_dictionary_entries d
-    JOIN words w
-      ON w.word = d.topic
+      w.verse_word,
+      d.topic,
+      CASE
+      WHEN d.definition IS NULL THEN NULL
+      ELSE xmlparse(content '<root>' || d.definition || '</root>')
+      END AS x
+    FROM words w
+    LEFT JOIN public._all_dictionary_entries d
+           ON w.verse_word = d.topic
   ),
   extracted AS (
     SELECT
+      d.verse_word,
       d.topic,
-
-      -- dt/a text from first <dl>
-      trim((xpath('/root/dl[1]/dt/a/text()', x))[1]::text) AS word,
-
-      -- meaning
-      trim(
-        array_to_string(
-          xpath('//span[@class="meaning"]//text()', x),
-          ' '
-        )
-      ) AS meaning,
-
-      -- main parse
-      trim(
-        (xpath('/root/dl[1]//span[@class="parse"][1]/text()', x))[1]::text
-      ) AS parse,
-
-      -- raw Greek forms (array of text)
-      xpath(
-        '/root/dl[1]//li/a[starts-with(@href, ''S:'')]/text()',
-        x
-      )::text[] AS forms_raw
-
+      trim((xpath('/root/dl[1]/dt/a/text()', x))[1]::text) AS lemma,
+      trim(array_to_string(xpath('//span[@class="meaning"]//text()', x), ' ')) AS meaning,
+      trim((xpath('/root/dl[1]//span[@class="parse"][1]/text()', x))[1]::text) AS parse,
+      xpath('/root/dl[1]//li/a[starts-with(@href, ''S:'')]/text()', x)::text[] AS forms_raw
     FROM dict d
   )
   SELECT
-      topic,
-      word,
-      meaning,
-      parse,
-      COALESCE(
-        (
-          SELECT array_agg(greek_to_betacode(f))
-          FROM unnest(forms_raw) f
-        ),
-        '{}'
-      ) AS forms
+    COALESCE(topic, verse_word) AS topic,
+    lemma AS word,
+    meaning,
+    parse,
+    COALESCE(
+      (
+        SELECT array_agg(greek_to_betacode(f))
+        FROM unnest(forms_raw) f
+      ),
+      '{}'
+    ) AS forms
   FROM extracted;
 $BODY$;
