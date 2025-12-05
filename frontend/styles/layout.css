@@ -64,6 +64,7 @@ h2 {
   box-sizing: border-box;
   border-width: 1px;
   border-style: solid;
+  border-radius: 0.25em;
   position: relative;
   z-index: 1;
 }
@@ -84,7 +85,10 @@ h2 {
 .search-input-group input:focus-visible,
 .didascalia .address.editing input:focus-visible,
 .didascalia .source.editing input:focus-visible {
-  outline: none;
+  outline-color: var(--cross-reference-color);
+  outline-offset: -1px;
+  outline-style: solid;
+  outline-width: thin;
 }
 
 .search-status {
@@ -193,6 +197,7 @@ h2 {
   box-sizing: border-box;
   border-width: 1px;
   border-style: solid;
+  border-radius: 0.25em;
 }
 
 .didascalia-handle {
