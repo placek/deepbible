@@ -1,6 +1,6 @@
 load database
   from {{SQLITE_PATH}}
-  into {{PGURL}}
+  into {{DATABASE_URL}}
 
  with include drop,
    create tables,
