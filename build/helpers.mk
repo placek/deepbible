@@ -141,3 +141,13 @@ helpers_sql := $(helpers_dir)/_helpers.sql
 apply-helpers: $(helpers_sql)
 	@$(call say,applying helpers)
 	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -f "$(helpers_sql)"
+
+.PHONY: embed-source
+
+embed-source:
+	@if [ -z "$(SOURCE)" ]; then \
+		printf 'SOURCE is required. Example: make embed-source SOURCE=BT_03\n'; \
+		exit 1; \
+	fi
+	@$(call say,embedding verses for source $(SOURCE))
+	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -c "INSERT INTO deepbible._embeddings (id, embedding) SELECT v.id, deepbible.generate_embedding(v.text) FROM deepbible._all_verses v WHERE v.source = '$(SOURCE)' ON CONFLICT (id) DO NOTHING;"
