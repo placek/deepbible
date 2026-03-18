@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Array as A
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.CodeUnits as CU
@@ -18,9 +18,9 @@ import Web.Event.Event (stopPropagation)
 import Web.UIEvent.KeyboardEvent (KeyboardEvent, key)
 import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
-import App.State (AppState, pericopesFromItems)
-import Domain.Bible.Types (AiSearchResult, Verse, VerseSearchResult)
-import Infrastructure.Api (fetchAiExplanations, fetchVerses, searchVerses)
+import App.State (AppState)
+import Domain.Bible.Types (Verse, VerseSearchResult)
+import Infrastructure.Api (fetchVerses, searchVerses)
 import Search.Highlight (splitSearchInput, toMaybeColor)
 
 -- Actions specific to search functionality
@@ -28,10 +28,7 @@ import Search.Highlight (splitSearchInput, toMaybeColor)
 data Action
   = UpdateSearchInput String
   | SubmitSearch
-  | SetAiSearchEnabled Boolean
   | ReceiveSearchResults (Either String (Array VerseSearchResult))
-  | ReceiveAiSearchResults (Either String (Array AiSearchResult))
-  | SelectAiSearchResult AiSearchResult
   | SelectSearchResult VerseSearchResult
   | FocusSearchInput
   | CloseSearchResults
@@ -45,22 +42,6 @@ renderSearchSection
   -> AppState
   -> H.ComponentHTML parentAction slots Aff
 renderSearchSection toParentAction st =
-  let
-    aiToggle =
-      if st.aiStatusUp then
-        [ HH.label
-            [ HP.class_ (HH.ClassName "search-ai-toggle") ]
-            [ HH.input
-                [ HP.attr (HH.AttrName "type") "checkbox"
-                , HP.checked st.aiSearchEnabled
-                , HE.onChecked (toParentAction <<< SetAiSearchEnabled)
-                ]
-            , HH.text "AI"
-            ]
-        ]
-      else
-        []
-  in
   HH.div
     [ HP.class_ (HH.ClassName "search-section") ]
     ( [ HH.div
@@ -83,7 +64,6 @@ renderSearchSection toParentAction st =
                         , HE.onKeyDown (toParentAction <<< HandleSearchKey)
                         ]
                     ]
-                    <> aiToggle
                   )
               ]
           ]
@@ -102,8 +82,6 @@ handleAction insertPericope action = case action of
 
   SubmitSearch -> do
     st <- H.get
-    let defaultAiSource = _.source <$> A.last (pericopesFromItems st.items)
-    let aiSearchActive = st.aiStatusUp && st.aiSearchEnabled
     let query = trim st.searchInput
     if query == "" then
       pure unit
@@ -111,31 +89,13 @@ handleAction insertPericope action = case action of
       H.modify_ \state -> state
         { searchInput = query
         , searchLoading = true
-        , aiSearchLoading = aiSearchActive
         , searchError = Nothing
-        , aiSearchError = Nothing
         , searchOpen = true
         , searchPerformed = true
         , searchResults = []
-        , aiSearchResults = []
         }
-      when aiSearchActive do
-        _ <- H.fork do
-          aiRes <- H.liftAff $ fetchAiExplanations query defaultAiSource
-          handleAction insertPericope (ReceiveAiSearchResults aiRes)
-        pure unit
       res <- H.liftAff $ searchVerses query
       handleAction insertPericope (ReceiveSearchResults res)
-
-  SetAiSearchEnabled enabled -> do
-    st <- H.get
-    let aiEnabled = st.aiStatusUp && enabled
-    H.put st
-      { aiSearchEnabled = aiEnabled
-      , aiSearchResults = if aiEnabled then st.aiSearchResults else []
-      , aiSearchLoading = if aiEnabled then st.aiSearchLoading else false
-      , aiSearchError = if aiEnabled then st.aiSearchError else Nothing
-      }
 
   ReceiveSearchResults res -> case res of
     Left err ->
@@ -151,33 +111,6 @@ handleAction insertPericope action = case action of
         , searchResults = results
         , searchOpen = true
         }
-
-  ReceiveAiSearchResults res -> case res of
-    Left err ->
-      H.modify_ \st -> st
-        { aiSearchLoading = false
-        , aiSearchError = Just err
-        , aiSearchResults = []
-        }
-    Right results ->
-      H.modify_ \st -> st
-        { aiSearchLoading = false
-        , aiSearchError = Nothing
-        , aiSearchResults = results
-        , searchOpen = true
-        }
-
-  SelectAiSearchResult aiResult -> do
-    let details = unwrap aiResult
-    H.modify_ \st -> st { searchOpen = false }
-    st <- H.get
-    case A.last (pericopesFromItems st.items) of
-      Nothing -> pure unit
-      Just lastPericope -> do
-        res <- H.liftAff $ fetchVerses details.address lastPericope.source
-        case res of
-          Left _ -> pure unit
-          Right verses -> insertPericope details.address lastPericope.source verses
 
   SelectSearchResult result -> do
     let details = unwrap result
@@ -215,24 +148,13 @@ renderSearchFeedback :: forall action slots. AppState -> Array (H.ComponentHTML 
 renderSearchFeedback st =
   let
     baseAttrs = [ HP.class_ (HH.ClassName "search-status") ]
-    aiEnabled = st.aiStatusUp && st.aiSearchEnabled
-    aiLoading = aiEnabled && st.aiSearchLoading
-    aiErrored = aiEnabled && (case st.aiSearchError of
-      Just _ -> true
-      Nothing -> false
-    )
-    hasAiResults = aiEnabled && not (A.null st.aiSearchResults)
-  in case st.searchLoading, st.searchError, aiLoading, aiErrored of
-       true, _, _, _ ->
+  in case st.searchLoading, st.searchError of
+       true, _ ->
          [ HH.div baseAttrs [ HH.text "Searching…" ] ]
-       false, Just err, _, _ ->
+       false, Just err ->
          [ HH.div baseAttrs [ HH.text err ] ]
-       false, Nothing, true, _ ->
-         [ HH.div baseAttrs [ HH.text "Fetching AI explanations…" ] ]
-       false, Nothing, false, true ->
-         [ HH.div baseAttrs [ HH.text ("AI error: " <> (fromMaybe "" st.aiSearchError)) ] ]
-       false, Nothing, false, false ->
-         if st.searchPerformed && A.null st.searchResults && not hasAiResults then
+       false, Nothing ->
+         if st.searchPerformed && A.null st.searchResults then
            [ HH.div baseAttrs [ HH.text "No results" ] ]
          else
            []
@@ -244,10 +166,8 @@ renderSearchResults
   -> Array (H.ComponentHTML parentAction slots Aff)
 renderSearchResults toParentAction st =
   let
-    aiResults = if st.aiStatusUp && st.aiSearchEnabled then st.aiSearchResults else []
     results =
-      (aiResults <#> renderAiSearchResult toParentAction)
-        <> (st.searchResults <#> renderSearchResult toParentAction)
+      st.searchResults <#> renderSearchResult toParentAction
   in
   if not st.searchOpen || A.null results then
     []
@@ -257,30 +177,6 @@ renderSearchResults toParentAction st =
         , HE.onClick (toParentAction <<< SearchResultsClick)
         ]
         results
-    ]
-
-renderAiSearchResult
-  :: forall parentAction slots
-   . (Action -> parentAction)
-  -> AiSearchResult
-  -> H.ComponentHTML parentAction slots Aff
-renderAiSearchResult toParentAction aiResult =
-  let
-    details = unwrap aiResult
-  in
-  HH.li
-    [ HP.class_ (HH.ClassName "search-result search-result--ai")
-    , HE.onClick \_ -> toParentAction (SelectAiSearchResult aiResult)
-    ]
-    [ HH.div
-        [ HP.class_ (HH.ClassName "search-result-meta") ]
-        [ HH.div
-            [ HP.class_ (HH.ClassName "search-result-address") ]
-            [ HH.text details.address ]
-        ]
-    , HH.div
-        [ HP.class_ (HH.ClassName "search-result-text") ]
-        [ HH.text details.explanation ]
     ]
 
 renderSearchResult

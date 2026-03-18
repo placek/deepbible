@@ -16,7 +16,7 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
-import Infrastructure.Api (checkAiStatus, fetchVerses)
+import Infrastructure.Api (fetchVerses)
 import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
@@ -83,15 +83,10 @@ initialState _ =
   , nextId: 1
   , searchInput: ""
   , searchResults: []
-  , aiSearchResults: []
-  , aiStatusUp: false
-  , aiSearchEnabled: false
   , searchOpen: false
   , searchPerformed: false
   , searchLoading: false
-  , aiSearchLoading: false
   , searchError: Nothing
-  , aiSearchError: Nothing
   }
 
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
@@ -155,8 +150,6 @@ renderFooter =
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
   Initialize -> do
-    aiStatusUp <- H.liftAff checkAiStatus
-    H.modify_ \st -> st { aiStatusUp = aiStatusUp }
     urlSeeds <- H.liftEffect loadSeeds
     let defaultSeeds =
           [ pericopeSeed "J 3,16-17" "NVUL"

@@ -8,24 +8,16 @@ import Affjax.RequestHeader as RH
 import Affjax.ResponseFormat as RF
 import Affjax.Web (driver)
 import Data.Argonaut ((:=), decodeJson, jsonEmptyObject, (~>))
-import Data.Argonaut.Decode.Error (JsonDecodeError)
 import Data.Argonaut.Core (fromString)
 import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
-import Domain.Bible.Types (Address, AiSearchResponse(..), AiSearchResult, Commentary, CrossReference, DictionaryEntry, Source, SourceInfo,
-                          Story, Verse, VerseId, VerseSearchResult)
+import Domain.Bible.Types (Address, Commentary, CrossReference, DictionaryEntry, Source, SourceInfo, Story, Verse, VerseId, VerseSearchResult)
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
-
-aiExplainUrl :: String
-aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search"
-
-aiStatusUrl :: String
-aiStatusUrl = "https://n8n.placki.cloud/webhook/deepbible/status"
 
 postgrestHeaders :: Array RH.RequestHeader
 postgrestHeaders =
@@ -132,35 +124,3 @@ searchVerses query = do
     Right json -> case decodeJson json.body of
       Left _ -> pure $ Left "Failed to search verses"
       Right verses -> pure $ Right verses
-
-fetchAiExplanations :: String -> Maybe Source -> Aff (Either String (Array AiSearchResult))
-fetchAiExplanations phrase maybeSource = do
-  let
-    payload =
-      case maybeSource of
-        Just source ->
-          ("phrase" := fromString phrase)
-            ~> ("source" := fromString source)
-            ~> jsonEmptyObject
-        Nothing ->
-          ("phrase" := fromString phrase) ~> jsonEmptyObject
-  res <- AX.post driver RF.json aiExplainUrl $ Just (RB.json payload)
-  case res of
-    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
-    Right json -> case decodeJson json.body of
-      Right explanations -> pure $ Right explanations
-      Left _ -> case decodeJson json.body of
-        Right (AiSearchResponse { output }) -> pure $ Right output
-        Left _ -> pure $ Left "Failed to fetch AI explanations"
-
-checkAiStatus :: Aff Boolean
-checkAiStatus = do
-  let
-    payload = ("status" := fromString "up") ~> jsonEmptyObject
-  res <- AX.post driver RF.json aiStatusUrl $ Just (RB.json payload)
-  case res of
-    Left _ -> pure false
-    Right json -> case decodeJson json.body :: Either JsonDecodeError { status :: String } of
-      Right { status }
-        | status == "up" -> pure true
-      _ -> pure false

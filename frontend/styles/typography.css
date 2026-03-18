@@ -206,10 +206,6 @@ n, s, m {
   text-decoration-line: underline;
 }
 
-.search-ai-toggle {
-  font-size: 0.9em;
-}
-
 .search-status {
   font-size: small;
   font-family: monospace;
@@ -223,11 +219,6 @@ n, s, m {
 
 .search-result-text {
   font-size: 0.9em;
-}
-
-.search-result--ai:after {
-  font-size: x-small;
-  content: "AI";
 }
 
 .note-render * {

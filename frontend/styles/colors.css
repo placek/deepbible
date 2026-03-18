@@ -158,12 +158,6 @@ input {
   background-color: var(--panel-background);
 }
 
-.search-ai-toggle {
-  color: var(--text-secondary);
-  background-color: var(--page-background);
-  box-shadow: 0 0 0 1px var(--panel-background);
-}
-
 .search-input-group input {
   background-color: transparent;
   color: transparent;
@@ -190,11 +184,6 @@ input {
 
 .search-result + .search-result {
   border-top-color: var(--panel-background);
-}
-
-.search-result--ai:after {
-  background-color: var(--panel-background);
-  color: var(--text-secondary);
 }
 
 .note-body {

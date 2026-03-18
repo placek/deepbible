@@ -71,13 +71,13 @@ h2 {
 
 .search-input-group input,
 .search-input-highlight {
-  padding-right: 3.25em;
+  padding-right: 0.75em;
 }
 
 .search-input-highlight {
   position: absolute;
   inset: 0;
-  padding: 0.5em 3.25em 0.5em 0.75em;
+  padding: 0.5em 0.75em 0.5em 0.75em;
   pointer-events: none;
   overflow: hidden;
 }
@@ -93,24 +93,6 @@ h2 {
 
 .search-status {
   margin-top: 0.5em;
-}
-
-.search-ai-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-  position: absolute;
-  right: 0.75em;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 0.15em 0.5em;
-  border-radius: 0.35em;
-  user-select: none;
-  z-index: 2;
-}
-
-.search-ai-toggle input {
-  margin: 0;
 }
 
 .search-results {
@@ -132,19 +114,6 @@ h2 {
   padding: 0.5em;
   position: relative;
   cursor: pointer;
-}
-
-.search-result--ai {
-  position: relative;
-  align-items: flex-start;
-  cursor: default;
-}
-
-.search-result--ai:after {
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  padding: 0.1em 0.5em;
 }
 
 .search-result-meta {

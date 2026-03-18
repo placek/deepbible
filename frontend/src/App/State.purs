@@ -3,7 +3,7 @@ module App.State where
 import Data.Array (mapMaybe)
 import Data.Maybe (Maybe(..))
 
-import Domain.Bible.Types (AiSearchResult, VerseSearchResult)
+import Domain.Bible.Types (VerseSearchResult)
 import Domain.Note.Types (Note)
 import Domain.Pericope.Types (Pericope)
 
@@ -23,13 +23,8 @@ type AppState =
   , nextId :: Int
   , searchInput :: String
   , searchResults :: Array VerseSearchResult
-  , aiSearchResults :: Array AiSearchResult
-  , aiStatusUp :: Boolean
-  , aiSearchEnabled :: Boolean
   , searchOpen :: Boolean
   , searchPerformed :: Boolean
   , searchLoading :: Boolean
-  , aiSearchLoading :: Boolean
   , searchError :: Maybe String
-  , aiSearchError :: Maybe String
   }
