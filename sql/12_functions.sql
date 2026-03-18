@@ -241,13 +241,6 @@ BEGIN
 END;
 $BODY$;
 
--- table to store verse embeddings
-CREATE TABLE IF NOT EXISTS deepbible._embeddings(
-  id text COLLATE pg_catalog."default" NOT NULL,
-  embedding vector(1024),
-  CONSTRAINT _embeddings_pkey PRIMARY KEY (id)
-)
-
 -- function to search for verses similar to the search_phrase using embedding vectors, optionally filtered by source and address
 DROP FUNCTION IF EXISTS deepbible.search_verses(text);
 CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text, limit_rows integer DEFAULT 50)

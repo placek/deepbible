@@ -10,6 +10,7 @@ sqls := $(helpers_dir)/01_all_verses.sql \
 				$(helpers_dir)/04_commentaries.sql \
 				$(helpers_dir)/05_stories.sql \
 				$(helpers_dir)/06_dictionary_entries.sql \
+				$(helpers_dir)/07_embeddings.sql \
 				$(helpers_dir)/11_errata.sql \
 				$(helpers_dir)/12_functions.sql \
 				$(helpers_dir)/13_postgrest.sql
@@ -116,6 +117,18 @@ $(helpers_dir)/06_dictionary_entries.sql: $(helpers_dir)
 	)
 	@echo >> "$@"
 	@echo "ORDER BY language, source_number;" >> "$@"
+	@echo >> "$@"
+
+# generates the embeddings.sql file with table for verse embeddings
+$(helpers_dir)/07_embeddings.sql: $(helpers_dir)
+	@$(call say,generating deepbible._embeddings helper SQL)
+	@echo "-- embeddings table for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE TABLE IF NOT EXISTS deepbible._embeddings(" >> "$@"
+	@echo "  id text COLLATE pg_catalog.\"default\" NOT NULL," >> "$@"
+	@echo "  embedding vector(1024)," >> "$@"
+	@echo "  CONSTRAINT _embeddings_pkey PRIMARY KEY (id)" >> "$@"
+	@echo ");" >> "$@"
 	@echo >> "$@"
 
 # combine helpers pieces
