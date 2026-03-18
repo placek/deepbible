@@ -231,6 +231,13 @@ BEGIN
 END;
 $BODY$;
 
+-- table to store verse embeddings
+CREATE TABLE IF NOT EXISTS public._embeddings(
+  id text COLLATE pg_catalog."default" NOT NULL,
+  embedding vector(1024),
+  CONSTRAINT _embeddings_pkey PRIMARY KEY (id)
+)
+
 -- searches for verses similar to the search_phrase using embedding vectors
 CREATE OR REPLACE FUNCTION public.search_embeddings(search_phrase text, limit_rows integer DEFAULT 50)
   RETURNS SETOF _embeddings
