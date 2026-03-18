@@ -4,12 +4,14 @@ import Prelude
 
 import Affjax as AX
 import Affjax.RequestBody as RB
+import Affjax.RequestHeader as RH
 import Affjax.ResponseFormat as RF
 import Affjax.Web (driver)
 import Data.Argonaut ((:=), decodeJson, jsonEmptyObject, (~>))
 import Data.Argonaut.Decode.Error (JsonDecodeError)
 import Data.Argonaut.Core (fromString)
 import Data.Either (Either(..))
+import Data.HTTP.Method (Method(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
@@ -25,12 +27,34 @@ aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search"
 aiStatusUrl :: String
 aiStatusUrl = "https://n8n.placki.cloud/webhook/deepbible/status"
 
+postgrestHeaders :: Array RH.RequestHeader
+postgrestHeaders =
+  [ RH.RequestHeader "Accept-Profile" "api"
+  , RH.RequestHeader "Content-Profile" "api"
+  ]
+
+postgrestGet url =
+  AX.request driver $ AX.defaultRequest
+    { url = url
+    , headers = postgrestHeaders
+    , responseFormat = RF.json
+    }
+
+postgrestPost url payload =
+  AX.request driver $ AX.defaultRequest
+    { method = Left POST
+    , url = url
+    , headers = postgrestHeaders
+    , responseFormat = RF.json
+    , content = Just (RB.json payload)
+    }
+
 fetchVerses :: Address -> Source -> Aff (Either String (Array Verse))
 fetchVerses address source = do
   let
     url = baseUrl <> "/rpc/fetch_verses_by_address"
     payload = ("p_address" := fromString address) ~> ("p_source" := fromString source) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -42,7 +66,7 @@ fetchSources = do
   let
     -- PostgREST requires an explicit select list; keep it minimal to avoid decoding failures.
     url = baseUrl <> "/_all_sources?select=name,description_short,language"
-  res <- AX.get driver RF.json url
+  res <- postgrestGet url
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -54,7 +78,7 @@ fetchCrossReferences verseId = do
   let
     url = baseUrl <> "/rpc/fetch_cross_references"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -66,7 +90,7 @@ fetchCommentaries verseId = do
   let
     url = baseUrl <> "/rpc/fetch_commentaries"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -78,7 +102,7 @@ fetchRenderedStories source address = do
   let
     url = baseUrl <> "/rpc/fetch_rendered_stories"
     payload = ("p_source" := fromString source) ~> ("p_address" := fromString address) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -90,7 +114,7 @@ fetchVerseDictionary verseId = do
   let
     url = baseUrl <> "/rpc/verse_dictionary"
     payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
@@ -102,7 +126,7 @@ searchVerses query = do
   let
     url = baseUrl <> "/rpc/search_verses"
     payload = ("search_phrase" := query) ~> jsonEmptyObject
-  res <- AX.post driver RF.json url $ Just (RB.json payload)
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of

@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS http;
 CREATE SCHEMA IF NOT EXISTS deepbible;
 
 -- HELPER SQL FUNCTIONS
@@ -173,7 +171,7 @@ $BODY$;
 -- retrieves verses by address, filtered by language, and source
 DROP FUNCTION IF EXISTS deepbible.fetch_verses_by_address(text, text);
 CREATE OR REPLACE FUNCTION deepbible.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text)
-  RETURNS SETOF public._all_verses
+  RETURNS SETOF deepbible._all_verses
   LANGUAGE 'plpgsql'
   COST 100
   VOLATILE PARALLEL UNSAFE
@@ -186,13 +184,13 @@ BEGIN
       b.book_number::int AS book_number,
       a.chapter::int     AS chapter,
       a.verse            AS verse
-    FROM public.parse_address(p_address) a
-    JOIN public._all_books b
+    FROM deepbible.parse_address(p_address) a
+    JOIN deepbible._all_books b
       ON a.book = b.short_name
   )
   SELECT v.*
   FROM addresses a
-  JOIN public._all_verses v
+  JOIN deepbible._all_verses v
     ON v.book_number = a.book_number
    AND (a.chapter IS NULL OR v.chapter = a.chapter)
    AND (a.verse IS NULL OR v.verse = a.verse)

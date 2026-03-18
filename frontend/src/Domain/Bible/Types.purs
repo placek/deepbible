@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Argonaut (class DecodeJson, decodeJson, (.:), (.:?))
 import Data.String (Pattern(..), Replacement(..), replace)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype)
 
 -- Core domain primitives
@@ -104,11 +104,19 @@ instance decodeVerse :: DecodeJson Verse where
     book_number <- obj .: "book_number"
     chapter <- obj .: "chapter"
     verse <- obj .: "verse"
-    verse_id <- obj .: "verse_id"
     language <- obj .: "language"
     source <- obj .: "source"
     address <- obj .: "address"
     text <- obj .: "text"
+    maybeVerseId <- obj .:? "verse_id"
+    maybeId <- obj .:? "id"
+    let
+      -- PostgREST view currently returns "id"; prefer "verse_id" when present.
+      fallbackId = source <> ":" <> address
+      verse_id =
+        case maybeVerseId of
+          Just v -> v
+          Nothing -> fromMaybe fallbackId maybeId
     pure $ Verse { book_number
                  , chapter
                  , verse

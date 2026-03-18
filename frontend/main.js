@@ -9530,23 +9530,6 @@ var defaultRequest = /* @__PURE__ */ function() {
     timeout: Nothing.value
   };
 }();
-var get2 = function(driver2) {
-  return function(rf) {
-    return function(u2) {
-      return request2(driver2)({
-        method: defaultRequest.method,
-        headers: defaultRequest.headers,
-        content: defaultRequest.content,
-        username: defaultRequest.username,
-        password: defaultRequest.password,
-        withCredentials: defaultRequest.withCredentials,
-        timeout: defaultRequest.timeout,
-        url: u2,
-        responseFormat: rf
-      });
-    };
-  };
-};
 var post = function(driver2) {
   return function(rf) {
     return function(u2) {
@@ -10020,20 +10003,34 @@ var decodeVerse = {
       return bind6(getField1(obj)("book_number"))(function(book_number) {
         return bind6(getField1(obj)("chapter"))(function(chapter) {
           return bind6(getField1(obj)("verse"))(function(verse) {
-            return bind6(getField3(obj)("verse_id"))(function(verse_id) {
-              return bind6(getField3(obj)("language"))(function(language2) {
-                return bind6(getField3(obj)("source"))(function(source2) {
-                  return bind6(getField3(obj)("address"))(function(address2) {
-                    return bind6(getField3(obj)("text"))(function(text6) {
-                      return pure11({
-                        book_number,
-                        chapter,
-                        verse,
-                        verse_id,
-                        language: language2,
-                        source: source2,
-                        address: address2,
-                        text: text6
+            return bind6(getField3(obj)("language"))(function(language2) {
+              return bind6(getField3(obj)("source"))(function(source2) {
+                return bind6(getField3(obj)("address"))(function(address2) {
+                  return bind6(getField3(obj)("text"))(function(text6) {
+                    return bind6(getFieldOptional$prime3(obj)("verse_id"))(function(maybeVerseId) {
+                      return bind6(getFieldOptional$prime3(obj)("id"))(function(maybeId) {
+                        var fallbackId = source2 + (":" + address2);
+                        var verse_id = function() {
+                          if (maybeVerseId instanceof Just) {
+                            return maybeVerseId.value0;
+                          }
+                          ;
+                          if (maybeVerseId instanceof Nothing) {
+                            return fromMaybe(fallbackId)(maybeId);
+                          }
+                          ;
+                          throw new Error("Failed pattern match at Domain.Bible.Types (line 117, column 9 - line 119, column 50): " + [maybeVerseId.constructor.name]);
+                        }();
+                        return pure11({
+                          book_number,
+                          chapter,
+                          verse,
+                          verse_id,
+                          language: language2,
+                          source: source2,
+                          address: address2,
+                          text: text6
+                        });
                       });
                     });
                   });
@@ -10198,11 +10195,42 @@ var decodeJson7 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeRecord(/* @__
 })()())());
 var decodeJson8 = /* @__PURE__ */ decodeJson(/* @__PURE__ */ decodeArray2(decodeAiSearchResult));
 var decodeJson9 = /* @__PURE__ */ decodeJson(decodeAiSearchResponse);
+var postgrestHeaders = /* @__PURE__ */ function() {
+  return [new RequestHeader("Accept-Profile", "api"), new RequestHeader("Content-Profile", "api")];
+}();
+var postgrestPost = function(url) {
+  return function(payload) {
+    return request2(driver)({
+      username: defaultRequest.username,
+      password: defaultRequest.password,
+      withCredentials: defaultRequest.withCredentials,
+      timeout: defaultRequest.timeout,
+      method: new Left(POST2.value),
+      url,
+      headers: postgrestHeaders,
+      responseFormat: json2,
+      content: new Just(json(payload))
+    });
+  };
+};
+var postgrestGet = function(url) {
+  return request2(driver)({
+    method: defaultRequest.method,
+    content: defaultRequest.content,
+    username: defaultRequest.username,
+    password: defaultRequest.password,
+    withCredentials: defaultRequest.withCredentials,
+    timeout: defaultRequest.timeout,
+    url,
+    headers: postgrestHeaders,
+    responseFormat: json2
+  });
+};
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCommentaries = function(verseId) {
   var url = baseUrl + "/rpc/fetch_commentaries";
   var payload = extend4(assoc3("p_verse_id")(id2(verseId)))(jsonEmptyObject);
-  return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+  return bind7(postgrestPost(url)(payload))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10217,16 +10245,16 @@ var fetchCommentaries = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 72, column 19 - line 74, column 54): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 96, column 19 - line 98, column 54): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 70, column 3 - line 74, column 54): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 94, column 3 - line 98, column 54): " + [res.constructor.name]);
   });
 };
 var fetchCrossReferences = function(verseId) {
   var url = baseUrl + "/rpc/fetch_cross_references";
   var payload = extend4(assoc3("p_verse_id")(id2(verseId)))(jsonEmptyObject);
-  return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+  return bind7(postgrestPost(url)(payload))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10241,17 +10269,17 @@ var fetchCrossReferences = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 60, column 19 - line 62, column 38): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 84, column 19 - line 86, column 38): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 58, column 3 - line 62, column 38): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 82, column 3 - line 86, column 38): " + [res.constructor.name]);
   });
 };
 var fetchRenderedStories = function(source2) {
   return function(address2) {
     var url = baseUrl + "/rpc/fetch_rendered_stories";
     var payload = extend4(assoc3("p_source")(id2(source2)))(extend4(assoc3("p_address")(id2(address2)))(jsonEmptyObject));
-    return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+    return bind7(postgrestPost(url)(payload))(function(res) {
       if (res instanceof Left) {
         return pure14(new Left("HTTP error: " + printError(res.value0)));
       }
@@ -10266,16 +10294,16 @@ var fetchRenderedStories = function(source2) {
           return pure14(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 84, column 19 - line 86, column 44): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 108, column 19 - line 110, column 44): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 82, column 3 - line 86, column 44): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 106, column 3 - line 110, column 44): " + [res.constructor.name]);
     });
   };
 };
 var fetchSources = /* @__PURE__ */ function() {
   var url = baseUrl + "/_all_sources?select=name,description_short,language";
-  return bind7(get2(driver)(json2)(url))(function(res) {
+  return bind7(postgrestGet(url))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10290,16 +10318,16 @@ var fetchSources = /* @__PURE__ */ function() {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 48, column 19 - line 50, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 72, column 19 - line 74, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 46, column 3 - line 50, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 70, column 3 - line 74, column 44): " + [res.constructor.name]);
   });
 }();
 var fetchVerseDictionary = function(verseId) {
   var url = baseUrl + "/rpc/verse_dictionary";
   var payload = extend4(assoc3("p_verse_id")(id2(verseId)))(jsonEmptyObject);
-  return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+  return bind7(postgrestPost(url)(payload))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10314,17 +10342,17 @@ var fetchVerseDictionary = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 96, column 19 - line 98, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 120, column 19 - line 122, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 94, column 3 - line 98, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 118, column 3 - line 122, column 44): " + [res.constructor.name]);
   });
 };
 var fetchVerses = function(address2) {
   return function(source2) {
     var url = baseUrl + "/rpc/fetch_verses_by_address";
     var payload = extend4(assoc3("p_address")(id2(address2)))(extend4(assoc3("p_source")(id2(source2)))(jsonEmptyObject));
-    return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+    return bind7(postgrestPost(url)(payload))(function(res) {
       if (res instanceof Left) {
         return pure14(new Left("HTTP error: " + printError(res.value0)));
       }
@@ -10339,17 +10367,17 @@ var fetchVerses = function(address2) {
           return pure14(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 36, column 19 - line 38, column 42): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 60, column 19 - line 62, column 42): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 34, column 3 - line 38, column 42): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 58, column 3 - line 62, column 42): " + [res.constructor.name]);
     });
   };
 };
 var searchVerses = function(query3) {
   var url = baseUrl + "/rpc/search_verses";
   var payload = extend4(assoc1("search_phrase")(query3))(jsonEmptyObject);
-  return bind7(post(driver)(json2)(url)(new Just(json(payload))))(function(res) {
+  return bind7(postgrestPost(url)(payload))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10364,10 +10392,10 @@ var searchVerses = function(query3) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 108, column 19 - line 110, column 42): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 132, column 19 - line 134, column 42): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 106, column 3 - line 110, column 42): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 130, column 3 - line 134, column 42): " + [res.constructor.name]);
   });
 };
 var aiStatusUrl = "https://n8n.placki.cloud/webhook/deepbible/status";
@@ -10387,7 +10415,7 @@ var checkAiStatus = /* @__PURE__ */ function() {
       return pure14(false);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 137, column 3 - line 142, column 22): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 161, column 3 - line 166, column 22): " + [res.constructor.name]);
   });
 }();
 var aiExplainUrl = "https://n8n.placki.cloud/webhook/deepbible/ai-search";
@@ -10402,7 +10430,7 @@ var fetchAiExplanations = function(phrase) {
         return extend4(assoc3("phrase")(id2(phrase)))(jsonEmptyObject);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 116, column 7 - line 122, column 61): " + [maybeSource.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 140, column 7 - line 146, column 61): " + [maybeSource.constructor.name]);
     }();
     return bind7(post(driver)(json2)(aiExplainUrl)(new Just(json(payload))))(function(res) {
       if (res instanceof Left) {
@@ -10425,13 +10453,13 @@ var fetchAiExplanations = function(phrase) {
             return pure14(new Left("Failed to fetch AI explanations"));
           }
           ;
-          throw new Error("Failed pattern match at Infrastructure.Api (line 128, column 17 - line 130, column 64): " + [v1.constructor.name]);
+          throw new Error("Failed pattern match at Infrastructure.Api (line 152, column 17 - line 154, column 64): " + [v1.constructor.name]);
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 126, column 19 - line 130, column 64): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 150, column 19 - line 154, column 64): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 124, column 3 - line 130, column 64): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 148, column 3 - line 154, column 64): " + [res.constructor.name]);
     });
   };
 };

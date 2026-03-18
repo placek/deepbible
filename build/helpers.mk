@@ -36,18 +36,15 @@ $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
 	@$(call say,generating deepbible._all_verses helper SQL)
 	@echo "-- all verses for deepbible schema" > "$@"
 	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
-	@echo "DROP INDEX IF EXISTS deepbible.idx__all_verses_text_search;" >> "$@"
 	@echo "DROP MATERIALIZED VIEW IF EXISTS deepbible._all_verses;" >> "$@"
 	@echo "CREATE MATERIALIZED VIEW deepbible._all_verses AS" >> "$@"
 	@$(foreach lang,$(langs), \
 		printf "SELECT id, language, source, book, book_name, address,\n" >> "$@"; \
-		printf "       source_number, book_number, chapter, verse, text,\n" >> "$@"; \
-		printf "       to_tsvector('simple', COALESCE(text, '')) AS text_search\n" >> "$@"; \
+		printf "       source_number, book_number, chapter, verse, text\n" >> "$@"; \
 		printf "FROM $(lang)._all_verses" >> "$@"; \
 		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; else printf "\n" >> "$@"; fi; \
 	)
 	@echo ";" >> "$@"
-	@echo "CREATE INDEX idx__all_verses_text_search ON deepbible._all_verses USING GIN (text_search);" >> "$@"
 	@echo >> "$@"
 
 # generates the books.sql file with view for all languages
@@ -124,6 +121,8 @@ $(helpers_dir)/07_embeddings.sql: $(helpers_dir)
 	@$(call say,generating deepbible._embeddings helper SQL)
 	@echo "-- embeddings table for deepbible schema" > "$@"
 	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE EXTENSION IF NOT EXISTS vector;" >> "$@"
+	@echo "CREATE EXTENSION IF NOT EXISTS http;" >> "$@"
 	@echo "CREATE TABLE IF NOT EXISTS deepbible._embeddings(" >> "$@"
 	@echo "  id text COLLATE pg_catalog.\"default\" NOT NULL," >> "$@"
 	@echo "  embedding vector(1024)," >> "$@"
