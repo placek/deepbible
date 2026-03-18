@@ -215,13 +215,22 @@ AS $BODY$
 DECLARE
   v_source  text;
   v_address text;
+  v_book    text;
+  v_filter  text;
   v_term    text;
 BEGIN
   v_source := substring(search_phrase from '@(\S+)');
-  v_address := substring(search_phrase from '~(\S*(\s+\d+([,:][\d\-\.]+)?)?)');
-  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S*(\s+\d+([,:][\d\-\.]+)?)?)', '', 'gi'));
+  v_filter := substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)');
+  IF v_filter IS NOT NULL THEN
+    IF v_filter ~ '\s+\d' THEN
+      v_address := v_filter;
+    ELSE
+      v_book := v_filter;
+    END IF;
+  END IF;
+  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)', '', 'gi'));
 
-  RAISE NOTICE 'search_verses: source=%, address=%, term=%', v_source, v_address, v_term;
+  RAISE NOTICE 'search_verses: source=%, address=%, book=%, term=%', v_source, v_address, v_book, v_term;
 
   IF v_term IS NULL OR v_term !~ '\w' THEN
     v_term := NULL;
@@ -232,6 +241,24 @@ BEGIN
     SELECT *
     FROM public.fetch_verses_by_address(v_address, v_source, true) v
     WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
+    ORDER BY CASE
+             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
+             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
+             END DESC
+    LIMIT 500;
+
+  ELSIF v_book IS NOT NULL THEN
+  RETURN QUERY
+    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, public.raw_text(v.text)
+    FROM public._all_verses v
+    WHERE (v_source  IS NULL OR v.source = v_source)
+      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
+      AND EXISTS (
+        SELECT 1
+        FROM public._all_books b
+        WHERE b.book_number::int = v.book_number::int
+          AND b.short_name = v_book
+      )
     ORDER BY CASE
              WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
              ELSE similarity(v.text, COALESCE(v_term, search_phrase))
