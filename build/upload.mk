@@ -13,7 +13,7 @@ upload-cross-references: $(cross_refs_db)
 	SQLITE_PATH="$$(realpath $<)"; \
 	DATABASE_URL="$(DATABASE_URL)"; \
 	TABLES="'_cross_references'"; \
-	SCHEMA="public"; \
+	SCHEMA="deepbible"; \
 	sed "s#{{SQLITE_PATH}}#$$SQLITE_PATH#g; s#{{DATABASE_URL}}#$$DATABASE_URL#g; s#{{SCHEMA}}#$$SCHEMA#g; s#{{TABLES}}#$$TABLES#g" upload.load > /tmp/pgloader.$*.load; \
 	pgloader /tmp/pgloader.$*.load
 

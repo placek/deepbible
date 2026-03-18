@@ -218,7 +218,7 @@ UPDATE pl._all_verses
   WHERE text ~ '<<';
 
 -- add missing reference
-INSERT INTO public._cross_references (book_number, chapter, verse, b1, c1, v1, rate)
+INSERT INTO deepbible._cross_references (book_number, chapter, verse, b1, c1, v1, rate)
 VALUES (490, 1, 43, 100, 6, 9, 0);
 
 -- fix wrong markers in NA28
@@ -236,4 +236,3 @@ WHERE marker LIKE '%' || U&'\2009' || '%';
 UPDATE en._commentaries
   SET marker = replace(marker, U&'\2009', '')
 WHERE marker LIKE '%' || U&'\2009' || '%';
-

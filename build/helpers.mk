@@ -32,11 +32,12 @@ $(helpers_dir)/%.sql: $(sql_dir)/%.sql | $(helpers_dir)
 
 # generates the all_verses.sql file with materialized view for all languages
 $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
-	@$(call say,generating public._all_verses helper SQL)
-	@echo "-- all verses for public schema" > "$@"
-	@echo "DROP INDEX IF EXISTS public.idx__all_verses_text_search;" >> "$@"
-	@echo "DROP MATERIALIZED VIEW IF EXISTS public._all_verses;" >> "$@"
-	@echo "CREATE MATERIALIZED VIEW public._all_verses AS" >> "$@"
+	@$(call say,generating deepbible._all_verses helper SQL)
+	@echo "-- all verses for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "DROP INDEX IF EXISTS deepbible.idx__all_verses_text_search;" >> "$@"
+	@echo "DROP MATERIALIZED VIEW IF EXISTS deepbible._all_verses;" >> "$@"
+	@echo "CREATE MATERIALIZED VIEW deepbible._all_verses AS" >> "$@"
 	@$(foreach lang,$(langs), \
 		printf "SELECT id, language, source, book, book_name, address,\n" >> "$@"; \
 		printf "       source_number, book_number, chapter, verse, text,\n" >> "$@"; \
@@ -45,14 +46,15 @@ $(helpers_dir)/01_all_verses.sql: $(helpers_dir)
 		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; else printf "\n" >> "$@"; fi; \
 	)
 	@echo ";" >> "$@"
-	@echo "CREATE INDEX idx__all_verses_text_search ON public._all_verses USING GIN (text_search);" >> "$@"
+	@echo "CREATE INDEX idx__all_verses_text_search ON deepbible._all_verses USING GIN (text_search);" >> "$@"
 	@echo >> "$@"
 
 # generates the books.sql file with view for all languages
 $(helpers_dir)/02_books.sql: $(helpers_dir)
-	@$(call say,generating public._all_books helper SQL)
-	@echo "-- all books for public schema" > "$@"
-	@echo "CREATE OR REPLACE VIEW public._all_books AS" >> "$@"
+	@$(call say,generating deepbible._all_books helper SQL)
+	@echo "-- all books for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE OR REPLACE VIEW deepbible._all_books AS" >> "$@"
 	@$(foreach lang,$(langs), \
 		printf "SELECT * FROM $(lang)._books" >> "$@"; \
 		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
@@ -63,9 +65,10 @@ $(helpers_dir)/02_books.sql: $(helpers_dir)
 
 # generates the sources.sql file with view for all languages
 $(helpers_dir)/03_sources.sql: $(helpers_dir)
-	@$(call say,generating public._all_sources helper SQL)
-	@echo "-- all sources for public schema" > "$@"
-	@echo "CREATE OR REPLACE VIEW public._all_sources AS" >> "$@"
+	@$(call say,generating deepbible._all_sources helper SQL)
+	@echo "-- all sources for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE OR REPLACE VIEW deepbible._all_sources AS" >> "$@"
 	@$(foreach lang,$(langs), \
 		printf "SELECT * FROM $(lang)._sources" >> "$@"; \
 		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
@@ -76,9 +79,10 @@ $(helpers_dir)/03_sources.sql: $(helpers_dir)
 
 # generates the commentaries.sql file with view for all languages
 $(helpers_dir)/04_commentaries.sql: $(helpers_dir)
-	@$(call say,generating public._all_commentaries helper SQL)
-	@echo "-- all commentaries for public schema" > "$@"
-	@echo "CREATE OR REPLACE VIEW public._all_commentaries AS" >> "$@"
+	@$(call say,generating deepbible._all_commentaries helper SQL)
+	@echo "-- all commentaries for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE OR REPLACE VIEW deepbible._all_commentaries AS" >> "$@"
 	@$(foreach lang,$(langs), \
 		printf "SELECT * FROM $(lang)._commentaries" >> "$@"; \
 		if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
@@ -88,9 +92,10 @@ $(helpers_dir)/04_commentaries.sql: $(helpers_dir)
 
 # generates the stories.sql file with view for all languages
 $(helpers_dir)/05_stories.sql: $(helpers_dir)
-	@$(call say,generating public._all_stories helper SQL)
-	@echo "-- all stories for public schema" > "$@"
-	@echo "CREATE OR REPLACE VIEW public._all_stories AS" >> "$@"
+	@$(call say,generating deepbible._all_stories helper SQL)
+	@echo "-- all stories for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE OR REPLACE VIEW deepbible._all_stories AS" >> "$@"
 	@$(foreach lang,$(langs), \
 	  printf "SELECT * FROM $(lang)._stories" >> "$@"; \
 	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \
@@ -101,9 +106,10 @@ $(helpers_dir)/05_stories.sql: $(helpers_dir)
 
 # generates the dictionary_entries.sql file with view for all languages
 $(helpers_dir)/06_dictionary_entries.sql: $(helpers_dir)
-	@$(call say,generating public._all_dictionary_entries helper SQL)
-	@echo "-- all dictionary entries for public schema" > "$@"
-	@echo "CREATE OR REPLACE VIEW public._all_dictionary_entries AS" >> "$@"
+	@$(call say,generating deepbible._all_dictionary_entries helper SQL)
+	@echo "-- all dictionary entries for deepbible schema" > "$@"
+	@echo "CREATE SCHEMA IF NOT EXISTS deepbible;" >> "$@"
+	@echo "CREATE OR REPLACE VIEW deepbible._all_dictionary_entries AS" >> "$@"
 	@$(foreach lang,$(langs), \
 	  printf "SELECT * FROM $(lang)._dictionary_entries" >> "$@"; \
 	  if [ "$(lang)" != "$(lastword $(langs))" ]; then printf "\nUNION ALL\n" >> "$@"; fi; \

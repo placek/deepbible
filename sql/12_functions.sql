@@ -1,11 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS http;
+CREATE SCHEMA IF NOT EXISTS deepbible;
 
 -- HELPER SQL FUNCTIONS
 
 -- removes basic XML formatting tags from text
-DROP FUNCTION IF EXISTS public.text_without_format(text);
-CREATE OR REPLACE FUNCTION public.text_without_format(input text)
+DROP FUNCTION IF EXISTS deepbible.text_without_format(text);
+CREATE OR REPLACE FUNCTION deepbible.text_without_format(input text)
   RETURNS text
   LANGUAGE 'sql'
   COST 100
@@ -15,8 +16,8 @@ AS $BODY$
 $BODY$;
 
 -- removes metadata XML tags from text
-DROP FUNCTION IF EXISTS public.text_without_metadata(text);
-CREATE OR REPLACE FUNCTION public.text_without_metadata(input text)
+DROP FUNCTION IF EXISTS deepbible.text_without_metadata(text);
+CREATE OR REPLACE FUNCTION deepbible.text_without_metadata(input text)
   RETURNS text
   LANGUAGE 'plpgsql'
   COST 100
@@ -36,19 +37,19 @@ END;
 $BODY$;
 
 -- removes all known XML tags from text
-DROP FUNCTION IF EXISTS public.raw_text(text);
-CREATE OR REPLACE FUNCTION public.raw_text(input text)
+DROP FUNCTION IF EXISTS deepbible.raw_text(text);
+CREATE OR REPLACE FUNCTION deepbible.raw_text(input text)
   RETURNS text
   LANGUAGE 'sql'
   COST 100
   IMMUTABLE PARALLEL UNSAFE
 AS $BODY$
-  SELECT regexp_replace(public.text_without_metadata(public.text_without_format(input)), '</?(J|i)>', '', 'g')
+  SELECT regexp_replace(deepbible.text_without_metadata(deepbible.text_without_format(input)), '</?(J|i)>', '', 'g')
 $BODY$;
 
 -- extracts words with metadata into jsonb
-DROP FUNCTION IF EXISTS public.collect_tags(text);
-CREATE OR REPLACE FUNCTION public.collect_tags(input text)
+DROP FUNCTION IF EXISTS deepbible.collect_tags(text);
+CREATE OR REPLACE FUNCTION deepbible.collect_tags(input text)
   RETURNS jsonb
   LANGUAGE plpgsql
   COST 100
@@ -59,7 +60,7 @@ DECLARE
   result  jsonb;
 BEGIN
   -- optional, keep your preprocessing if it's still desired
-  cleaned := public.text_without_format(input);
+  cleaned := deepbible.text_without_format(input);
   cleaned := replace(cleaned, '<i>', '[');
   cleaned := replace(cleaned, '</i>', ']');
 
@@ -90,8 +91,8 @@ END;
 $BODY$;
 
 -- fetches a verse along with its metadata
-DROP FUNCTION IF EXISTS public.fetch_verse_with_metadata(text);
-CREATE OR REPLACE FUNCTION public.fetch_verse_with_metadata(p_verse_id text)
+DROP FUNCTION IF EXISTS deepbible.fetch_verse_with_metadata(text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_verse_with_metadata(p_verse_id text)
   RETURNS TABLE(verse_id text, metadata jsonb)
   LANGUAGE 'plpgsql'
   COST 100
@@ -102,15 +103,15 @@ BEGIN
   RETURN QUERY
   SELECT
     v.id AS verse_id,
-    public.collect_tags(v.text) AS metadata
-  FROM public._all_verses v
+    deepbible.collect_tags(v.text) AS metadata
+  FROM deepbible._all_verses v
   WHERE v.id = p_verse_id;
 END;
 $BODY$;
 
 -- parses a Bible address
-DROP FUNCTION IF EXISTS public.parse_address(text);
-CREATE OR REPLACE FUNCTION public.parse_address(address text)
+DROP FUNCTION IF EXISTS deepbible.parse_address(text);
+CREATE OR REPLACE FUNCTION deepbible.parse_address(address text)
   RETURNS TABLE(book text, chapter integer, verse integer)
   LANGUAGE 'plpgsql'
   COST 100
@@ -170,8 +171,8 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-DROP FUNCTION IF EXISTS public.fetch_verses_by_address(text, text, boolean);
-CREATE OR REPLACE FUNCTION public.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text, p_raw boolean DEFAULT false)
+DROP FUNCTION IF EXISTS deepbible.fetch_verses_by_address(text, text, boolean);
+CREATE OR REPLACE FUNCTION deepbible.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text, p_raw boolean DEFAULT false)
   RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -185,8 +186,8 @@ BEGIN
       b.book_number::int AS book_number,
       a.chapter::int     AS chapter,
       a.verse            AS verse
-    FROM parse_address(p_address) a
-    JOIN public._all_books b
+    FROM deepbible.parse_address(p_address) a
+    JOIN deepbible._all_books b
       ON a.book = b.short_name
   )
   SELECT DISTINCT
@@ -198,11 +199,11 @@ BEGIN
     v.source,
     v.address,
     CASE
-    WHEN p_raw THEN public.raw_text(v.text)
-    ELSE public. text_without_format(v.text)
+    WHEN p_raw THEN deepbible.raw_text(v.text)
+    ELSE deepbible.text_without_format(v.text)
     END AS text
   FROM addresses a
-  JOIN public._all_verses v
+  JOIN deepbible._all_verses v
     ON v.book_number = a.book_number
    AND v.chapter = a.chapter
    AND (a.verse IS NULL OR v.verse = a.verse)
@@ -213,7 +214,7 @@ END;
 $BODY$;
 
 -- fetches embedding vector for a given text using Ollama API
-CREATE OR REPLACE FUNCTION public.generate_embedding(input_text text, model_name text DEFAULT 'bge-m3'::text)
+CREATE OR REPLACE FUNCTION deepbible.generate_embedding(input_text text, model_name text DEFAULT 'bge-m3'::text)
   RETURNS vector
   LANGUAGE 'plpgsql'
   COST 100
@@ -241,16 +242,16 @@ END;
 $BODY$;
 
 -- table to store verse embeddings
-CREATE TABLE IF NOT EXISTS public._embeddings(
+CREATE TABLE IF NOT EXISTS deepbible._embeddings(
   id text COLLATE pg_catalog."default" NOT NULL,
   embedding vector(1024),
   CONSTRAINT _embeddings_pkey PRIMARY KEY (id)
 )
 
 -- function to search for verses similar to the search_phrase using embedding vectors, optionally filtered by source and address
-DROP FUNCTION IF EXISTS public.search_verses(text);
-CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text, limit_rows integer DEFAULT 50)
-  RETURNS SETOF public._all_verses
+DROP FUNCTION IF EXISTS deepbible.search_verses(text);
+CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text, limit_rows integer DEFAULT 50)
+  RETURNS SETOF deepbible._all_verses
   LANGUAGE 'plpgsql'
 AS $BODY$
 DECLARE
@@ -262,7 +263,7 @@ BEGIN
   v_source       := substring(search_phrase from '@(\S+)');
   v_address      := substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)');
   v_clean_phrase := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)', '', 'gi'));
-  v_vector       := generate_embedding(v_clean_phrase);
+  v_vector       := deepbible.generate_embedding(v_clean_phrase);
   IF v_address IS NOT NULL THEN
     RETURN QUERY
     WITH addresses AS (
@@ -270,17 +271,17 @@ BEGIN
         b.book_number::int AS book_number,
         a.chapter::int     AS chapter,
         a.verse            AS verse
-      FROM public.parse_address(v_address) a
-      JOIN public._all_books b
+      FROM deepbible.parse_address(v_address) a
+      JOIN deepbible._all_books b
         ON a.book = b.short_name
     )
     SELECT v.*
     FROM addresses a
-    JOIN public._all_verses v
+    JOIN deepbible._all_verses v
       ON v.book_number = a.book_number
      AND (a.chapter IS NULL OR v.chapter = a.chapter)
      AND (a.verse IS NULL OR v.verse = a.verse)
-    JOIN public._embeddings e
+    JOIN deepbible._embeddings e
       ON e.id = v.id
     WHERE (v_source IS NULL OR v.source = v_source)
     ORDER BY e.embedding <=> v_vector ASC
@@ -288,8 +289,8 @@ BEGIN
   ELSE
     RETURN QUERY
     SELECT v.*
-    FROM public._all_verses v
-    JOIN public._embeddings e
+    FROM deepbible._all_verses v
+    JOIN deepbible._embeddings e
       ON e.id = v.id
     WHERE (v_source IS NULL OR v.source = v_source)
     ORDER BY e.embedding <=> v_vector ASC
@@ -299,8 +300,8 @@ END;
 $BODY$;
 
 -- retrieves commentaries for a given verse_id
-DROP FUNCTION IF EXISTS public.fetch_commentaries(text);
-CREATE OR REPLACE FUNCTION public.fetch_commentaries(p_verse_id text)
+DROP FUNCTION IF EXISTS deepbible.fetch_commentaries(text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_commentaries(p_verse_id text)
   RETURNS TABLE(marker text, text text)
   LANGUAGE 'plpgsql'
   COST 100
@@ -308,11 +309,11 @@ CREATE OR REPLACE FUNCTION public.fetch_commentaries(p_verse_id text)
 AS $BODY$
 DECLARE
   v_language          text;
-  v_source_number     public._all_commentaries.source_number%TYPE;
+  v_source_number     deepbible._all_commentaries.source_number%TYPE;
   v_book_number_text  text;
   v_chapter_text      text;
   v_verse_text        text;
-  v_book_number       public._all_commentaries.book_number%TYPE;
+  v_book_number       deepbible._all_commentaries.book_number%TYPE;
   v_chapter           integer;
   v_verse             integer;
   v_position          numeric;
@@ -342,7 +343,7 @@ BEGIN
   SELECT
     ac.marker,
     ac.text
-  FROM public._all_commentaries ac
+  FROM deepbible._all_commentaries ac
   WHERE ac.language      = v_language
     AND ac.source_number = v_source_number
     AND ac.book_number   = v_book_number
@@ -353,8 +354,8 @@ END;
 $BODY$;
 
 -- materialized view of rendered stories
-DROP MATERIALIZED VIEW IF EXISTS public._rendered_stories;
-CREATE MATERIALIZED VIEW public._rendered_stories AS
+DROP MATERIALIZED VIEW IF EXISTS deepbible._rendered_stories;
+CREATE MATERIALIZED VIEW deepbible._rendered_stories AS
 WITH
 story_bounds AS (
   SELECT
@@ -366,7 +367,7 @@ story_bounds AS (
      s.verse AS start_verse,
      lead(s.chapter) OVER w AS next_chapter,
      lead(s.verse) OVER w AS next_verse
-   FROM _all_stories s
+   FROM deepbible._all_stories s
    WINDOW w AS (
      PARTITION BY s.language, s.source_number, s.book_number
      ORDER BY s.chapter, s.verse
@@ -467,27 +468,27 @@ SELECT
       ELSE e.to_verse
     END AS b
 FROM expanded e
-JOIN _all_books b
+JOIN deepbible._all_books b
   ON b.language = e.language
  AND b.source_number = e.source_number
  AND b.book_number::numeric = e.book_number
-JOIN _all_sources src
+JOIN deepbible._all_sources src
   ON src.language = e.language
  AND src.source_number = e.source_number
 ORDER BY e.language, src.name, e.book_number, e.start_chapter, e.start_verse, e.chapter;
 
 -- function to get rendered stories by source and address
-DROP FUNCTION IF EXISTS public.fetch_rendered_stories(text, text);
-CREATE OR REPLACE FUNCTION public.fetch_rendered_stories(p_source text, p_address text)
-  RETURNS SETOF _rendered_stories 
+DROP FUNCTION IF EXISTS deepbible.fetch_rendered_stories(text, text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_rendered_stories(p_source text, p_address text)
+  RETURNS SETOF deepbible._rendered_stories
   LANGUAGE 'sql'
   COST 100
   STABLE PARALLEL UNSAFE
   ROWS 1000
 AS $BODY$
   SELECT s.*
-  FROM public._rendered_stories AS s
-  JOIN public.parse_address(p_address) AS a
+  FROM deepbible._rendered_stories AS s
+  JOIN deepbible.parse_address(p_address) AS a
     ON (1000 * a.chapter + a.verse BETWEEN s.a AND s.b)
    AND s.a <> s.b
    AND s.book = a.book
@@ -495,8 +496,8 @@ AS $BODY$
 $BODY$;
 
 -- retrieves cross-references for a given verse_id
-DROP FUNCTION IF EXISTS public.fetch_cross_references(text);
-CREATE OR REPLACE FUNCTION public.fetch_cross_references(p_verse_id text)
+DROP FUNCTION IF EXISTS deepbible.fetch_cross_references(text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_cross_references(p_verse_id text)
   RETURNS TABLE(id text, address text, reference text, rate bigint)
   LANGUAGE 'plpgsql'
   COST 100
@@ -505,10 +506,10 @@ CREATE OR REPLACE FUNCTION public.fetch_cross_references(p_verse_id text)
 AS $BODY$
 DECLARE
   v_language      text;
-  v_source_number public._all_books.source_number%TYPE;
-  v_book_number   public._cross_references.book_number%TYPE;
-  v_chapter       public._cross_references.chapter%TYPE;
-  v_verse         public._cross_references.verse%TYPE;
+  v_source_number deepbible._all_books.source_number%TYPE;
+  v_book_number   deepbible._cross_references.book_number%TYPE;
+  v_chapter       deepbible._cross_references.chapter%TYPE;
+  v_verse         deepbible._cross_references.verse%TYPE;
 BEGIN
   -- Parse p_verse_id = <language>/<source>/<book>/<chapter>/<verse>
   v_language      := NULLIF(split_part(p_verse_id, '/', 1), '');
@@ -531,7 +532,7 @@ BEGIN
   WITH main_book AS (
     -- base verse book (same as your original CTE)
     SELECT ab.book_number, ab.short_name
-    FROM public._all_books AS ab
+    FROM deepbible._all_books AS ab
     WHERE ab.source_number = v_source_number
       AND ab.language      = v_language
   ),
@@ -541,7 +542,7 @@ BEGIN
            ab.book_number,
            ab.language,
            ab.short_name
-    FROM public._all_books AS ab
+    FROM deepbible._all_books AS ab
     WHERE ab.language = v_language
     ORDER BY ab.book_number, ab.language, ab.source_number
   )
@@ -568,7 +569,7 @@ BEGIN
         END
       ) AS reference,
       cr.rate
-  FROM public._cross_references AS cr
+  FROM deepbible._cross_references AS cr
   LEFT JOIN main_book AS b
          ON cr.book_number = b.book_number
   LEFT JOIN ref_books AS b1
@@ -586,8 +587,8 @@ END;
 $BODY$;
 
 -- convert greek text to beta code
-DROP FUNCTION IF EXISTS public.greek_to_betacode(text);
-CREATE OR REPLACE FUNCTION public.greek_to_betacode(p_input text)
+DROP FUNCTION IF EXISTS deepbible.greek_to_betacode(text);
+CREATE OR REPLACE FUNCTION deepbible.greek_to_betacode(p_input text)
   RETURNS text
   LANGUAGE 'plpgsql'
   COST 100
@@ -677,8 +678,8 @@ END;
 $BODY$;
 
 -- retrieves dictionary entries for words in a given verse
-DROP FUNCTION IF EXISTS public.verse_dictionary(text);
-CREATE OR REPLACE FUNCTION public.verse_dictionary(p_verse_id text)
+DROP FUNCTION IF EXISTS deepbible.verse_dictionary(text);
+CREATE OR REPLACE FUNCTION deepbible.verse_dictionary(p_verse_id text)
   RETURNS TABLE(topic text, word text, meaning text, parse text, forms text[])
   LANGUAGE 'sql'
   COST 100
@@ -689,8 +690,8 @@ WITH
   words AS (
     SELECT DISTINCT verse_word
     FROM (
-      SELECT unnest(string_to_array(trim(regexp_replace(greek_to_betacode(public.text_without_format(v.text)), '\s+', ' ', 'g')), ' ')) AS verse_word
-      FROM public._all_verses v
+      SELECT unnest(string_to_array(trim(regexp_replace(deepbible.greek_to_betacode(deepbible.text_without_format(v.text)), '\s+', ' ', 'g')), ' ')) AS verse_word
+      FROM deepbible._all_verses v
       WHERE v.id = p_verse_id
     ) t
     WHERE btrim(verse_word) <> ''
@@ -704,7 +705,7 @@ WITH
       ELSE xmlparse(content '<root>' || d.definition || '</root>')
       END AS x
     FROM words w
-    LEFT JOIN public._all_dictionary_entries d
+    LEFT JOIN deepbible._all_dictionary_entries d
            ON w.verse_word = d.topic
   ),
   extracted AS (
