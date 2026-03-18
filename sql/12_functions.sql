@@ -122,10 +122,11 @@ DECLARE
   start_verse INT;
   end_verse INT;
   v INT;
+  trimmed_address TEXT := trim(address);
 BEGIN
-  m := regexp_match(trim(address), '^(.+)\s+(\d+)[,:]\s*([\d\.\-]+)$');
+  m := regexp_match(trimmed_address, '^(.+)\s+(\d+)[,:]\s*([\d\.\-]+)$');
   IF m IS NOT NULL THEN
-    book    := m[1];
+    book    := trim(m[1]);
     chapter := m[2]::INT;
     FOR part IN SELECT unnest(string_to_array(m[3], '.')) LOOP
       IF position('-' IN part) > 0 THEN
@@ -135,7 +136,7 @@ BEGIN
           end_verse := 999;
         END IF;
         IF end_verse < start_verse THEN
-          RAISE EXCEPTION 'Invalid verse range: % in %', part, address;
+          RAISE EXCEPTION 'parse_address: invalid verse range % in %', part, address;
         END IF;
         FOR v IN start_verse..end_verse LOOP
           verse := v;
@@ -148,7 +149,7 @@ BEGIN
     END LOOP;
     RETURN;
   END IF;
-  m := regexp_match(trim(address), '^(.+)\s+(\d+)$');
+  m := regexp_match(trimmed_address, '^(.+)\s+(\d+)$');
   IF m IS NOT NULL THEN
     book    := trim(regexp_replace(m[1], '\s+', ' ', 'g'));
     chapter := m[2]::INT;
@@ -156,7 +157,14 @@ BEGIN
     RETURN NEXT;
     RETURN;
   END IF;
-  RAISE EXCEPTION 'Invalid address format: %', address;
+  IF trimmed_address <> '' THEN
+    book    := trim(regexp_replace(trimmed_address, '\s+', ' ', 'g'));
+    chapter := NULL;
+    verse   := NULL;
+    RETURN NEXT;
+    RETURN;
+  END IF;
+  RAISE EXCEPTION 'parse_address: invalid address format %', address;
 END;
 $BODY$;
 
