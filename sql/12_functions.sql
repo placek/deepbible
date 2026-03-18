@@ -1,4 +1,5 @@
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS http;
 
 -- HELPER SQL FUNCTIONS
 
@@ -246,101 +247,54 @@ CREATE TABLE IF NOT EXISTS public._embeddings(
   CONSTRAINT _embeddings_pkey PRIMARY KEY (id)
 )
 
--- searches for verses similar to the search_phrase using embedding vectors
-CREATE OR REPLACE FUNCTION public.search_embeddings(search_phrase text, limit_rows integer DEFAULT 50)
-  RETURNS SETOF _embeddings
-  LANGUAGE 'plpgsql'
-  COST 100
-  VOLATILE PARALLEL UNSAFE
-  ROWS 1000
-AS $BODY$
-DECLARE
-  phrase_vector vector;
-BEGIN
-  phrase_vector := generate_embedding(search_phrase);
-  RETURN QUERY
-    SELECT e.*
-    FROM public._embeddings e
-    ORDER BY e.embedding <=> phrase_vector ASC
-    LIMIT limit_rows;
-END;
-$BODY$;
-
--- full-text search for verses
+-- function to search for verses similar to the search_phrase using embedding vectors, optionally filtered by source and address
 DROP FUNCTION IF EXISTS public.search_verses(text);
-CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
-  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
+CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text, limit_rows integer DEFAULT 50)
+  RETURNS SETOF public._all_verses
   LANGUAGE 'plpgsql'
-  COST 100
-  VOLATILE PARALLEL UNSAFE
-  ROWS 1000
 AS $BODY$
 DECLARE
-  v_source  text;
+  v_vector vector;
+  v_source text;
   v_address text;
-  v_book    text;
-  v_filter  text;
-  v_term    text;
+  v_clean_phrase text;
 BEGIN
-  v_source := substring(search_phrase from '@(\S+)');
-  v_filter := substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)');
-  IF v_filter IS NOT NULL THEN
-    IF v_filter ~ '\s+\d' THEN
-      v_address := v_filter;
-    ELSE
-      v_book := v_filter;
-    END IF;
-  END IF;
-  v_term := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)', '', 'gi'));
-
-  RAISE NOTICE 'search_verses: source=%, address=%, book=%, term=%', v_source, v_address, v_book, v_term;
-
-  IF v_term IS NULL OR v_term !~ '\w' THEN
-    v_term := NULL;
-  END IF;
-
+  v_source       := substring(search_phrase from '@(\S+)');
+  v_address      := substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)');
+  v_clean_phrase := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)', '', 'gi'));
+  v_vector       := generate_embedding(v_clean_phrase);
   IF v_address IS NOT NULL THEN
-  RETURN QUERY
-    SELECT *
-    FROM public.fetch_verses_by_address(v_address, v_source, true) v
-    WHERE (v_term IS NULL OR v.text ILIKE '%' || v_term || '%')
-    ORDER BY CASE
-             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
-             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
-             END DESC
-    LIMIT 500;
-
-  ELSIF v_book IS NOT NULL THEN
-  RETURN QUERY
-    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, public.raw_text(v.text)
-    FROM public._all_verses v
-    WHERE (v_source  IS NULL OR v.source = v_source)
-      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
-      AND EXISTS (
-        SELECT 1
-        FROM public._all_books b
-        WHERE b.book_number::int = v.book_number::int
-          AND b.short_name = v_book
-      )
-    ORDER BY CASE
-             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
-             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
-             END DESC
-    LIMIT 500;
-
+    RETURN QUERY
+    WITH addresses AS (
+      SELECT DISTINCT
+        b.book_number::int AS book_number,
+        a.chapter::int     AS chapter,
+        a.verse            AS verse
+      FROM public.parse_address(v_address) a
+      JOIN public._all_books b
+        ON a.book = b.short_name
+    )
+    SELECT v.*
+    FROM addresses a
+    JOIN public._all_verses v
+      ON v.book_number = a.book_number
+     AND (a.chapter IS NULL OR v.chapter = a.chapter)
+     AND (a.verse IS NULL OR v.verse = a.verse)
+    JOIN public._embeddings e
+      ON e.id = v.id
+    WHERE (v_source IS NULL OR v.source = v_source)
+    ORDER BY e.embedding <=> v_vector ASC
+    LIMIT limit_rows;
   ELSE
-  RETURN QUERY
-    SELECT v.book_number::int, v.chapter::int, v.verse::int, v.id AS verse_id, v.language, v.source, v.address, public.raw_text(v.text)
+    RETURN QUERY
+    SELECT v.*
     FROM public._all_verses v
-    WHERE (v_source  IS NULL OR v.source = v_source)
-      AND (v_term    IS NULL OR v.text ILIKE '%' || v_term || '%')
-    ORDER BY CASE
-             WHEN v_term IS NULL THEN -(v.book_number * 1000 + v.chapter * 100 + v.verse)
-             ELSE similarity(v.text, COALESCE(v_term, search_phrase))
-             END DESC
-    LIMIT 500;
+    JOIN public._embeddings e
+      ON e.id = v.id
+    WHERE (v_source IS NULL OR v.source = v_source)
+    ORDER BY e.embedding <=> v_vector ASC
+    LIMIT limit_rows;
   END IF;
-
 END;
 $BODY$;
 
