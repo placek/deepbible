@@ -203,6 +203,54 @@ BEGIN
 END;
 $BODY$;
 
+-- fetches embedding vector for a given text using Ollama API
+CREATE OR REPLACE FUNCTION public.generate_embedding(input_text text, model_name text DEFAULT 'bge-m3'::text)
+  RETURNS vector
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+AS $BODY$
+DECLARE
+  http_resp http_response;
+  payload jsonb;
+  vector_text text;
+BEGIN
+  IF input_text IS NULL OR trim(input_text) = '' THEN
+    RETURN NULL;
+  END IF;
+  payload := jsonb_build_object('model', model_name, 'prompt', input_text);
+  SELECT * INTO http_resp FROM http(('POST', 'http://127.0.0.1:11434/api/embeddings', ARRAY[]::http_header[], 'application/json', payload::text)::http_request);
+  IF http_resp.status != 200 THEN
+    RAISE EXCEPTION 'generate_embedding: error from ollama service: status %, response %', http_resp.status, http_resp.content;
+  END IF;
+  vector_text := http_resp.content::jsonb ->> 'embedding';
+  IF vector_text IS NULL OR vector_text = '[]' THEN
+    RAISE EXCEPTION 'generate_embedding: ollama returned no vector: verse "%", response %', left(input_text, 50), http_resp.content;
+  END IF;
+  RETURN vector_text::vector;
+END;
+$BODY$;
+
+-- searches for verses similar to the search_phrase using embedding vectors
+CREATE OR REPLACE FUNCTION public.search_embeddings(search_phrase text, limit_rows integer DEFAULT 50)
+  RETURNS SETOF _embeddings
+  LANGUAGE 'plpgsql'
+  COST 100
+  VOLATILE PARALLEL UNSAFE
+  ROWS 1000
+AS $BODY$
+DECLARE
+  phrase_vector vector;
+BEGIN
+  phrase_vector := generate_embedding(search_phrase);
+  RETURN QUERY
+    SELECT e.*
+    FROM public._embeddings e
+    ORDER BY e.embedding <=> phrase_vector ASC
+    LIMIT limit_rows;
+END;
+$BODY$;
+
 -- full-text search for verses
 DROP FUNCTION IF EXISTS public.search_verses(text);
 CREATE OR REPLACE FUNCTION public.search_verses(search_phrase text)
