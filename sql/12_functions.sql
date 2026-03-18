@@ -171,9 +171,9 @@ END;
 $BODY$;
 
 -- retrieves verses by address, filtered by language, and source
-DROP FUNCTION IF EXISTS deepbible.fetch_verses_by_address(text, text, boolean);
-CREATE OR REPLACE FUNCTION deepbible.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text, p_raw boolean DEFAULT false)
-  RETURNS TABLE(book_number integer, chapter integer, verse integer, verse_id text, language text, source text, address text, text text)
+DROP FUNCTION IF EXISTS deepbible.fetch_verses_by_address(text, text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text)
+  RETURNS SETOF public._all_verses
   LANGUAGE 'plpgsql'
   COST 100
   VOLATILE PARALLEL UNSAFE
@@ -186,30 +186,25 @@ BEGIN
       b.book_number::int AS book_number,
       a.chapter::int     AS chapter,
       a.verse            AS verse
-    FROM deepbible.parse_address(p_address) a
-    JOIN deepbible._all_books b
+    FROM public.parse_address(p_address) a
+    JOIN public._all_books b
       ON a.book = b.short_name
   )
-  SELECT DISTINCT
-    v.book_number::int AS book_number,
-    v.chapter::int     AS chapter,
-    v.verse::int       AS verse,
-    v.id               AS verse_id,
-    v.language,
-    v.source,
-    v.address,
-    CASE
-    WHEN p_raw THEN deepbible.raw_text(v.text)
-    ELSE deepbible.text_without_format(v.text)
-    END AS text
+  SELECT v.*
   FROM addresses a
-  JOIN deepbible._all_verses v
+  JOIN public._all_verses v
     ON v.book_number = a.book_number
-   AND v.chapter = a.chapter
+   AND (a.chapter IS NULL OR v.chapter = a.chapter)
    AND (a.verse IS NULL OR v.verse = a.verse)
   WHERE
-    p_source IS NULL OR v.source = p_source
-  ORDER BY book_number, chapter, verse, language, source, verse_id;
+    (p_source IS NULL OR v.source = p_source)
+  ORDER BY
+    v.book_number,
+    v.chapter,
+    v.verse,
+    v.language,
+    v.source,
+    v.id;
 END;
 $BODY$;
 
