@@ -264,22 +264,21 @@ CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text)
   LANGUAGE plpgsql
 AS $BODY$
 DECLARE
-  v_vector vector;
   v_source text;
   v_address text;
   v_clean_phrase text;
+  v_vector vector;
 BEGIN
   SELECT p.source, p.address, p.clean_phrase
   INTO v_source, v_address, v_clean_phrase
   FROM deepbible.parse_search_phrase(search_phrase) p;
 
-  v_vector := deepbible.generate_embedding(v_clean_phrase);
-
-  IF v_vector IS NULL THEN
+  IF v_clean_phrase IS NULL THEN
     RETURN QUERY
       SELECT *
       FROM deepbible.fetch_verses_by_address(v_address, v_source);
   ELSE
+    v_vector := deepbible.generate_embedding(v_clean_phrase);
     RETURN QUERY
       SELECT v.*
       FROM deepbible.fetch_verses_by_address(v_address, v_source) v
