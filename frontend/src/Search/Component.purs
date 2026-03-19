@@ -56,7 +56,7 @@ renderSearchSection toParentAction st =
                     , HH.input
                         [ HP.class_ (HH.ClassName "search-input")
                         , HP.attr (HH.AttrName "type") "text"
-                        , HP.placeholder "search verses, e.g. '@NVUL ~J 3,10- Deus'"
+                        , HP.placeholder "search verses, e.g. @NVUL ~J 3,10- Deus"
                         , HP.value st.searchInput
                         , HE.onValueInput (toParentAction <<< UpdateSearchInput)
                         , HE.onFocus \_ -> toParentAction FocusSearchInput
