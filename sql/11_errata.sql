@@ -244,3 +244,8 @@ WHERE marker LIKE '%' || U&'\2009' || '%';
 UPDATE en._commentaries
   SET marker = replace(marker, U&'\2009', '')
 WHERE marker LIKE '%' || U&'\2009' || '%';
+
+-- add missing space after punctuation
+UPDATE pl._all_verses
+SET text = REGEXP_REPLACE(text, '([.,;!?])([A-ZĄĆĘŁŃÓŚŹŻ])', '\1 \2', 'g')
+WHERE text ~ '[.,;!?][A-ZĄĆĘŁŃÓŚŹŻ]';
