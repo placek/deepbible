@@ -56,9 +56,10 @@ fetchVerses address source = do
 fetchSources :: Aff (Either String (Array SourceInfo))
 fetchSources = do
   let
-    -- PostgREST requires an explicit select list; keep it minimal to avoid decoding failures.
-    url = baseUrl <> "/_all_sources?select=name,description_short,language"
-  res <- postgrestGet url
+    -- Keep the select list minimal to avoid decoding failures.
+    url = baseUrl <> "/rpc/_all_sources?select=name,description_short,language"
+    payload = jsonEmptyObject
+  res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of

@@ -13,9 +13,17 @@ $$;
 DROP SCHEMA IF EXISTS api CASCADE;
 CREATE SCHEMA api;
 
-CREATE OR REPLACE VIEW api._all_sources AS
-SELECT *
-FROM deepbible._all_sources;
+DROP VIEW IF EXISTS api._all_sources;
+
+CREATE OR REPLACE FUNCTION api._all_sources()
+  RETURNS SETOF deepbible._all_sources
+  LANGUAGE sql
+  SECURITY DEFINER
+  SET search_path = deepbible, public
+AS $$
+  SELECT *
+  FROM deepbible._all_sources;
+$$;
 
 CREATE OR REPLACE FUNCTION api.fetch_verses_by_address(p_address text, p_source text DEFAULT NULL::text)
   RETURNS SETOF deepbible._all_verses
@@ -78,7 +86,7 @@ AS $$
 $$;
 
 GRANT USAGE ON SCHEMA api TO web_anon;
-GRANT SELECT ON api._all_sources TO web_anon;
+GRANT EXECUTE ON FUNCTION api._all_sources() TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_verses_by_address(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_cross_references(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_commentaries(text) TO web_anon;
