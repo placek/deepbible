@@ -258,7 +258,7 @@ AS $BODY$
     ) AS clean_phrase;
 $BODY$;
 
-DROP FUNCTION IF EXISTS deepbible.search_verses(text,integer);
+DROP FUNCTION IF EXISTS deepbible.search_verses(text);
 CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text)
   RETURNS SETOF deepbible._all_verses
   LANGUAGE plpgsql
@@ -283,7 +283,7 @@ BEGIN
     RETURN QUERY
       SELECT v.*
       FROM deepbible.fetch_verses_by_address(v_address, v_source) v
-      LEFT JOIN deepbible._embeddings e ON e.id = v.id
+      JOIN deepbible._embeddings e ON e.id = v.id
       ORDER BY (e.embedding <=> v_vector) ASC;
   END IF;
 END;
