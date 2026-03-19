@@ -235,6 +235,30 @@ END;
 $BODY$;
 
 -- function to search for verses similar to the search_phrase using embedding vectors, optionally filtered by source and address
+DROP FUNCTION IF EXISTS deepbible.parse_search_phrase(text);
+CREATE OR REPLACE FUNCTION deepbible.parse_search_phrase(search_phrase text)
+  RETURNS TABLE(source text, address text, clean_phrase text)
+  LANGUAGE 'sql'
+  COST 100
+  IMMUTABLE PARALLEL SAFE
+AS $BODY$
+  SELECT
+    substring(search_phrase from '@(\S+)') AS source,
+    substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)') AS address,
+    -- Wrap the entire trimmed output in NULLIF to convert '' to NULL
+    NULLIF(
+      trim(
+        regexp_replace(
+          regexp_replace(search_phrase, '@\S+\s*', '', 'gi'),
+          '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)',
+          '',
+          'gi'
+        )
+      ), 
+      ''
+    ) AS clean_phrase;
+$BODY$;
+
 DROP FUNCTION IF EXISTS deepbible.search_verses(text);
 CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text, limit_rows integer DEFAULT 50)
   RETURNS SETOF deepbible._all_verses
@@ -246,9 +270,7 @@ DECLARE
   v_address text;
   v_clean_phrase text;
 BEGIN
-  v_source       := substring(search_phrase from '@(\S+)');
-  v_address      := substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)');
-  v_clean_phrase := trim(regexp_replace(regexp_replace(search_phrase, '@\S+\s*', '', 'gi'), '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)', '', 'gi'));
+  SELECT p.source, p.address, p.clean_phrase INTO v_source, v_address, v_clean_phrase FROM deepbible.parse_search_phrase(search_phrase) p;
   v_vector       := deepbible.generate_embedding(v_clean_phrase);
   IF v_address IS NOT NULL THEN
     RETURN QUERY
