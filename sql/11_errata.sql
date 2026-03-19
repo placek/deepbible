@@ -217,6 +217,14 @@ UPDATE pl._all_verses
   SET text = REPLACE(text, '<<', '<')
   WHERE text ~ '<<';
 
+-- fix &gt;
+UPDATE pl._all_verses
+SET text = REPLACE(text, '&gt;', '›');
+
+-- fix &lt;
+UPDATE pl._all_verses
+SET text = REPLACE(text, '&lt;', '‹');
+
 -- add missing reference
 INSERT INTO deepbible._cross_references (book_number, chapter, verse, b1, c1, v1, rate)
 VALUES (490, 1, 43, 100, 6, 9, 0);
