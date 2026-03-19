@@ -136,7 +136,7 @@ BEGIN
           end_verse := 999;
         END IF;
         IF end_verse < start_verse THEN
-          RAISE EXCEPTION 'parse_address: invalid verse range % in %', part, address;
+          RETURN;
         END IF;
         FOR v IN start_verse..end_verse LOOP
           verse := v;
@@ -164,7 +164,7 @@ BEGIN
     RETURN NEXT;
     RETURN;
   END IF;
-  RAISE EXCEPTION 'parse_address: invalid address format %', address;
+  RETURN;
 END;
 $BODY$;
 
@@ -245,7 +245,6 @@ AS $BODY$
   SELECT
     substring(search_phrase from '@(\S+)') AS source,
     substring(search_phrase from '~(\S+(?:\s+\d+(?:[,:][\d\-\.]+)?)?)') AS address,
-    -- Wrap the entire trimmed output in NULLIF to convert '' to NULL
     NULLIF(
       trim(
         regexp_replace(
@@ -259,10 +258,10 @@ AS $BODY$
     ) AS clean_phrase;
 $BODY$;
 
-DROP FUNCTION IF EXISTS deepbible.search_verses(text);
+DROP FUNCTION IF EXISTS deepbible.search_verses(text,integer);
 CREATE OR REPLACE FUNCTION deepbible.search_verses(search_phrase text, limit_rows integer DEFAULT 50)
   RETURNS SETOF deepbible._all_verses
-  LANGUAGE 'plpgsql'
+  LANGUAGE plpgsql
 AS $BODY$
 DECLARE
   v_vector vector;
@@ -270,40 +269,18 @@ DECLARE
   v_address text;
   v_clean_phrase text;
 BEGIN
-  SELECT p.source, p.address, p.clean_phrase INTO v_source, v_address, v_clean_phrase FROM deepbible.parse_search_phrase(search_phrase) p;
-  v_vector       := deepbible.generate_embedding(v_clean_phrase);
-  IF v_address IS NOT NULL THEN
-    RETURN QUERY
-    WITH addresses AS (
-      SELECT DISTINCT
-        b.book_number::int AS book_number,
-        a.chapter::int     AS chapter,
-        a.verse            AS verse
-      FROM deepbible.parse_address(v_address) a
-      JOIN deepbible._all_books b
-        ON a.book = b.short_name
-    )
+  SELECT p.source, p.address, p.clean_phrase
+  INTO v_source, v_address, v_clean_phrase
+  FROM deepbible.parse_search_phrase(search_phrase) p;
+
+  v_vector := deepbible.generate_embedding(v_clean_phrase);
+
+  RETURN QUERY
     SELECT v.*
-    FROM addresses a
-    JOIN deepbible._all_verses v
-      ON v.book_number = a.book_number
-     AND (a.chapter IS NULL OR v.chapter = a.chapter)
-     AND (a.verse IS NULL OR v.verse = a.verse)
-    JOIN deepbible._embeddings e
-      ON e.id = v.id
-    WHERE (v_source IS NULL OR v.source = v_source)
-    ORDER BY e.embedding <=> v_vector ASC
+    FROM deepbible.fetch_verses_by_address(v_address, v_source) v
+    LEFT JOIN deepbible._embeddings e ON e.id = v.id
+    ORDER BY (e.embedding <=> v_vector) ASC NULLS LAST
     LIMIT limit_rows;
-  ELSE
-    RETURN QUERY
-    SELECT v.*
-    FROM deepbible._all_verses v
-    JOIN deepbible._embeddings e
-      ON e.id = v.id
-    WHERE (v_source IS NULL OR v.source = v_source)
-    ORDER BY e.embedding <=> v_vector ASC
-    LIMIT limit_rows;
-  END IF;
 END;
 $BODY$;
 
