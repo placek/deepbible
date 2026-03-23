@@ -1,6 +1,5 @@
 module App.State where
 
-import Data.Array (mapMaybe)
 import Data.Maybe (Maybe(..))
 
 import Domain.Bible.Types (VerseSearchResult)
@@ -10,11 +9,6 @@ import Domain.Pericope.Types (Pericope)
 data Item
   = PericopeItem Pericope
   | NoteItem Note
-
-pericopesFromItems :: Array Item -> Array Pericope
-pericopesFromItems = mapMaybe case _ of
-  PericopeItem p -> Just p
-  NoteItem _ -> Nothing
 
 type AppState =
   { items :: Array Item

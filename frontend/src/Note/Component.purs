@@ -35,8 +35,7 @@ type State =
   }
 
 data Action
-  = Noop
-  | SetContent String
+  = SetContent String
   | StartEditing
   | StopEditing
   | KeyDown KeyboardEvent
@@ -117,9 +116,6 @@ renderBody st =
 
 handle :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handle = case _ of
-  Noop ->
-    pure unit
-
   SetContent content -> do
     H.modify_ \st -> st { note = st.note { content = content } }
     st <- H.get

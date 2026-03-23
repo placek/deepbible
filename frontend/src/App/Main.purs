@@ -91,6 +91,23 @@ initialState _ =
   , searchError: Nothing
   }
 
+defaultSeeds :: Array ItemSeed
+defaultSeeds =
+  [ pericopeSeed "J 3,16-17" "NVUL"
+  , pericopeSeed "J 3,16-17" "NA28"
+  , pericopeSeed "J 3,16-17" "BT_03"
+  , pericopeSeed "J 3,16-17" "TRO+"
+  ]
+
+pericopeSeed :: String -> String -> ItemSeed
+pericopeSeed address source =
+  ItemSeed
+    { kind: "pericope"
+    , address
+    , source
+    , content: ""
+    }
+
 render :: AppState -> H.ComponentHTML Action ChildSlots Aff
 render st =
   let
@@ -155,13 +172,7 @@ handle action = case action of
     sheetId <- H.liftEffect getOrCreateSheetId
     H.modify_ \st -> st { sheetId = sheetId, hydrating = true }
     res <- H.liftAff $ fetchSheet sheetId
-    let defaultSeeds =
-          [ pericopeSeed "J 3,16-17" "NVUL"
-          , pericopeSeed "J 3,16-17" "NA28"
-          , pericopeSeed "J 3,16-17" "BT_03"
-          , pericopeSeed "J 3,16-17" "TRO+"
-          ]
-        loadedSeeds = case res of
+    let loadedSeeds = case res of
           Left _ -> []
           Right maybeData -> case maybeData of
             Nothing -> []
@@ -179,12 +190,8 @@ handle action = case action of
   HandleSearch searchAction ->
     Search.handleAction insertPericope searchAction
 
-  HandleDocumentClick -> do
-    Search.handleAction insertPericope Search.CloseSearchResults
-    st <- H.get
-    for_ st.items \item -> case item of
-      PericopeItem p -> cancelEditing p
-      _ -> pure unit
+  HandleDocumentClick ->
+    handleDocumentClick
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
@@ -205,112 +212,122 @@ handle action = case action of
         syncSheet
 
   ChildMsg msg -> case msg of
-    PericopeMsg pid out -> case out of
-      P.DidDuplicate { id: baseId } -> do
-        st <- H.get
-        case findPericope baseId st.items of
-          Nothing -> pure unit
-          Just p -> do
-            let addr = p.address
-                src  = p.source
-            res <- H.liftAff $ fetchVerses addr src
-            case res of
-              Left _ -> pure unit
-              Right vs -> insertPericope addr src vs
+    PericopeMsg pid out ->
+      handlePericopeOutput pid out
+    NoteMsg nid out ->
+      handleNoteOutput nid out
 
-      P.DidRemove rid -> do
-        H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
-        syncSheet
+handleDocumentClick :: H.HalogenM AppState Action ChildSlots Void Aff Unit
+handleDocumentClick = do
+  Search.handleAction insertPericope Search.CloseSearchResults
+  st <- H.get
+  for_ st.items \item -> case item of
+    PericopeItem p -> cancelEditing p
+    _ -> pure unit
 
-      P.DidStartDrag _ ->
-        handle (StartDrag pid)
+handlePericopeOutput
+  :: PericopeId
+  -> P.Output
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+handlePericopeOutput pid = case _ of
+  P.DidDuplicate { id: baseId } -> do
+    st <- H.get
+    case findPericope baseId st.items of
+      Nothing -> pure unit
+      Just p -> fetchAndInsertPericope p.address p.source
 
-      P.DidDragOver _ ->
-        handle (OverDrag pid)
+  P.DidRemove rid ->
+    removeItemById rid
 
-      P.DidDragLeave _ ->
-        handle (LeaveDrag pid)
+  P.DidStartDrag _ ->
+    handle (StartDrag pid)
 
-      P.DidReorder _ ->
-        handle (DropOn pid)
+  P.DidDragOver _ ->
+    handle (OverDrag pid)
 
-      P.DidUpdate updated -> do
-        H.modify_ \st -> st
-          { items = st.items <#> updatePericope updated }
-        syncSheet
+  P.DidDragLeave _ ->
+    handle (LeaveDrag pid)
 
-      P.DidLoadCrossReference { source, address } -> do
-        res <- H.liftAff $ fetchVerses address source
-        case res of
-          Left _ -> pure unit
-          Right verses -> insertPericope address source verses
+  P.DidReorder _ ->
+    handle (DropOn pid)
 
-      P.DidCreatePericopeFromSelection { source, address } -> do
-        res <- H.liftAff $ fetchVerses address source
-        case res of
-          Left _ -> pure unit
-          Right verses -> insertPericope address source verses
+  P.DidUpdate updated ->
+    updateItemsAndSync (\items -> items <#> updatePericope updated)
 
-      P.DidLoadStory { source, address } -> do
-        res <- H.liftAff $ fetchVerses address source
-        case res of
-          Left _ -> pure unit
-          Right verses -> insertPericope address source verses
+  P.DidLoadCrossReference { source, address } ->
+    fetchAndInsertPericope address source
 
-    NoteMsg nid out -> case out of
-      N.DidDuplicate { id: baseId } -> do
-        st <- H.get
-        case findNote baseId st.items of
-          Nothing -> pure unit
-          Just { index, note } -> insertNoteAt (index + 1) note.content
+  P.DidCreatePericopeFromSelection { source, address } ->
+    fetchAndInsertPericope address source
 
-      N.DidRemove rid -> do
-        H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
-        syncSheet
+  P.DidLoadStory { source, address } ->
+    fetchAndInsertPericope address source
 
-      N.DidStartDrag _ ->
-        handle (StartDrag nid)
+handleNoteOutput
+  :: NoteId
+  -> N.Output
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+handleNoteOutput nid = case _ of
+  N.DidDuplicate { id: baseId } -> do
+    st <- H.get
+    case findNote baseId st.items of
+      Nothing -> pure unit
+      Just { index, note } -> insertNoteAt (index + 1) note.content
 
-      N.DidDragOver _ ->
-        handle (OverDrag nid)
+  N.DidRemove rid ->
+    removeItemById rid
 
-      N.DidDragLeave _ ->
-        handle (LeaveDrag nid)
+  N.DidStartDrag _ ->
+    handle (StartDrag nid)
 
-      N.DidReorder _ ->
-        handle (DropOn nid)
+  N.DidDragOver _ ->
+    handle (OverDrag nid)
 
-      N.DidUpdate updated -> do
-        H.modify_ \st -> st
-          { items = st.items <#> updateNote updated }
-        syncSheet
-  where
-  cancelEditing
-    :: Pericope
-    -> H.HalogenM AppState Action ChildSlots Void Aff Unit
-  cancelEditing p =
-    void $ H.query pericopeSlot p.id (P.CancelEditing unit)
+  N.DidDragLeave _ ->
+    handle (LeaveDrag nid)
 
-  pericopeSeed :: String -> String -> ItemSeed
-  pericopeSeed address source =
-    ItemSeed
-      { kind: "pericope"
-      , address
-      , source
-      , content: ""
-      }
+  N.DidReorder _ ->
+    handle (DropOn nid)
 
-  loadSeed :: ItemSeed -> H.HalogenM AppState Action ChildSlots Void Aff Unit
-  loadSeed (ItemSeed seed) = case seed.kind of
-    "note" -> insertNoteAtEnd seed.content
-    _ ->
-      if seed.address /= "" && seed.source /= "" then do
-        res <- H.liftAff $ fetchVerses seed.address seed.source
-        case res of
-          Left _ -> pure unit
-          Right verses -> insertPericope seed.address seed.source verses
-      else
-        pure unit
+  N.DidUpdate updated ->
+    updateItemsAndSync (\items -> items <#> updateNote updated)
+
+cancelEditing
+  :: Pericope
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+cancelEditing p =
+  void $ H.query pericopeSlot p.id (P.CancelEditing unit)
+
+loadSeed :: ItemSeed -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+loadSeed (ItemSeed seed) = case seed.kind of
+  "note" ->
+    insertNoteAtEnd seed.content
+  _ ->
+    if seed.address /= "" && seed.source /= "" then
+      fetchAndInsertPericope seed.address seed.source
+    else
+      pure unit
+
+fetchAndInsertPericope
+  :: String
+  -> String
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+fetchAndInsertPericope address source = do
+  res <- H.liftAff $ fetchVerses address source
+  case res of
+    Left _ -> pure unit
+    Right verses -> insertPericope address source verses
+
+updateItemsAndSync
+  :: (Array Item -> Array Item)
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+updateItemsAndSync updateItems = do
+  H.modify_ \st -> st { items = updateItems st.items }
+  syncSheet
+
+removeItemById :: Int -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+removeItemById rid =
+  updateItemsAndSync (A.filter (\item -> itemId item /= rid))
 
 -- Helpers
 itemId :: Item -> Int
