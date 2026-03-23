@@ -10018,19 +10018,6 @@ var postgrestPost = function(url) {
     });
   };
 };
-var postgrestGet = function(url) {
-  return request2(driver)({
-    method: defaultRequest.method,
-    content: defaultRequest.content,
-    username: defaultRequest.username,
-    password: defaultRequest.password,
-    withCredentials: defaultRequest.withCredentials,
-    timeout: defaultRequest.timeout,
-    url,
-    headers: postgrestHeaders,
-    responseFormat: json2
-  });
-};
 var baseUrl = "https://api.bible.placki.cloud";
 var fetchCommentaries = function(verseId) {
   var url = baseUrl + "/rpc/fetch_commentaries";
@@ -10050,10 +10037,10 @@ var fetchCommentaries = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 88, column 19 - line 90, column 54): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 89, column 19 - line 91, column 54): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 86, column 3 - line 90, column 54): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 87, column 3 - line 91, column 54): " + [res.constructor.name]);
   });
 };
 var fetchCrossReferences = function(verseId) {
@@ -10074,10 +10061,10 @@ var fetchCrossReferences = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 76, column 19 - line 78, column 38): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 77, column 19 - line 79, column 38): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 74, column 3 - line 78, column 38): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 75, column 3 - line 79, column 38): " + [res.constructor.name]);
   });
 };
 var fetchRenderedStories = function(source2) {
@@ -10099,16 +10086,16 @@ var fetchRenderedStories = function(source2) {
           return pure14(new Right(v.value0));
         }
         ;
-        throw new Error("Failed pattern match at Infrastructure.Api (line 100, column 19 - line 102, column 44): " + [v.constructor.name]);
+        throw new Error("Failed pattern match at Infrastructure.Api (line 101, column 19 - line 103, column 44): " + [v.constructor.name]);
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 98, column 3 - line 102, column 44): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 99, column 3 - line 103, column 44): " + [res.constructor.name]);
     });
   };
 };
 var fetchSources = /* @__PURE__ */ function() {
-  var url = baseUrl + "/_all_sources?select=name,description_short,language";
-  return bind6(postgrestGet(url))(function(res) {
+  var url = baseUrl + "/rpc/_all_sources?select=name,description_short,language";
+  return bind6(postgrestPost(url)(jsonEmptyObject))(function(res) {
     if (res instanceof Left) {
       return pure14(new Left("HTTP error: " + printError(res.value0)));
     }
@@ -10123,10 +10110,10 @@ var fetchSources = /* @__PURE__ */ function() {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 64, column 19 - line 66, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 65, column 19 - line 67, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 62, column 3 - line 66, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 63, column 3 - line 67, column 44): " + [res.constructor.name]);
   });
 }();
 var fetchVerseDictionary = function(verseId) {
@@ -10147,10 +10134,10 @@ var fetchVerseDictionary = function(verseId) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 112, column 19 - line 114, column 44): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 113, column 19 - line 115, column 44): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 110, column 3 - line 114, column 44): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 111, column 3 - line 115, column 44): " + [res.constructor.name]);
   });
 };
 var fetchVerses = function(address2) {
@@ -10197,10 +10184,10 @@ var searchVerses = function(query3) {
         return pure14(new Right(v.value0));
       }
       ;
-      throw new Error("Failed pattern match at Infrastructure.Api (line 124, column 19 - line 126, column 42): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Infrastructure.Api (line 125, column 19 - line 127, column 42): " + [v.constructor.name]);
     }
     ;
-    throw new Error("Failed pattern match at Infrastructure.Api (line 122, column 3 - line 126, column 42): " + [res.constructor.name]);
+    throw new Error("Failed pattern match at Infrastructure.Api (line 123, column 3 - line 127, column 42): " + [res.constructor.name]);
   });
 };
 
@@ -12400,7 +12387,7 @@ var renderSearchFeedback = function(st) {
 };
 var renderSearchSection = function(toParentAction) {
   return function(st) {
-    return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. '@NVUL ~J 3,10- Deus'"), value16(st.searchInput), onValueInput(function($89) {
+    return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. @NVUL ~J 3,10- Deus"), value16(st.searchInput), onValueInput(function($89) {
       return toParentAction(UpdateSearchInput.create($89));
     }), onFocus(function(v) {
       return toParentAction(FocusSearchInput.value);
