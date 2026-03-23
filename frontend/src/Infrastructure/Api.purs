@@ -7,14 +7,28 @@ import Affjax.RequestBody as RB
 import Affjax.RequestHeader as RH
 import Affjax.ResponseFormat as RF
 import Affjax.Web (driver)
-import Data.Argonaut ((:=), decodeJson, jsonEmptyObject, (~>))
-import Data.Argonaut.Core (fromString)
+import Data.Argonaut (class DecodeJson, (:=), decodeJson, jsonEmptyObject, (.:), (~>))
+import Data.Argonaut.Core (Json, fromString)
+import Data.Array as A
 import Data.Either (Either(..))
 import Data.HTTP.Method (Method(..))
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
 
 import Domain.Bible.Types (Address, Commentary, CrossReference, DictionaryEntry, Source, SourceInfo, Story, Verse, VerseId, VerseSearchResult)
+
+newtype Sheet =
+  Sheet
+    { id :: String
+    , sheetData :: Json
+    }
+
+instance decodeSheet :: DecodeJson Sheet where
+  decodeJson j = do
+    obj <- decodeJson j
+    id <- obj .: "id"
+    dataJson <- obj .: "data"
+    pure $ Sheet { id, sheetData: dataJson }
 
 baseUrl :: String
 baseUrl = "https://api.bible.placki.cloud"
@@ -40,6 +54,30 @@ postgrestPost url payload =
     , responseFormat = RF.json
     , content = Just (RB.json payload)
     }
+
+fetchSheet :: String -> Aff (Either String (Maybe Json))
+fetchSheet sheetId = do
+  let
+    url = baseUrl <> "/rpc/fetch_sheet"
+    payload = ("p_id" := fromString sheetId) ~> jsonEmptyObject
+  res <- postgrestPost url payload
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right json -> case decodeJson json.body of
+      Left _ -> pure $ Left "Failed to fetch sheet"
+      Right sheets -> case A.head sheets of
+        Nothing -> pure $ Right Nothing
+        Just (Sheet sheet) -> pure $ Right (Just sheet.sheetData)
+
+upsertSheet :: String -> Json -> Aff (Either String Unit)
+upsertSheet sheetId dataJson = do
+  let
+    url = baseUrl <> "/rpc/upsert_sheet"
+    payload = ("p_id" := fromString sheetId) ~> ("p_data" := dataJson) ~> jsonEmptyObject
+  res <- postgrestPost url payload
+  case res of
+    Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
+    Right _ -> pure $ Right unit
 
 fetchVerses :: Address -> Source -> Aff (Either String (Array Verse))
 fetchVerses address source = do

@@ -1,24 +1,63 @@
 module App.UrlState
-  ( ItemSeed
-  , loadSeeds
+  ( ItemSeed(..)
+  , decodeSeeds
+  , encodeSeeds
+  , getOrCreateSheetId
   , itemsToSeeds
-  , storeSeeds
   ) where
 
 import Prelude
 
+import Data.Argonaut (class DecodeJson, class EncodeJson, decodeJson, encodeJson, (.:), (.:?), (:=), (~>), jsonEmptyObject)
+import Data.Argonaut.Core (Json)
+import Data.Array as A
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Effect (Effect)
 
 import App.State (Item(..))
 import Domain.Note.Types (Note)
 import Domain.Pericope.Types (Pericope)
 
-type ItemSeed =
-  { kind :: String
-  , address :: String
-  , source :: String
-  , content :: String
-  }
+newtype ItemSeed =
+  ItemSeed
+    { kind :: String
+    , address :: String
+    , source :: String
+    , content :: String
+    }
+
+newtype SheetData =
+  SheetData
+    { items :: Array ItemSeed
+    }
+
+instance encodeItemSeed :: EncodeJson ItemSeed where
+  encodeJson (ItemSeed seed) =
+    ("kind" := seed.kind)
+      ~> ("address" := seed.address)
+      ~> ("source" := seed.source)
+      ~> ("content" := seed.content)
+      ~> jsonEmptyObject
+
+instance decodeItemSeed :: DecodeJson ItemSeed where
+  decodeJson j = do
+    obj <- decodeJson j
+    kind <- obj .: "kind"
+    address <- fromMaybe "" <$> obj .:? "address"
+    source <- fromMaybe "" <$> obj .:? "source"
+    content <- fromMaybe "" <$> obj .:? "content"
+    pure $ ItemSeed { kind, address, source, content }
+
+instance encodeSheetData :: EncodeJson SheetData where
+  encodeJson (SheetData sheet) =
+    ("items" := sheet.items) ~> jsonEmptyObject
+
+instance decodeSheetData :: DecodeJson SheetData where
+  decodeJson j = do
+    obj <- decodeJson j
+    items <- obj .: "items"
+    pure $ SheetData { items }
 
 itemsToSeeds :: Array Item -> Array ItemSeed
 itemsToSeeds ps = ps <#> case _ of
@@ -28,20 +67,45 @@ itemsToSeeds ps = ps <#> case _ of
   where
   pericopeSeed :: Pericope -> ItemSeed
   pericopeSeed p =
-    { kind: "pericope"
-    , address: p.address
-    , source: p.source
-    , content: ""
-    }
+    ItemSeed
+      { kind: "pericope"
+      , address: p.address
+      , source: p.source
+      , content: ""
+      }
 
   noteSeed :: Note -> ItemSeed
   noteSeed n =
-    { kind: "note"
-    , address: ""
-    , source: ""
-    , content: n.content
-    }
+    ItemSeed
+      { kind: "note"
+      , address: ""
+      , source: ""
+      , content: n.content
+      }
 
-foreign import loadSeeds :: Effect (Array ItemSeed)
+sanitizeSeed :: ItemSeed -> Maybe ItemSeed
+sanitizeSeed (ItemSeed seed) = case seed.kind of
+  "pericope" ->
+    if seed.address == "" && seed.source == "" then
+      Nothing
+    else
+      Just $ ItemSeed (seed { content = "" })
+  "note" ->
+    Just $ ItemSeed (seed { address = "", source = "" })
+  _ ->
+    Nothing
 
-foreign import storeSeeds :: Array ItemSeed -> Effect Unit
+sanitizeSeeds :: Array ItemSeed -> Array ItemSeed
+sanitizeSeeds = A.mapMaybe sanitizeSeed
+
+decodeSeeds :: Json -> Array ItemSeed
+decodeSeeds json = case decodeJson json of
+  Right (SheetData { items }) -> sanitizeSeeds items
+  Left _ -> case (decodeJson json :: Either _ (Array ItemSeed)) of
+    Right items -> sanitizeSeeds items
+    Left _ -> []
+
+encodeSeeds :: Array ItemSeed -> Json
+encodeSeeds seeds = encodeJson (SheetData { items: sanitizeSeeds seeds })
+
+foreign import getOrCreateSheetId :: Effect String

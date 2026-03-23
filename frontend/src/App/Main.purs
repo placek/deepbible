@@ -16,13 +16,13 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
-import Infrastructure.Api (fetchVerses)
+import Infrastructure.Api (fetchSheet, fetchVerses, upsertSheet)
 import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
 
 import App.State (AppState, Item(..))
-import App.UrlState (ItemSeed, itemsToSeeds, loadSeeds, storeSeeds)
+import App.UrlState (ItemSeed(..), decodeSeeds, encodeSeeds, getOrCreateSheetId, itemsToSeeds)
 import Domain.Bible.Types (Verse)
 import Domain.Note.Types (Note, NoteId)
 import Domain.Pericope.Types (Pericope, PericopeId)
@@ -80,6 +80,8 @@ initialState _ =
   { items: []
   , dragging: Nothing
   , droppingOver: Nothing
+  , sheetId: ""
+  , hydrating: false
   , nextId: 1
   , searchInput: ""
   , searchResults: []
@@ -150,15 +152,23 @@ renderFooter =
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
   Initialize -> do
-    urlSeeds <- H.liftEffect loadSeeds
+    sheetId <- H.liftEffect getOrCreateSheetId
+    H.modify_ \st -> st { sheetId = sheetId, hydrating = true }
+    res <- H.liftAff $ fetchSheet sheetId
     let defaultSeeds =
           [ pericopeSeed "J 3,16-17" "NVUL"
           , pericopeSeed "J 3,16-17" "NA28"
           , pericopeSeed "J 3,16-17" "BT_03"
           , pericopeSeed "J 3,16-17" "TRO+"
           ]
-        seeds = if A.null urlSeeds then defaultSeeds else urlSeeds
+        loadedSeeds = case res of
+          Left _ -> []
+          Right maybeData -> case maybeData of
+            Nothing -> []
+            Just dataJson -> decodeSeeds dataJson
+        seeds = if A.null loadedSeeds then defaultSeeds else loadedSeeds
     for_ seeds loadSeed
+    H.modify_ \st -> st { hydrating = false }
 
   AddPericope addr src verses ->
     insertPericope addr src verses
@@ -192,7 +202,7 @@ handle action = case action of
       Just fromId -> do
         let items = reorder fromId targetId st.items
         H.put st { items = items, dragging = Nothing, droppingOver = Nothing }
-        syncUrl
+        syncSheet
 
   ChildMsg msg -> case msg of
     PericopeMsg pid out -> case out of
@@ -210,7 +220,7 @@ handle action = case action of
 
       P.DidRemove rid -> do
         H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
-        syncUrl
+        syncSheet
 
       P.DidStartDrag _ ->
         handle (StartDrag pid)
@@ -227,7 +237,7 @@ handle action = case action of
       P.DidUpdate updated -> do
         H.modify_ \st -> st
           { items = st.items <#> updatePericope updated }
-        syncUrl
+        syncSheet
 
       P.DidLoadCrossReference { source, address } -> do
         res <- H.liftAff $ fetchVerses address source
@@ -256,7 +266,7 @@ handle action = case action of
 
       N.DidRemove rid -> do
         H.modify_ \st -> st { items = A.filter (\item -> itemId item /= rid) st.items }
-        syncUrl
+        syncSheet
 
       N.DidStartDrag _ ->
         handle (StartDrag nid)
@@ -273,7 +283,7 @@ handle action = case action of
       N.DidUpdate updated -> do
         H.modify_ \st -> st
           { items = st.items <#> updateNote updated }
-        syncUrl
+        syncSheet
   where
   cancelEditing
     :: Pericope
@@ -283,14 +293,15 @@ handle action = case action of
 
   pericopeSeed :: String -> String -> ItemSeed
   pericopeSeed address source =
-    { kind: "pericope"
-    , address
-    , source
-    , content: ""
-    }
+    ItemSeed
+      { kind: "pericope"
+      , address
+      , source
+      , content: ""
+      }
 
   loadSeed :: ItemSeed -> H.HalogenM AppState Action ChildSlots Void Aff Unit
-  loadSeed seed = case seed.kind of
+  loadSeed (ItemSeed seed) = case seed.kind of
     "note" -> insertNoteAtEnd seed.content
     _ ->
       if seed.address /= "" && seed.source /= "" then do
@@ -349,7 +360,7 @@ insertNoteAt index content = do
       clampedIndex = max 0 (min index (A.length st.items))
       items = fromMaybe (A.snoc st.items (NoteItem note)) (A.insertAt clampedIndex (NoteItem note) st.items)
   H.put st { items = items, nextId = st.nextId + 1 }
-  syncUrl
+  syncSheet
 
 insertPericope
   :: String
@@ -370,7 +381,7 @@ insertPericope address source verses = do
     { items = A.snoc st.items (PericopeItem pericope)
     , nextId = st.nextId + 1
     }
-  syncUrl
+  syncSheet
 
 findPericope :: PericopeId -> Array Item -> Maybe Pericope
 findPericope pid items = A.findMap (case _ of
@@ -384,7 +395,11 @@ findNote nid items = do
     Just (NoteItem note) -> Just { index, note }
     _ -> Nothing
 
-syncUrl :: H.HalogenM AppState Action ChildSlots Void Aff Unit
-syncUrl = do
+syncSheet :: H.HalogenM AppState Action ChildSlots Void Aff Unit
+syncSheet = do
   st <- H.get
-  H.liftEffect $ storeSeeds (itemsToSeeds st.items)
+  if st.hydrating || st.sheetId == "" then
+    pure unit
+  else do
+    let payload = encodeSeeds (itemsToSeeds st.items)
+    void $ H.liftAff $ upsertSheet st.sheetId payload

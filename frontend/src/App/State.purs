@@ -20,6 +20,8 @@ type AppState =
   { items :: Array Item
   , dragging :: Maybe Int
   , droppingOver :: Maybe Int
+  , sheetId :: String
+  , hydrating :: Boolean
   , nextId :: Int
   , searchInput :: String
   , searchResults :: Array VerseSearchResult

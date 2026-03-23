@@ -11,6 +11,7 @@ sqls := $(helpers_dir)/01_all_verses.sql \
 				$(helpers_dir)/05_stories.sql \
 				$(helpers_dir)/06_dictionary_entries.sql \
 				$(helpers_dir)/07_embeddings.sql \
+				$(helpers_dir)/10_ui.sql \
 				$(helpers_dir)/11_errata.sql \
 				$(helpers_dir)/12_functions.sql \
 				$(helpers_dir)/13_postgrest.sql

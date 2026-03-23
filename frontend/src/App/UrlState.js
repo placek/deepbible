@@ -1,173 +1,48 @@
-const HASH_KEY = "state";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SHEET_PARAM = "sheet";
 
-const textEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
-const textDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
-
-const base64urlEncode = bytes => {
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  const base64 = btoa(binary);
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-};
-
-const base64urlDecode = encoded => {
-  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(normalized.length + (4 - (normalized.length % 4)) % 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-};
-
-const readLegacySeeds = () => {
-  const params = new URLSearchParams(window.location.search);
-  const raw = params.get("pericopes");
-  if (!raw) {
-    return [];
-  }
-
-  const seeds = [];
-  const entries = raw.split("|");
-  for (const entry of entries) {
-    if (!entry) continue;
-    const parts = entry.split("~");
-    if (parts.length !== 2) continue;
-    const [addressPart, sourcePart] = parts;
-    try {
-      const address = decodeURIComponent(addressPart).replace(/_/gi, " ").replace(/\*/gi, ",");
-      const source = decodeURIComponent(sourcePart);
-      seeds.push({ kind: "pericope", address, source, content: "" });
-    } catch (_err) {
-      // ignore malformed entries
+const randomBytes = (bytes) => {
+  const buffer = new Uint8Array(bytes);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    crypto.getRandomValues(buffer);
+  } else {
+    for (let i = 0; i < buffer.length; i++) {
+      buffer[i] = Math.floor(Math.random() * 256);
     }
   }
-  return seeds;
+  return buffer;
 };
 
-const sanitizeSeed = seed => {
-  const kind = typeof seed.kind === "string" ? seed.kind : "";
-  if (kind === "pericope") {
-    const address = typeof seed.address === "string" ? seed.address : "";
-    const source = typeof seed.source === "string" ? seed.source : "";
-    if (!address && !source) return null;
-    return {
-      kind,
-      address,
-      source,
-      content: "",
-    };
-  }
-
-  if (kind === "note") {
-    const content = typeof seed.content === "string" ? seed.content : "";
-    return {
-      kind,
-      address: "",
-      source: "",
-      content: content ?? "",
-    };
-  }
-
-  return null;
+const fallbackUuid = () => {
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 };
 
-const encodeSeeds = seeds => {
-  if (!Array.isArray(seeds) || seeds.length === 0 || !window.pako || !textEncoder) {
+const createUuid = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return fallbackUuid();
+};
+
+export const getOrCreateSheetId = () => {
+  if (typeof window === "undefined") {
     return "";
   }
-  const state = { items: seeds };
-  const json = JSON.stringify(state);
-  const compressed = window.pako.deflate(textEncoder.encode(json));
-  return base64urlEncode(compressed);
-};
 
-const decodeSeeds = encoded => {
-  if (!encoded || !window.pako || !textDecoder) {
-    return [];
-  }
-  try {
-    const inflated = window.pako.inflate(base64urlDecode(encoded));
-    const json = textDecoder.decode(inflated);
-    const parsed = JSON.parse(json);
-    if (parsed && Array.isArray(parsed.items)) {
-      return parsed.items.map(sanitizeSeed).filter(Boolean);
-    }
-    if (parsed && Array.isArray(parsed.pericopes)) {
-      return parsed.pericopes.map(seed => sanitizeSeed({ kind: "pericope", ...seed })).filter(Boolean);
-    }
-  } catch (_err) {
-    // ignore malformed state
-  }
-  return [];
-};
-
-const currentHashValue = () => {
-  const raw = window.location.hash.startsWith("#")
-    ? window.location.hash.slice(1)
-    : window.location.hash;
-  if (!raw) return "";
-  if (raw.startsWith(`${HASH_KEY}=`)) {
-    return raw.slice(HASH_KEY.length + 1);
-  }
-  return raw;
-};
-
-const buildUrl = (hashValue) => {
   const params = new URLSearchParams(window.location.search);
-  params.delete("pericopes");
+  const existing = params.get(SHEET_PARAM);
+  if (existing && UUID_RE.test(existing)) {
+    return existing;
+  }
+
+  const sheetId = createUuid();
+  params.set(SHEET_PARAM, sheetId);
   const search = params.toString();
-  const hash = hashValue ? `#${HASH_KEY}=${hashValue}` : "";
-  return `${window.location.pathname}${search ? `?${search}` : ""}${hash}`;
-};
-
-export const loadSeeds = () => {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const hashValue = currentHashValue();
-  let seeds = decodeSeeds(hashValue);
-
-  if (seeds.length === 0) {
-    seeds = readLegacySeeds();
-  }
-
-  const encoded = encodeSeeds(seeds);
-  const newUrl = buildUrl(encoded);
-
-  window.history.replaceState({ items: seeds }, "", newUrl);
-
-  if (!window.__deepbibleHistoryListener) {
-    window.addEventListener("popstate", () => {
-      window.location.reload();
-    });
-    window.__deepbibleHistoryListener = true;
-  }
-
-  return seeds;
-};
-
-export const storeSeeds = seeds => () => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const sanitized = Array.isArray(seeds)
-    ? seeds.map(sanitizeSeed).filter(Boolean)
-    : [];
-
-  const encoded = encodeSeeds(sanitized);
-  const newUrl = buildUrl(encoded);
-  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-  const state = { items: sanitized };
-
-  if (currentUrl === newUrl) {
-    window.history.replaceState(state, "", newUrl);
-  } else {
-    window.history.pushState(state, "", newUrl);
-  }
+  const newUrl = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+  window.history.replaceState({ sheetId }, "", newUrl);
+  return sheetId;
 };

@@ -85,6 +85,28 @@ AS $$
   FROM deepbible.search_verses(search_phrase);
 $$;
 
+CREATE OR REPLACE FUNCTION api.upsert_sheet(p_id uuid, p_data jsonb DEFAULT '{}'::jsonb)
+  RETURNS SETOF deepbible._sheets
+  LANGUAGE sql
+  SECURITY DEFINER
+  SET search_path = deepbible, public
+AS $$
+  INSERT INTO deepbible._sheets (id, data)
+  VALUES (COALESCE(p_id, gen_random_uuid()), p_data)
+  ON CONFLICT (id) DO UPDATE
+  SET data = EXCLUDED.data
+  RETURNING *;
+$$;
+
+CREATE OR REPLACE FUNCTION api.fetch_sheet(p_id uuid)
+  RETURNS SETOF deepbible._sheets
+  LANGUAGE sql
+  SECURITY DEFINER
+  SET search_path = deepbible, public
+AS $$
+  SELECT id, data FROM deepbible._sheets WHERE id = p_id;
+$$;
+
 GRANT USAGE ON SCHEMA api TO web_anon;
 GRANT EXECUTE ON FUNCTION api._all_sources() TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_verses_by_address(text, text) TO web_anon;
@@ -93,3 +115,5 @@ GRANT EXECUTE ON FUNCTION api.fetch_commentaries(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_rendered_stories(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.verse_dictionary(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.search_verses(text) TO web_anon;
+GRANT EXECUTE ON FUNCTION api.upsert_sheet(uuid, jsonb) TO web_anon;
+GRANT EXECUTE ON FUNCTION api.fetch_sheet(uuid) TO web_anon;
