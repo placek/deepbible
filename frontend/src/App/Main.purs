@@ -21,6 +21,7 @@ import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
 
+import App.Markdown (downloadMarkdownFile, renderSheetMarkdown)
 import App.State (AppState, Item(..))
 import App.UrlState (ItemSeed(..), decodeSeeds, encodeSeeds, getOrCreateSheetId, itemsToSeeds)
 import Domain.Bible.Types (Verse)
@@ -67,6 +68,7 @@ data Action
   = Initialize
   | AddPericope String String (Array Verse)
   | AddNoteAt Int
+  | DownloadMarkdown
   | ChildMsg ChildMessage
   | StartDrag Int
   | OverDrag Int
@@ -158,7 +160,13 @@ renderFooter :: H.ComponentHTML Action ChildSlots Aff
 renderFooter =
   HH.div
     [ HP.class_ (HH.ClassName "app-footer") ]
-    [ HH.a
+    [ HH.button
+        [ HP.class_ (HH.ClassName "app-footer-action")
+        , HP.title "download sheet as markdown"
+        , HE.onClick \_ -> DownloadMarkdown
+        ]
+        [ HH.text "download markdown" ]
+    , HH.a
         [ HP.href "https://github.com/placek/deepbible"
         , HP.attr (HH.AttrName "target") "_blank"
         , HP.attr (HH.AttrName "rel") "noreferrer"
@@ -186,6 +194,17 @@ handle action = case action of
 
   AddNoteAt index ->
     insertNoteAt index ""
+
+  DownloadMarkdown -> do
+    st <- H.get
+    let
+      filename =
+        if st.sheetId == "" then
+          "deepbible-sheet.md"
+        else
+          "deepbible-sheet-" <> st.sheetId <> ".md"
+      markdown = renderSheetMarkdown st.items
+    H.liftEffect $ downloadMarkdownFile filename markdown
 
   HandleSearch searchAction ->
     Search.handleAction insertPericope searchAction
