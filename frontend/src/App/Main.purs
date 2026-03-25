@@ -10,7 +10,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
 import Data.String.Common (trim)
 import Effect (Effect)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, launchAff_)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -446,4 +446,5 @@ syncSheet = do
     pure unit
   else do
     let payload = encodeSeeds (itemsToSeeds st.items)
-    void $ H.liftAff $ upsertSheet st.sheetId payload
+    H.liftEffect $ launchAff_ do
+      void $ upsertSheet st.sheetId payload

@@ -5196,6 +5196,9 @@ var launchAff = function(aff) {
     return fiber;
   };
 };
+var launchAff_ = function($75) {
+  return $$void3(launchAff($75));
+};
 var bracket = function(acquire) {
   return function(completed) {
     return generalBracket(acquire)({
@@ -12739,8 +12742,8 @@ var handleAction = function(insertPericope2) {
 var bind11 = /* @__PURE__ */ bind(bindHalogenM);
 var get7 = /* @__PURE__ */ get2(monadStateHalogenM);
 var pure20 = /* @__PURE__ */ pure(applicativeHalogenM);
-var $$void7 = /* @__PURE__ */ $$void(functorHalogenM);
-var liftAff3 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
+var liftEffect8 = /* @__PURE__ */ liftEffect(/* @__PURE__ */ monadEffectHalogenM(monadEffectAff));
+var $$void7 = /* @__PURE__ */ $$void(functorAff);
 var discard8 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
 var modify_6 = /* @__PURE__ */ modify_2(monadStateHalogenM);
 var slot2 = /* @__PURE__ */ slot();
@@ -12762,10 +12765,11 @@ var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var max6 = /* @__PURE__ */ max(ordInt);
 var min5 = /* @__PURE__ */ min(ordInt);
 var bind16 = /* @__PURE__ */ bind(bindMaybe);
+var liftAff3 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
+var void1 = /* @__PURE__ */ $$void(functorHalogenM);
 var query2 = /* @__PURE__ */ query()(pericopeIsSymbol)(ordInt);
 var for_3 = /* @__PURE__ */ for_(applicativeHalogenM)(foldableArray);
 var mapFlipped7 = /* @__PURE__ */ mapFlipped(functorArray);
-var liftEffect8 = /* @__PURE__ */ liftEffect(/* @__PURE__ */ monadEffectHalogenM(monadEffectAff));
 var PericopeMsg = /* @__PURE__ */ function() {
   function PericopeMsg2(value0, value1) {
     this.value0 = value0;
@@ -12918,26 +12922,26 @@ var updateNote = function(updated) {
   };
 };
 var syncSheet = /* @__PURE__ */ bind11(get7)(function(st) {
-  var $70 = st.hydrating || st.sheetId === "";
-  if ($70) {
+  var $71 = st.hydrating || st.sheetId === "";
+  if ($71) {
     return pure20(unit);
   }
   ;
   var payload = encodeSeeds(itemsToSeeds(st.items));
-  return $$void7(liftAff3(upsertSheet(st.sheetId)(payload)));
+  return liftEffect8(launchAff_($$void7(upsertSheet(st.sheetId)(payload))));
 });
 var updateItemsAndSync = function(updateItems) {
   return discard8(modify_6(function(st) {
-    var $71 = {};
-    for (var $72 in st) {
-      if ({}.hasOwnProperty.call(st, $72)) {
-        $71[$72] = st[$72];
+    var $72 = {};
+    for (var $73 in st) {
+      if ({}.hasOwnProperty.call(st, $73)) {
+        $72[$73] = st[$73];
       }
       ;
     }
     ;
-    $71.items = updateItems(st.items);
-    return $71;
+    $72.items = updateItems(st.items);
+    return $72;
   }))(function() {
     return syncSheet;
   });
@@ -13050,17 +13054,17 @@ var insertPericope = function(address2) {
           selected: empty4
         };
         return discard8(put3(function() {
-          var $88 = {};
-          for (var $89 in st) {
-            if ({}.hasOwnProperty.call(st, $89)) {
-              $88[$89] = st[$89];
+          var $89 = {};
+          for (var $90 in st) {
+            if ({}.hasOwnProperty.call(st, $90)) {
+              $89[$90] = st[$90];
             }
             ;
           }
           ;
-          $88.items = snoc(st.items)(new PericopeItem(pericope));
-          $88.nextId = st.nextId + 1 | 0;
-          return $88;
+          $89.items = snoc(st.items)(new PericopeItem(pericope));
+          $89.nextId = st.nextId + 1 | 0;
+          return $89;
         }()))(function() {
           return syncSheet;
         });
@@ -13078,17 +13082,17 @@ var insertNoteAt = function(index4) {
       var clampedIndex = max6(0)(min5(index4)(length(st.items)));
       var items2 = fromMaybe(snoc(st.items)(new NoteItem(note2)))(insertAt(clampedIndex)(new NoteItem(note2))(st.items));
       return discard8(put3(function() {
-        var $91 = {};
-        for (var $92 in st) {
-          if ({}.hasOwnProperty.call(st, $92)) {
-            $91[$92] = st[$92];
+        var $92 = {};
+        for (var $93 in st) {
+          if ({}.hasOwnProperty.call(st, $93)) {
+            $92[$93] = st[$93];
           }
           ;
         }
         ;
-        $91.items = items2;
-        $91.nextId = st.nextId + 1 | 0;
-        return $91;
+        $92.items = items2;
+        $92.nextId = st.nextId + 1 | 0;
+        return $92;
       }()))(function() {
         return syncSheet;
       });
@@ -13164,8 +13168,8 @@ var loadSeed = function(v) {
     return insertNoteAtEnd(v.content);
   }
   ;
-  var $104 = v.address !== "" && v.source !== "";
-  if ($104) {
+  var $105 = v.address !== "" && v.source !== "";
+  if ($105) {
     return fetchAndInsertPericope(v.address)(v.source);
   }
   ;
@@ -13173,7 +13177,7 @@ var loadSeed = function(v) {
 };
 var defaultSeeds = [/* @__PURE__ */ pericopeSeed("J 3,16-17")("NVUL"), /* @__PURE__ */ pericopeSeed("J 3,16-17")("NA28"), /* @__PURE__ */ pericopeSeed("J 3,16-17")("BT_03"), /* @__PURE__ */ pericopeSeed("J 3,16-17")("TRO+")];
 var cancelEditing = function(p2) {
-  return $$void7(query2(pericopeSlot)(p2.id)(new CancelEditing(unit)));
+  return void1(query2(pericopeSlot)(p2.id)(new CancelEditing(unit)));
 };
 var handleDocumentClick = /* @__PURE__ */ function() {
   return discard8(handleAction(insertPericope)(CloseSearchResults.value))(function() {
@@ -13296,17 +13300,17 @@ var handle3 = function(action2) {
   if (action2 instanceof Initialize2) {
     return bind11(liftEffect8(getOrCreateSheetId))(function(sheetId) {
       return discard8(modify_6(function(st) {
-        var $141 = {};
-        for (var $142 in st) {
-          if ({}.hasOwnProperty.call(st, $142)) {
-            $141[$142] = st[$142];
+        var $142 = {};
+        for (var $143 in st) {
+          if ({}.hasOwnProperty.call(st, $143)) {
+            $142[$143] = st[$143];
           }
           ;
         }
         ;
-        $141.sheetId = sheetId;
-        $141.hydrating = true;
-        return $141;
+        $142.sheetId = sheetId;
+        $142.hydrating = true;
+        return $142;
       }))(function() {
         return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
           var loadedSeeds = function() {
@@ -13329,8 +13333,8 @@ var handle3 = function(action2) {
             throw new Error("Failed pattern match at App.Main (line 184, column 23 - line 188, column 50): " + [res.constructor.name]);
           }();
           var seeds = function() {
-            var $149 = $$null(loadedSeeds);
-            if ($149) {
+            var $150 = $$null(loadedSeeds);
+            if ($150) {
               return defaultSeeds;
             }
             ;
@@ -13338,21 +13342,21 @@ var handle3 = function(action2) {
           }();
           return discard8(for_3(seeds)(loadSeed))(function() {
             return discard8(modify_6(function(st) {
-              var $150 = {};
-              for (var $151 in st) {
-                if ({}.hasOwnProperty.call(st, $151)) {
-                  $150[$151] = st[$151];
+              var $151 = {};
+              for (var $152 in st) {
+                if ({}.hasOwnProperty.call(st, $152)) {
+                  $151[$152] = st[$152];
                 }
                 ;
               }
               ;
-              $150.hydrating = false;
-              return $150;
+              $151.hydrating = false;
+              return $151;
             }))(function() {
               return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
                 var query1 = trim(rawQuery);
-                var $153 = query1 === "";
-                if ($153) {
+                var $154 = query1 === "";
+                if ($154) {
                   return pure20(unit);
                 }
                 ;
@@ -13379,8 +13383,8 @@ var handle3 = function(action2) {
     return bind11(get7)(function(st) {
       var markdown = renderSheetMarkdown(st.items);
       var filename = function() {
-        var $158 = st.sheetId === "";
-        if ($158) {
+        var $159 = st.sheetId === "";
+        if ($159) {
           return "deepbible-sheet.md";
         }
         ;
@@ -13400,46 +13404,46 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof StartDrag) {
     return modify_6(function(st) {
-      var $160 = {};
-      for (var $161 in st) {
-        if ({}.hasOwnProperty.call(st, $161)) {
-          $160[$161] = st[$161];
+      var $161 = {};
+      for (var $162 in st) {
+        if ({}.hasOwnProperty.call(st, $162)) {
+          $161[$162] = st[$162];
         }
         ;
       }
       ;
-      $160.dragging = new Just(action2.value0);
-      return $160;
+      $161.dragging = new Just(action2.value0);
+      return $161;
     });
   }
   ;
   if (action2 instanceof OverDrag) {
     return modify_6(function(st) {
-      var $164 = {};
-      for (var $165 in st) {
-        if ({}.hasOwnProperty.call(st, $165)) {
-          $164[$165] = st[$165];
+      var $165 = {};
+      for (var $166 in st) {
+        if ({}.hasOwnProperty.call(st, $166)) {
+          $165[$166] = st[$166];
         }
         ;
       }
       ;
-      $164.droppingOver = new Just(action2.value0);
-      return $164;
+      $165.droppingOver = new Just(action2.value0);
+      return $165;
     });
   }
   ;
   if (action2 instanceof LeaveDrag) {
     return modify_6(function(st) {
-      var $168 = {};
-      for (var $169 in st) {
-        if ({}.hasOwnProperty.call(st, $169)) {
-          $168[$169] = st[$169];
+      var $169 = {};
+      for (var $170 in st) {
+        if ({}.hasOwnProperty.call(st, $170)) {
+          $169[$170] = st[$170];
         }
         ;
       }
       ;
-      $168.droppingOver = Nothing.value;
-      return $168;
+      $169.droppingOver = Nothing.value;
+      return $169;
     });
   }
   ;
@@ -13452,18 +13456,18 @@ var handle3 = function(action2) {
       if (st.dragging instanceof Just) {
         var items2 = reorder(st.dragging.value0)(action2.value0)(st.items);
         return discard8(put3(function() {
-          var $173 = {};
-          for (var $174 in st) {
-            if ({}.hasOwnProperty.call(st, $174)) {
-              $173[$174] = st[$174];
+          var $174 = {};
+          for (var $175 in st) {
+            if ({}.hasOwnProperty.call(st, $175)) {
+              $174[$175] = st[$175];
             }
             ;
           }
           ;
-          $173.items = items2;
-          $173.dragging = Nothing.value;
-          $173.droppingOver = Nothing.value;
-          return $173;
+          $174.items = items2;
+          $174.dragging = Nothing.value;
+          $174.droppingOver = Nothing.value;
+          return $174;
         }()))(function() {
           return syncSheet;
         });
