@@ -276,7 +276,8 @@ BEGIN
   IF v_clean_phrase IS NULL THEN
     RETURN QUERY
       SELECT *
-      FROM deepbible.fetch_verses_by_address(v_address, v_source);
+      FROM deepbible.fetch_verses_by_address(v_address, v_source)
+      LIMIT 200;
   ELSE
     v_vector := deepbible.generate_embedding(v_clean_phrase);
     IF v_address IS NULL OR btrim(v_address) = '' THEN
@@ -285,13 +286,15 @@ BEGIN
         FROM deepbible._all_verses v
         JOIN deepbible._embeddings e ON e.id = v.id
         WHERE (v_source IS NULL OR v.source = v_source)
-        ORDER BY (e.embedding <=> v_vector) ASC;
+        ORDER BY (e.embedding <=> v_vector) ASC
+        LIMIT 200;
     ELSE
       RETURN QUERY
         SELECT v.*
         FROM deepbible.fetch_verses_by_address(v_address, v_source) v
         JOIN deepbible._embeddings e ON e.id = v.id
-        ORDER BY (e.embedding <=> v_vector) ASC;
+        ORDER BY (e.embedding <=> v_vector) ASC
+        LIMIT 200;
     END IF;
   END IF;
 END;
