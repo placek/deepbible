@@ -8,6 +8,7 @@ import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
+import Data.String.Common (trim)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen as H
@@ -23,7 +24,7 @@ import Type.Proxy (Proxy(..))
 
 import App.Markdown (downloadMarkdownFile, renderSheetMarkdown)
 import App.State (AppState, Item(..))
-import App.UrlState (ItemSeed(..), decodeSeeds, encodeSeeds, getOrCreateSheetId, itemsToSeeds)
+import App.UrlState (ItemSeed(..), decodeSeeds, encodeSeeds, getOrCreateSheetId, getSearchQueryParam, itemsToSeeds)
 import Domain.Bible.Types (Verse)
 import Domain.Note.Types (Note, NoteId)
 import Domain.Pericope.Types (Pericope, PericopeId)
@@ -188,6 +189,13 @@ handle action = case action of
         seeds = if A.null loadedSeeds then defaultSeeds else loadedSeeds
     for_ seeds loadSeed
     H.modify_ \st -> st { hydrating = false }
+    rawQuery <- H.liftEffect getSearchQueryParam
+    let query = trim rawQuery
+    if query == "" then
+      pure unit
+    else do
+      Search.handleAction insertPericope (Search.UpdateSearchInput rawQuery)
+      Search.handleAction insertPericope Search.SubmitSearch
 
   AddPericope addr src verses ->
     insertPericope addr src verses

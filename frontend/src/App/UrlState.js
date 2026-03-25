@@ -46,3 +46,13 @@ export const getOrCreateSheetId = () => {
   window.history.replaceState({ sheetId }, "", newUrl);
   return sheetId;
 };
+
+export const getSearchQueryParam = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const value = params.get("q");
+  return value == null ? "" : value;
+};

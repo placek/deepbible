@@ -2,6 +2,7 @@ module App.UrlState
   ( ItemSeed(..)
   , decodeSeeds
   , encodeSeeds
+  , getSearchQueryParam
   , getOrCreateSheetId
   , itemsToSeeds
   ) where
@@ -109,3 +110,4 @@ encodeSeeds :: Array ItemSeed -> Json
 encodeSeeds seeds = encodeJson (SheetData { items: sanitizeSeeds seeds })
 
 foreign import getOrCreateSheetId :: Effect String
+foreign import getSearchQueryParam :: Effect String
