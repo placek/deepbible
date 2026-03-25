@@ -1959,9 +1959,6 @@ var joinWith = function(s) {
 var show2 = /* @__PURE__ */ show(showInt);
 var mapFlipped2 = /* @__PURE__ */ mapFlipped(functorArray);
 var map6 = /* @__PURE__ */ map(functorArray);
-var blockquoteLine = function(content3) {
-  return "> " + content3;
-};
 var renderVerseLine = function(v) {
   var cleanText = htmlToText(v.text);
   var line = function() {
@@ -1972,11 +1969,11 @@ var renderVerseLine = function(v) {
     ;
     return show2(v.verse) + (" " + cleanText);
   }();
-  return blockquoteLine(line);
+  return "- " + line;
 };
 var renderPericope = function(pericope) {
   var verseLines = mapFlipped2(pericope.verses)(renderVerseLine);
-  var header2 = blockquoteLine("Source: " + (pericope.source + (" | Address: " + pericope.address)));
+  var header2 = "## Source: " + (pericope.source + (" | Address: " + pericope.address));
   return joinWith("\n")(cons(header2)(verseLines));
 };
 var renderItem = function(v) {

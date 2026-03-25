@@ -26,8 +26,7 @@ renderPericope :: Pericope -> String
 renderPericope pericope =
   let
     header =
-      blockquoteLine
-        ("Source: " <> pericope.source <> " | Address: " <> pericope.address)
+      "###### " <> pericope.address <> " (" <> pericope.source <> ")"
     verseLines = pericope.verses <#> renderVerseLine
   in
     joinWith "\n" (A.cons header verseLines)
@@ -36,13 +35,11 @@ renderVerseLine :: Verse -> String
 renderVerseLine (Verse verse) =
   let
     cleanText = htmlToText verse.text
+    verseNumber = "<sup>" <> show verse.verse <> "</sup>"
     line =
       if cleanText == "" then
-        show verse.verse
+        verseNumber
       else
-        show verse.verse <> " " <> cleanText
+        verseNumber <> " " <> cleanText
   in
-    blockquoteLine line
-
-blockquoteLine :: String -> String
-blockquoteLine content = "> " <> content
+    "- " <> line
