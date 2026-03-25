@@ -279,11 +279,20 @@ BEGIN
       FROM deepbible.fetch_verses_by_address(v_address, v_source);
   ELSE
     v_vector := deepbible.generate_embedding(v_clean_phrase);
-    RETURN QUERY
-      SELECT v.*
-      FROM deepbible.fetch_verses_by_address(v_address, v_source) v
-      JOIN deepbible._embeddings e ON e.id = v.id
-      ORDER BY (e.embedding <=> v_vector) ASC;
+    IF v_address IS NULL OR btrim(v_address) = '' THEN
+      RETURN QUERY
+        SELECT v.*
+        FROM deepbible._all_verses v
+        JOIN deepbible._embeddings e ON e.id = v.id
+        WHERE (v_source IS NULL OR v.source = v_source)
+        ORDER BY (e.embedding <=> v_vector) ASC;
+    ELSE
+      RETURN QUERY
+        SELECT v.*
+        FROM deepbible.fetch_verses_by_address(v_address, v_source) v
+        JOIN deepbible._embeddings e ON e.id = v.id
+        ORDER BY (e.embedding <=> v_vector) ASC;
+    END IF;
   END IF;
 END;
 $BODY$;
