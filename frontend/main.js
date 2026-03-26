@@ -9,6 +9,13 @@ var htmlToText = (html2) => {
   const text6 = container.textContent || "";
   return text6.replace(/\s+/g, " ").trim();
 };
+var stripSmTags = (input3) => {
+  const value17 = typeof input3 === "string" ? input3 : "";
+  if (value17 === "") {
+    return "";
+  }
+  return value17.replace(/<\/?s\b[^>]*>/gi, "").replace(/<\/?m\b[^>]*>/gi, "");
+};
 var downloadMarkdownFile = (filename) => (content3) => () => {
   const safeName = typeof filename === "string" && filename.length > 0 ? filename : "deepbible-sheet.md";
   const text6 = typeof content3 === "string" ? content3 : "";
@@ -1597,12 +1604,12 @@ var foldableMaybe = {
 var foldMapDefaultR = function(dictFoldable) {
   var foldr22 = foldr(dictFoldable);
   return function(dictMonoid) {
-    var append7 = append(dictMonoid.Semigroup0());
+    var append6 = append(dictMonoid.Semigroup0());
     var mempty2 = mempty(dictMonoid);
     return function(f) {
       return foldr22(function(x) {
         return function(acc) {
-          return append7(f(x))(acc);
+          return append6(f(x))(acc);
         };
       })(mempty2);
     };
@@ -1961,7 +1968,7 @@ var mapFlipped2 = /* @__PURE__ */ mapFlipped(functorArray);
 var map6 = /* @__PURE__ */ map(functorArray);
 var renderVerseLine = function(v) {
   var verseNumber = "<sup>" + (show2(v.verse) + "</sup>");
-  var cleanText = htmlToText(v.text);
+  var cleanText = htmlToText(stripSmTags(v.text));
   var line = function() {
     var $8 = cleanText === "";
     if ($8) {
@@ -1979,14 +1986,14 @@ var renderPericope = function(pericope) {
 };
 var renderItem = function(v) {
   if (v instanceof NoteItem) {
-    return v.value0.content;
+    return stripSmTags(v.value0.content);
   }
   ;
   if (v instanceof PericopeItem) {
     return renderPericope(v.value0);
   }
   ;
-  throw new Error("Failed pattern match at App.Markdown (line 21, column 14 - line 23, column 51): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Markdown (line 22, column 14 - line 24, column 51): " + [v.constructor.name]);
 };
 var renderSheetMarkdown = function(items2) {
   return joinWith("\n\n")(map6(renderItem)(items2));
@@ -2150,13 +2157,13 @@ var foldrWithIndex = function(dict) {
 var foldMapWithIndexDefaultR = function(dictFoldableWithIndex) {
   var foldrWithIndex1 = foldrWithIndex(dictFoldableWithIndex);
   return function(dictMonoid) {
-    var append7 = append(dictMonoid.Semigroup0());
+    var append6 = append(dictMonoid.Semigroup0());
     var mempty2 = mempty(dictMonoid);
     return function(f) {
       return foldrWithIndex1(function(i2) {
         return function(x) {
           return function(acc) {
-            return append7(f(i2)(x))(acc);
+            return append6(f(i2)(x))(acc);
           };
         };
       })(mempty2);
@@ -2297,13 +2304,13 @@ var functorWithIndexObject = {
 };
 var fold2 = /* @__PURE__ */ _foldM(applyFlipped);
 var foldMap2 = function(dictMonoid) {
-  var append14 = append(dictMonoid.Semigroup0());
+  var append15 = append(dictMonoid.Semigroup0());
   var mempty2 = mempty(dictMonoid);
   return function(f) {
     return fold2(function(acc) {
       return function(k) {
         return function(v) {
-          return append14(acc)(f(k)(v));
+          return append15(acc)(f(k)(v));
         };
       };
     })(mempty2);
@@ -3279,7 +3286,7 @@ var foldableMap = {
   },
   foldMap: function(dictMonoid) {
     var mempty2 = mempty(dictMonoid);
-    var append14 = append(dictMonoid.Semigroup0());
+    var append15 = append(dictMonoid.Semigroup0());
     return function(f) {
       var go2 = function(v) {
         if (v instanceof Leaf) {
@@ -3287,7 +3294,7 @@ var foldableMap = {
         }
         ;
         if (v instanceof Node) {
-          return append14(go2(v.value4))(append14(f(v.value3))(go2(v.value5)));
+          return append15(go2(v.value4))(append15(f(v.value3))(go2(v.value5)));
         }
         ;
         throw new Error("Failed pattern match at Data.Map.Internal (line 181, column 10 - line 184, column 28): " + [v.constructor.name]);
@@ -3341,7 +3348,7 @@ var foldableWithIndexMap = {
   },
   foldMapWithIndex: function(dictMonoid) {
     var mempty2 = mempty(dictMonoid);
-    var append14 = append(dictMonoid.Semigroup0());
+    var append15 = append(dictMonoid.Semigroup0());
     return function(f) {
       var go2 = function(v) {
         if (v instanceof Leaf) {
@@ -3349,7 +3356,7 @@ var foldableWithIndexMap = {
         }
         ;
         if (v instanceof Node) {
-          return append14(go2(v.value4))(append14(f(v.value2)(v.value3))(go2(v.value5)));
+          return append15(go2(v.value4))(append15(f(v.value2)(v.value3))(go2(v.value5)));
         }
         ;
         throw new Error("Failed pattern match at Data.Map.Internal (line 201, column 10 - line 204, column 30): " + [v.constructor.name]);
@@ -5032,7 +5039,7 @@ var monadThrowExceptT = function(dictMonad) {
   };
 };
 var altExceptT = function(dictSemigroup) {
-  var append7 = append(dictSemigroup);
+  var append6 = append(dictSemigroup);
   return function(dictMonad) {
     var Bind1 = dictMonad.Bind1();
     var bind17 = bind(Bind1);
@@ -5053,7 +5060,7 @@ var altExceptT = function(dictSemigroup) {
                 }
                 ;
                 if (rn instanceof Left) {
-                  return pure21(new Left(append7(rm.value0)(rn.value0)));
+                  return pure21(new Left(append6(rm.value0)(rn.value0)));
                 }
                 ;
                 throw new Error("Failed pattern match at Control.Monad.Except.Trans (line 87, column 9 - line 89, column 49): " + [rn.constructor.name]);
@@ -12760,7 +12767,7 @@ var slot22 = /* @__PURE__ */ slot2({
   }
 })(ordInt);
 var component22 = /* @__PURE__ */ component(monadAffAff);
-var append6 = /* @__PURE__ */ append(semigroupArray);
+var append14 = /* @__PURE__ */ append(semigroupArray);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var max6 = /* @__PURE__ */ max(ordInt);
 var min5 = /* @__PURE__ */ min(ordInt);
@@ -12946,9 +12953,19 @@ var updateItemsAndSync = function(updateItems) {
     return syncSheet;
   });
 };
-var renderFooter = /* @__PURE__ */ div2([/* @__PURE__ */ class_("app-footer")])([/* @__PURE__ */ button([/* @__PURE__ */ class_("app-footer-action"), /* @__PURE__ */ title2("download sheet as markdown"), /* @__PURE__ */ onClick(function(v) {
-  return DownloadMarkdown.value;
-})])([/* @__PURE__ */ text5("download markdown")]), /* @__PURE__ */ a([/* @__PURE__ */ href4("https://github.com/placek/deepbible"), /* @__PURE__ */ attr2("target")("_blank"), /* @__PURE__ */ attr2("rel")("noreferrer")])([/* @__PURE__ */ text5("github")])]);
+var sheetMarkdownFilename = function(sheetId) {
+  var $75 = sheetId === "";
+  if ($75) {
+    return "deepbible-sheet.md";
+  }
+  ;
+  return "deepbible-sheet-" + (sheetId + ".md");
+};
+var renderFooter = function(sheetId) {
+  return div2([class_("app-footer")])([button([class_("app-footer-action"), title2("download sheet as markdown"), onClick(function(v) {
+    return DownloadMarkdown.value;
+  })])([text5(sheetMarkdownFilename(sheetId))]), a([href4("https://github.com/placek/deepbible"), attr2("target")("_blank"), attr2("rel")("noreferrer")])([text5("github")])]);
+};
 var renderAddNoteButton = function(index4) {
   return button([class_("note-add"), onClick(function(v) {
     return new AddNoteAt(index4);
@@ -12997,10 +13014,10 @@ var renderItemWithAddButton = function(index4) {
   };
 };
 var render3 = function(st) {
-  var items2 = concat(append6([[renderAddNoteButton(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
+  var items2 = concat(append14([[renderAddNoteButton(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
   return div2([onClick(function(v) {
     return HandleDocumentClick.value;
-  })])([renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter]);
+  })])([renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter(st.sheetId)]);
 };
 var itemId = function(v) {
   if (v instanceof PericopeItem) {
@@ -13011,7 +13028,7 @@ var itemId = function(v) {
     return v.value0.id;
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 361, column 10 - line 363, column 21): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 364, column 10 - line 366, column 21): " + [v.constructor.name]);
 };
 var removeItemById = function(rid) {
   return updateItemsAndSync(filter(function(item) {
@@ -13054,17 +13071,17 @@ var insertPericope = function(address2) {
           selected: empty4
         };
         return discard8(put3(function() {
-          var $89 = {};
-          for (var $90 in st) {
-            if ({}.hasOwnProperty.call(st, $90)) {
-              $89[$90] = st[$90];
+          var $90 = {};
+          for (var $91 in st) {
+            if ({}.hasOwnProperty.call(st, $91)) {
+              $90[$91] = st[$91];
             }
             ;
           }
           ;
-          $89.items = snoc(st.items)(new PericopeItem(pericope));
-          $89.nextId = st.nextId + 1 | 0;
-          return $89;
+          $90.items = snoc(st.items)(new PericopeItem(pericope));
+          $90.nextId = st.nextId + 1 | 0;
+          return $90;
         }()))(function() {
           return syncSheet;
         });
@@ -13082,17 +13099,17 @@ var insertNoteAt = function(index4) {
       var clampedIndex = max6(0)(min5(index4)(length(st.items)));
       var items2 = fromMaybe(snoc(st.items)(new NoteItem(note2)))(insertAt(clampedIndex)(new NoteItem(note2))(st.items));
       return discard8(put3(function() {
-        var $92 = {};
-        for (var $93 in st) {
-          if ({}.hasOwnProperty.call(st, $93)) {
-            $92[$93] = st[$93];
+        var $93 = {};
+        for (var $94 in st) {
+          if ({}.hasOwnProperty.call(st, $94)) {
+            $93[$94] = st[$94];
           }
           ;
         }
         ;
-        $92.items = items2;
-        $92.nextId = st.nextId + 1 | 0;
-        return $92;
+        $93.items = items2;
+        $93.nextId = st.nextId + 1 | 0;
+        return $93;
       }()))(function() {
         return syncSheet;
       });
@@ -13159,7 +13176,7 @@ var fetchAndInsertPericope = function(address2) {
         return insertPericope(address2)(source2)(res.value0);
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 344, column 3 - line 346, column 57): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 347, column 3 - line 349, column 57): " + [res.constructor.name]);
     });
   };
 };
@@ -13168,8 +13185,8 @@ var loadSeed = function(v) {
     return insertNoteAtEnd(v.content);
   }
   ;
-  var $105 = v.address !== "" && v.source !== "";
-  if ($105) {
+  var $106 = v.address !== "" && v.source !== "";
+  if ($106) {
     return fetchAndInsertPericope(v.address)(v.source);
   }
   ;
@@ -13205,7 +13222,7 @@ var handlePericopeOutput = function(pid) {
           return fetchAndInsertPericope(v1.value0.address)(v1.value0.source);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 262, column 5 - line 264, column 58): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 265, column 5 - line 267, column 58): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13247,7 +13264,7 @@ var handlePericopeOutput = function(pid) {
       return fetchAndInsertPericope(v.value0.address)(v.value0.source);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 259, column 28 - line 291, column 42): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 262, column 28 - line 294, column 42): " + [v.constructor.name]);
   };
 };
 var handleNoteOutput = function(nid) {
@@ -13263,7 +13280,7 @@ var handleNoteOutput = function(nid) {
           return insertNoteAt(v1.value0.index + 1 | 0)(v1.value0.note.content);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 300, column 5 - line 302, column 68): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 303, column 5 - line 305, column 68): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13293,24 +13310,24 @@ var handleNoteOutput = function(nid) {
       });
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 297, column 24 - line 320, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 300, column 24 - line 323, column 64): " + [v.constructor.name]);
   };
 };
 var handle3 = function(action2) {
   if (action2 instanceof Initialize2) {
     return bind11(liftEffect8(getOrCreateSheetId))(function(sheetId) {
       return discard8(modify_6(function(st) {
-        var $142 = {};
-        for (var $143 in st) {
-          if ({}.hasOwnProperty.call(st, $143)) {
-            $142[$143] = st[$143];
+        var $143 = {};
+        for (var $144 in st) {
+          if ({}.hasOwnProperty.call(st, $144)) {
+            $143[$144] = st[$144];
           }
           ;
         }
         ;
-        $142.sheetId = sheetId;
-        $142.hydrating = true;
-        return $142;
+        $143.sheetId = sheetId;
+        $143.hydrating = true;
+        return $143;
       }))(function() {
         return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
           var loadedSeeds = function() {
@@ -13327,14 +13344,14 @@ var handle3 = function(action2) {
                 return decodeSeeds(res.value0.value0);
               }
               ;
-              throw new Error("Failed pattern match at App.Main (line 186, column 30 - line 188, column 50): " + [res.value0.constructor.name]);
+              throw new Error("Failed pattern match at App.Main (line 193, column 30 - line 195, column 50): " + [res.value0.constructor.name]);
             }
             ;
-            throw new Error("Failed pattern match at App.Main (line 184, column 23 - line 188, column 50): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at App.Main (line 191, column 23 - line 195, column 50): " + [res.constructor.name]);
           }();
           var seeds = function() {
-            var $150 = $$null(loadedSeeds);
-            if ($150) {
+            var $151 = $$null(loadedSeeds);
+            if ($151) {
               return defaultSeeds;
             }
             ;
@@ -13342,21 +13359,21 @@ var handle3 = function(action2) {
           }();
           return discard8(for_3(seeds)(loadSeed))(function() {
             return discard8(modify_6(function(st) {
-              var $151 = {};
-              for (var $152 in st) {
-                if ({}.hasOwnProperty.call(st, $152)) {
-                  $151[$152] = st[$152];
+              var $152 = {};
+              for (var $153 in st) {
+                if ({}.hasOwnProperty.call(st, $153)) {
+                  $152[$153] = st[$153];
                 }
                 ;
               }
               ;
-              $151.hydrating = false;
-              return $151;
+              $152.hydrating = false;
+              return $152;
             }))(function() {
               return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
                 var query1 = trim(rawQuery);
-                var $154 = query1 === "";
-                if ($154) {
+                var $155 = query1 === "";
+                if ($155) {
                   return pure20(unit);
                 }
                 ;
@@ -13382,14 +13399,7 @@ var handle3 = function(action2) {
   if (action2 instanceof DownloadMarkdown) {
     return bind11(get7)(function(st) {
       var markdown = renderSheetMarkdown(st.items);
-      var filename = function() {
-        var $159 = st.sheetId === "";
-        if ($159) {
-          return "deepbible-sheet.md";
-        }
-        ;
-        return "deepbible-sheet-" + (st.sheetId + ".md");
-      }();
+      var filename = sheetMarkdownFilename(st.sheetId);
       return liftEffect8(downloadMarkdownFile(filename)(markdown));
     });
   }
@@ -13473,7 +13483,7 @@ var handle3 = function(action2) {
         });
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 234, column 5 - line 239, column 18): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 237, column 5 - line 242, column 18): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -13486,10 +13496,10 @@ var handle3 = function(action2) {
       return handleNoteOutput(action2.value0.value0)(action2.value0.value1);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 241, column 19 - line 245, column 31): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 244, column 19 - line 248, column 31): " + [action2.value0.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 179, column 17 - line 245, column 31): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 186, column 17 - line 248, column 31): " + [action2.constructor.name]);
 };
 var component3 = /* @__PURE__ */ function() {
   return mkComponent({

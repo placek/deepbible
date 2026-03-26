@@ -124,7 +124,7 @@ render st =
     [ HE.onClick \_ -> HandleDocumentClick ]
     [ Search.renderSearchSection HandleSearch st
     , HH.div_ items
-    , renderFooter
+    , renderFooter st.sheetId
     ]
 
 renderItemWithAddButton
@@ -157,8 +157,15 @@ renderAddNoteButton index =
     ]
     [ HH.text "+" ]
 
-renderFooter :: H.ComponentHTML Action ChildSlots Aff
-renderFooter =
+sheetMarkdownFilename :: String -> String
+sheetMarkdownFilename sheetId =
+  if sheetId == "" then
+    "deepbible-sheet.md"
+  else
+    "deepbible-sheet-" <> sheetId <> ".md"
+
+renderFooter :: String -> H.ComponentHTML Action ChildSlots Aff
+renderFooter sheetId =
   HH.div
     [ HP.class_ (HH.ClassName "app-footer") ]
     [ HH.button
@@ -166,7 +173,7 @@ renderFooter =
         , HP.title "download sheet as markdown"
         , HE.onClick \_ -> DownloadMarkdown
         ]
-        [ HH.text "download markdown" ]
+        [ HH.text (sheetMarkdownFilename sheetId) ]
     , HH.a
         [ HP.href "https://github.com/placek/deepbible"
         , HP.attr (HH.AttrName "target") "_blank"
@@ -206,11 +213,7 @@ handle action = case action of
   DownloadMarkdown -> do
     st <- H.get
     let
-      filename =
-        if st.sheetId == "" then
-          "deepbible-sheet.md"
-        else
-          "deepbible-sheet-" <> st.sheetId <> ".md"
+      filename = sheetMarkdownFilename st.sheetId
       markdown = renderSheetMarkdown st.items
     H.liftEffect $ downloadMarkdownFile filename markdown
 
