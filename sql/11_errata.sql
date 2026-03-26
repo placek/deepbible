@@ -249,3 +249,7 @@ WHERE marker LIKE '%' || U&'\2009' || '%';
 UPDATE pl._all_verses
 SET text = REGEXP_REPLACE(text, '([.,;!?])([A-ZĄĆĘŁŃÓŚŹŻ])', '\1 \2', 'g')
 WHERE text ~ '[.,;!?][A-ZĄĆĘŁŃÓŚŹŻ]';
+
+UPDATE la._all_verses
+SET text = REGEXP_REPLACE(text, '([.,:;!?])([A-Za-z])', '\1 \2', 'g')
+WHERE text ~ '[.,:;!?][A-Zaz]';
