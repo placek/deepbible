@@ -11,6 +11,17 @@ export const htmlToText = (html) => {
   return text.replace(/\s+/g, " ").trim();
 };
 
+export const stripSmTags = (input) => {
+  const value = typeof input === "string" ? input : "";
+  if (value === "") {
+    return "";
+  }
+
+  return value
+    .replace(/<\/?s\b[^>]*>/gi, "")
+    .replace(/<\/?m\b[^>]*>/gi, "");
+};
+
 export const downloadMarkdownFile = (filename) => (content) => () => {
   const safeName = typeof filename === "string" && filename.length > 0
     ? filename

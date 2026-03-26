@@ -11,6 +11,7 @@ import Domain.Bible.Types (Verse(..))
 import Domain.Pericope.Types (Pericope)
 
 foreign import htmlToText :: String -> String
+foreign import stripSmTags :: String -> String
 foreign import downloadMarkdownFile :: String -> String -> Effect Unit
 
 renderSheetMarkdown :: Array Item -> String
@@ -19,7 +20,7 @@ renderSheetMarkdown items =
 
 renderItem :: Item -> String
 renderItem = case _ of
-  NoteItem note -> note.content
+  NoteItem note -> stripSmTags note.content
   PericopeItem pericope -> renderPericope pericope
 
 renderPericope :: Pericope -> String
@@ -34,7 +35,7 @@ renderPericope pericope =
 renderVerseLine :: Verse -> String
 renderVerseLine (Verse verse) =
   let
-    cleanText = htmlToText verse.text
+    cleanText = htmlToText (stripSmTags verse.text)
     verseNumber = "<sup>" <> show verse.verse <> "</sup>"
     line =
       if cleanText == "" then
