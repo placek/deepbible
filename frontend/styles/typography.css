@@ -165,6 +165,8 @@ n, s, m {
 .verse s {
   font-size: xx-small;
   text-decoration: none;
+  font-weight: bold;
+  padding-right: .5em;
 }
 
 .verse m {
