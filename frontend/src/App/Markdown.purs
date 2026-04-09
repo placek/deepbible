@@ -1,4 +1,4 @@
-module App.Markdown (renderSheetMarkdown, downloadMarkdownFile) where
+module App.Markdown (renderSheetMarkdown, downloadMarkdownFile, slugify) where
 
 import Prelude
 
@@ -12,6 +12,7 @@ import Domain.Pericope.Types (Pericope)
 
 foreign import htmlToText :: String -> String
 foreign import stripSmTags :: String -> String
+foreign import slugify :: String -> String
 foreign import downloadMarkdownFile :: String -> String -> Effect Unit
 
 renderSheetMarkdown :: String -> Array Item -> String

@@ -8,6 +8,7 @@ import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
+import Data.String.CodeUnits (fromCharArray, toCharArray)
 import Data.String.Common (trim)
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
@@ -18,11 +19,12 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Infrastructure.Api (fetchSheet, fetchVerses, upsertSheet)
+import Infrastructure.LocalStorage (SavedSheetEntry, saveSheetToLocal, loadSheetList, deleteSheetFromLocal, navigateToSheet)
 import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
 
-import App.Markdown (downloadMarkdownFile, renderSheetMarkdown)
+import App.Markdown (downloadMarkdownFile, renderSheetMarkdown, slugify)
 import App.State (AppState, Item(..))
 import App.UrlState (ItemSeed(..), decodeSheet, encodeSheet, getOrCreateSheetId, getSearchQueryParam, itemsToSeeds)
 import Domain.Bible.Types (Verse)
@@ -79,6 +81,9 @@ data Action
   | HandleSearch Search.Action
   | HandleDocumentClick
   | UpdateTitle String
+  | ToggleSheetList
+  | RecallSheet String
+  | DeleteSavedSheet String
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -95,6 +100,8 @@ initialState _ =
   , searchPerformed: false
   , searchLoading: false
   , searchError: Nothing
+  , savedSheets: []
+  , sheetListOpen: false
   }
 
 defaultSeeds :: Array ItemSeed
@@ -128,7 +135,7 @@ render st =
     [ renderHeader st.title
     , Search.renderSearchSection HandleSearch st
     , HH.div_ items
-    , renderFooter st.sheetId
+    , renderFooter st
     ]
 
 renderHeader :: String -> H.ComponentHTML Action ChildSlots Aff
@@ -189,36 +196,107 @@ renderAddNoteButton index =
     ]
     [ HH.text "+" ]
 
-sheetMarkdownFilename :: String -> String
-sheetMarkdownFilename sheetId =
-  if sheetId == "" then
-    "deepbible-sheet.md"
-  else
-    "deepbible-sheet-" <> sheetId <> ".md"
+sheetMarkdownFilename :: String -> String -> String
+sheetMarkdownFilename title sheetId =
+  let slug = slugify title
+  in case slug == "", sheetId == "" of
+    true, true -> "deepbible-sheet.md"
+    true, false -> "deepbible-sheet-" <> sheetId <> ".md"
+    false, true -> slug <> ".md"
+    false, false -> slug <> "-" <> sheetId <> ".md"
 
-renderFooter :: String -> H.ComponentHTML Action ChildSlots Aff
-renderFooter sheetId =
+renderFooter :: AppState -> H.ComponentHTML Action ChildSlots Aff
+renderFooter st =
   HH.div
-    [ HP.class_ (HH.ClassName "app-footer") ]
+    [ HP.class_ (HH.ClassName "app-footer-container") ]
+    ( ( if st.sheetListOpen then [ renderSheetList st.sheetId st.savedSheets ] else [] )
+      <>
+      [ HH.div
+          [ HP.class_ (HH.ClassName "app-footer") ]
+          [ HH.button
+              [ HP.class_ (HH.ClassName "app-footer-action")
+              , HP.title "saved sheets"
+              , HE.onClick \_ -> ToggleSheetList
+              ]
+              [ HH.text ("sheets (" <> show (A.length st.savedSheets) <> ")") ]
+          , HH.button
+              [ HP.class_ (HH.ClassName "app-footer-action")
+              , HP.title "download sheet as markdown"
+              , HE.onClick \_ -> DownloadMarkdown
+              ]
+              [ HH.text (sheetMarkdownFilename st.title st.sheetId) ]
+          , HH.a
+              [ HP.href "https://github.com/placek/deepbible"
+              , HP.attr (HH.AttrName "target") "_blank"
+              , HP.attr (HH.AttrName "rel") "noreferrer"
+              ]
+              [ HH.text "github" ]
+          ]
+      ]
+    )
+
+renderSheetList
+  :: String
+  -> Array SavedSheetEntry
+  -> H.ComponentHTML Action ChildSlots Aff
+renderSheetList currentSheetId sheets =
+  HH.div
+    [ HP.class_ (HH.ClassName "sheet-list") ]
+    ( if A.null sheets then
+        [ HH.div
+            [ HP.class_ (HH.ClassName "sheet-list-empty") ]
+            [ HH.text "no saved sheets" ]
+        ]
+      else
+        sheets <#> renderSheetEntry currentSheetId
+    )
+
+renderSheetEntry
+  :: String
+  -> SavedSheetEntry
+  -> H.ComponentHTML Action ChildSlots Aff
+renderSheetEntry currentSheetId entry =
+  let
+    isCurrent = entry.sheetId == currentSheetId
+    label = if entry.title == "" then "untitled sheet" else entry.title
+    classes =
+      "sheet-list-entry"
+        <> (if isCurrent then " sheet-list-entry--current" else "")
+  in
+  HH.div
+    [ HP.class_ (HH.ClassName classes) ]
     [ HH.button
-        [ HP.class_ (HH.ClassName "app-footer-action")
-        , HP.title "download sheet as markdown"
-        , HE.onClick \_ -> DownloadMarkdown
+        [ HP.class_ (HH.ClassName "sheet-list-title")
+        , HP.title entry.sheetId
+        , HE.onClick \_ -> RecallSheet entry.sheetId
         ]
-        [ HH.text (sheetMarkdownFilename sheetId) ]
-    , HH.a
-        [ HP.href "https://github.com/placek/deepbible"
-        , HP.attr (HH.AttrName "target") "_blank"
-        , HP.attr (HH.AttrName "rel") "noreferrer"
-        ]
-        [ HH.text "github" ]
+        [ HH.text label ]
+    , HH.span
+        [ HP.class_ (HH.ClassName "sheet-list-date") ]
+        [ HH.text (formatSavedAt entry.savedAt) ]
+    , if isCurrent then HH.text ""
+      else
+        HH.button
+          [ HP.class_ (HH.ClassName "sheet-list-delete")
+          , HP.title "remove from list"
+          , HE.onClick \_ -> DeleteSavedSheet entry.sheetId
+          ]
+          [ HH.text "\x00d7" ]
     ]
+
+formatSavedAt :: String -> String
+formatSavedAt s =
+  let
+    datePart = A.take 10 (A.fromFoldable (toCharArray s))
+  in
+    if A.length datePart == 10 then fromCharArray datePart else s
 
 handle :: Action -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 handle action = case action of
   Initialize -> do
     sheetId <- H.liftEffect getOrCreateSheetId
-    H.modify_ \st -> st { sheetId = sheetId, hydrating = true }
+    savedSheets <- H.liftEffect loadSheetList
+    H.modify_ \st -> st { sheetId = sheetId, hydrating = true, savedSheets = savedSheets }
     res <- H.liftAff $ fetchSheet sheetId
     let loaded = case res of
           Left _ -> { title: "", items: [] }
@@ -251,12 +329,23 @@ handle action = case action of
   DownloadMarkdown -> do
     st <- H.get
     let
-      filename = sheetMarkdownFilename st.sheetId
+      filename = sheetMarkdownFilename st.title st.sheetId
       markdown = renderSheetMarkdown st.title st.items
     H.liftEffect $ downloadMarkdownFile filename markdown
 
   HandleSearch searchAction ->
     Search.handleAction insertPericope searchAction
+
+  ToggleSheetList ->
+    H.modify_ \st -> st { sheetListOpen = not st.sheetListOpen }
+
+  RecallSheet sheetId ->
+    H.liftEffect $ navigateToSheet sheetId
+
+  DeleteSavedSheet sheetId -> do
+    H.liftEffect $ deleteSheetFromLocal sheetId
+    savedSheets <- H.liftEffect loadSheetList
+    H.modify_ \st -> st { savedSheets = savedSheets }
 
   HandleDocumentClick ->
     handleDocumentClick
@@ -521,5 +610,9 @@ syncSheet = do
     pure unit
   else do
     let payload = encodeSheet st.title (itemsToSeeds st.items)
-    H.liftEffect $ launchAff_ do
-      void $ upsertSheet st.sheetId payload
+    H.liftEffect do
+      saveSheetToLocal st.sheetId payload
+      launchAff_ do
+        void $ upsertSheet st.sheetId payload
+    savedSheets <- H.liftEffect loadSheetList
+    H.modify_ \s -> s { savedSheets = savedSheets }

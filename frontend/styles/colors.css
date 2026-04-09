@@ -223,6 +223,56 @@ input {
   color: var(--text-muted);
 }
 
+.app-footer-container {
+  background-color: var(--panel-background);
+}
+
+.sheet-list {
+  background-color: var(--page-background);
+  border-top-color: var(--text-muted);
+}
+
+.sheet-list-entry {
+  border-bottom-color: var(--panel-background);
+}
+
+.sheet-list-entry--current {
+  background-color: var(--panel-background);
+}
+
+.sheet-list-entry:hover {
+  background-color: var(--panel-background);
+}
+
+.sheet-list-title {
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.sheet-list-entry--current .sheet-list-title {
+  color: var(--highlight-positive);
+}
+
+.sheet-list-title:hover {
+  color: var(--cross-reference-color);
+}
+
+.sheet-list-date {
+  color: var(--text-muted);
+}
+
+.sheet-list-empty {
+  color: var(--text-muted);
+}
+
+.sheet-list-delete {
+  color: var(--text-muted);
+}
+
+.sheet-list-delete:hover {
+  color: var(--address-color);
+}
+
 .story-address {
   color: var(--story-color);
 }

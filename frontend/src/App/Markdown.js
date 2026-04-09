@@ -22,6 +22,13 @@ export const stripSmTags = (input) => {
     .replace(/<\/?m\b[^>]*>/gi, "");
 };
 
+export const slugify = (text) => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
 export const downloadMarkdownFile = (filename) => (content) => () => {
   const safeName = typeof filename === "string" && filename.length > 0
     ? filename

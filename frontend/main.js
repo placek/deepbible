@@ -16,6 +16,9 @@ var stripSmTags = (input3) => {
   }
   return value18.replace(/<\/?s\b[^>]*>/gi, "").replace(/<\/?m\b[^>]*>/gi, "");
 };
+var slugify = (text6) => {
+  return text6.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+};
 var downloadMarkdownFile = (filename) => (content3) => () => {
   const safeName = typeof filename === "string" && filename.length > 0 ? filename : "deepbible-sheet.md";
   const text6 = typeof content3 === "string" ? content3 : "";
@@ -72,6 +75,31 @@ var replicatePolyfill = function(count, value18) {
   return result;
 };
 var replicateImpl = typeof Array.prototype.fill === "function" ? replicateFill : replicatePolyfill;
+var fromFoldableImpl = /* @__PURE__ */ function() {
+  function Cons2(head4, tail2) {
+    this.head = head4;
+    this.tail = tail2;
+  }
+  var emptyList = {};
+  function curryCons(head4) {
+    return function(tail2) {
+      return new Cons2(head4, tail2);
+    };
+  }
+  function listToArray(list) {
+    var result = [];
+    var count = 0;
+    var xs = list;
+    while (xs !== emptyList) {
+      result[count++] = xs.head;
+      xs = xs.tail;
+    }
+    return result;
+  }
+  return function(foldr5, xs) {
+    return listToArray(foldr5(curryCons)(emptyList)(xs));
+  };
+}();
 var length = function(xs) {
   return xs.length;
 };
@@ -1929,6 +1957,9 @@ var index = /* @__PURE__ */ function() {
 var head = function(xs) {
   return index(xs)(0);
 };
+var fromFoldable = function(dictFoldable) {
+  return runFn2(fromFoldableImpl)(foldr(dictFoldable));
+};
 var findMap = /* @__PURE__ */ function() {
   return runFn4(findMapImpl)(Nothing.value)(isJust);
 }();
@@ -2018,7 +2049,7 @@ var renderItem = function(v) {
     return renderPericope(v.value0);
   }
   ;
-  throw new Error("Failed pattern match at App.Markdown (line 26, column 14 - line 28, column 51): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Markdown (line 27, column 14 - line 29, column 51): " + [v.constructor.name]);
 };
 var renderSheetMarkdown = function(title4) {
   return function(items2) {
@@ -10634,6 +10665,53 @@ var upsertSheet = function(sheetId) {
   };
 };
 
+// output/Infrastructure.LocalStorage/foreign.js
+var STORAGE_KEY = "deepbible:sheets";
+var readMap = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw)
+      return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+};
+var writeMap = (map31) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(map31));
+};
+var saveSheetToLocal = (sheetId) => (json3) => () => {
+  if (!sheetId)
+    return;
+  const map31 = readMap();
+  const title4 = json3 && typeof json3.title === "string" ? json3.title : "";
+  map31[sheetId] = {
+    title: title4,
+    savedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    items: json3 && Array.isArray(json3.items) ? json3.items : []
+  };
+  writeMap(map31);
+};
+var loadSheetList = () => {
+  const map31 = readMap();
+  return Object.entries(map31).map(([sheetId, entry]) => ({
+    sheetId,
+    title: entry.title || "",
+    savedAt: entry.savedAt || ""
+  })).sort((a2, b2) => b2.savedAt > a2.savedAt ? 1 : -1);
+};
+var deleteSheetFromLocal = (sheetId) => () => {
+  const map31 = readMap();
+  delete map31[sheetId];
+  writeMap(map31);
+};
+var navigateToSheet = (sheetId) => () => {
+  const params = new URLSearchParams(window.location.search);
+  params.set("sheet", sheetId);
+  window.location.search = params.toString();
+};
+
 // output/Note.Markdown/foreign.js
 var markdownToHtml = (markdown) => {
   const value18 = typeof markdown === "string" ? markdown : "";
@@ -13061,9 +13139,10 @@ var handleAction = function(insertPericope2) {
 var bind11 = /* @__PURE__ */ bind(bindHalogenM);
 var get7 = /* @__PURE__ */ get2(monadStateHalogenM);
 var pure20 = /* @__PURE__ */ pure(applicativeHalogenM);
+var discard8 = /* @__PURE__ */ discard(discardUnit);
+var discard14 = /* @__PURE__ */ discard8(bindHalogenM);
 var liftEffect8 = /* @__PURE__ */ liftEffect(/* @__PURE__ */ monadEffectHalogenM(monadEffectAff));
 var $$void7 = /* @__PURE__ */ $$void(functorAff);
-var discard8 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
 var modify_6 = /* @__PURE__ */ modify_2(monadStateHalogenM);
 var value17 = /* @__PURE__ */ value12(isPropString);
 var slot2 = /* @__PURE__ */ slot();
@@ -13080,16 +13159,18 @@ var slot22 = /* @__PURE__ */ slot2({
   }
 })(ordInt);
 var component22 = /* @__PURE__ */ component(monadAffAff);
-var append15 = /* @__PURE__ */ append(semigroupArray);
 var max6 = /* @__PURE__ */ max(ordInt);
 var min5 = /* @__PURE__ */ min(ordInt);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
+var fromFoldable7 = /* @__PURE__ */ fromFoldable(foldableArray);
+var mapFlipped7 = /* @__PURE__ */ mapFlipped(functorArray);
+var append15 = /* @__PURE__ */ append(semigroupArray);
+var show5 = /* @__PURE__ */ show(showInt);
 var bind16 = /* @__PURE__ */ bind(bindMaybe);
 var liftAff3 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
 var void1 = /* @__PURE__ */ $$void(functorHalogenM);
 var query2 = /* @__PURE__ */ query()(pericopeIsSymbol)(ordInt);
 var for_3 = /* @__PURE__ */ for_(applicativeHalogenM)(foldableArray);
-var mapFlipped7 = /* @__PURE__ */ mapFlipped(functorArray);
 var PericopeMsg = /* @__PURE__ */ function() {
   function PericopeMsg2(value0, value1) {
     this.value0 = value0;
@@ -13243,6 +13324,33 @@ var UpdateTitle = /* @__PURE__ */ function() {
   };
   return UpdateTitle2;
 }();
+var ToggleSheetList = /* @__PURE__ */ function() {
+  function ToggleSheetList2() {
+  }
+  ;
+  ToggleSheetList2.value = new ToggleSheetList2();
+  return ToggleSheetList2;
+}();
+var RecallSheet = /* @__PURE__ */ function() {
+  function RecallSheet2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  RecallSheet2.create = function(value0) {
+    return new RecallSheet2(value0);
+  };
+  return RecallSheet2;
+}();
+var DeleteSavedSheet = /* @__PURE__ */ function() {
+  function DeleteSavedSheet2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  DeleteSavedSheet2.create = function(value0) {
+    return new DeleteSavedSheet2(value0);
+  };
+  return DeleteSavedSheet2;
+}();
 var updatePericope = function(updated) {
   return function(v) {
     if (v instanceof PericopeItem && v.value0.id === updated.id) {
@@ -13262,26 +13370,44 @@ var updateNote = function(updated) {
   };
 };
 var syncSheet = /* @__PURE__ */ bind11(get7)(function(st) {
-  var $76 = st.hydrating || st.sheetId === "";
-  if ($76) {
+  var $88 = st.hydrating || st.sheetId === "";
+  if ($88) {
     return pure20(unit);
   }
   ;
   var payload = encodeSheet(st.title)(itemsToSeeds(st.items));
-  return liftEffect8(launchAff_($$void7(upsertSheet(st.sheetId)(payload))));
+  return discard14(liftEffect8(function __do2() {
+    saveSheetToLocal(st.sheetId)(payload)();
+    return launchAff_($$void7(upsertSheet(st.sheetId)(payload)))();
+  }))(function() {
+    return bind11(liftEffect8(loadSheetList))(function(savedSheets) {
+      return modify_6(function(s) {
+        var $89 = {};
+        for (var $90 in s) {
+          if ({}.hasOwnProperty.call(s, $90)) {
+            $89[$90] = s[$90];
+          }
+          ;
+        }
+        ;
+        $89.savedSheets = savedSheets;
+        return $89;
+      });
+    });
+  });
 });
 var updateItemsAndSync = function(updateItems) {
-  return discard8(modify_6(function(st) {
-    var $77 = {};
-    for (var $78 in st) {
-      if ({}.hasOwnProperty.call(st, $78)) {
-        $77[$78] = st[$78];
+  return discard14(modify_6(function(st) {
+    var $92 = {};
+    for (var $93 in st) {
+      if ({}.hasOwnProperty.call(st, $93)) {
+        $92[$93] = st[$93];
       }
       ;
     }
     ;
-    $77.items = updateItems(st.items);
-    return $77;
+    $92.items = updateItems(st.items);
+    return $92;
   }))(function() {
     return syncSheet;
   });
@@ -13299,21 +13425,32 @@ var sourceAbove = function(index4) {
     return fromMaybe("NVUL")(lastP);
   };
 };
-var sheetMarkdownFilename = function(sheetId) {
-  var $82 = sheetId === "";
-  if ($82) {
-    return "deepbible-sheet.md";
-  }
-  ;
-  return "deepbible-sheet-" + (sheetId + ".md");
+var sheetMarkdownFilename = function(title4) {
+  return function(sheetId) {
+    var slug = slugify(title4);
+    var v = sheetId === "";
+    var v1 = slug === "";
+    if (v1 && v) {
+      return "deepbible-sheet.md";
+    }
+    ;
+    if (v1 && !v) {
+      return "deepbible-sheet-" + (sheetId + ".md");
+    }
+    ;
+    if (!v1 && v) {
+      return slug + ".md";
+    }
+    ;
+    if (!v1 && !v) {
+      return slug + ("-" + (sheetId + ".md"));
+    }
+    ;
+    throw new Error("Failed pattern match at App.Main (line 202, column 6 - line 206, column 52): " + [v1.constructor.name, v.constructor.name]);
+  };
 };
 var renderHeader = function(title4) {
   return div2([class_("app-header")])([input2([class_("app-title"), value17(title4), placeholder3("untitled sheet"), onValueInput(UpdateTitle.create)])]);
-};
-var renderFooter = function(sheetId) {
-  return div2([class_("app-footer")])([button([class_("app-footer-action"), title2("download sheet as markdown"), onClick(function(v) {
-    return DownloadMarkdown.value;
-  })])([text5(sheetMarkdownFilename(sheetId))]), a([href4("https://github.com/placek/deepbible"), attr2("target")("_blank"), attr2("rel")("noreferrer")])([text5("github")])]);
 };
 var renderAddPericopeButton = function(index4) {
   return button([class_("pericope-add"), onClick(function(v) {
@@ -13363,18 +13500,12 @@ var renderItem2 = function(item) {
     return renderNote(item.value0);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 172, column 19 - line 174, column 35): " + [item.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 179, column 19 - line 181, column 35): " + [item.constructor.name]);
 };
 var renderItemWithAddButton = function(index4) {
   return function(item) {
     return [renderItem2(item), renderAddButtons(index4 + 1 | 0)];
   };
-};
-var render3 = function(st) {
-  var items2 = concat(append15([[renderAddButtons(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
-  return div2([onClick(function(v) {
-    return HandleDocumentClick.value;
-  })])([renderHeader(st.title), renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter(st.sheetId)]);
 };
 var itemId = function(v) {
   if (v instanceof PericopeItem) {
@@ -13385,7 +13516,7 @@ var itemId = function(v) {
     return v.value0.id;
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 426, column 10 - line 428, column 21): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 515, column 10 - line 517, column 21): " + [v.constructor.name]);
 };
 var removeItemById = function(rid) {
   return updateItemsAndSync(filter(function(item) {
@@ -13430,18 +13561,18 @@ var insertPericopeAt = function(index4) {
           };
           var clampedIndex = max6(0)(min5(index4)(length(st.items)));
           var items2 = fromMaybe(snoc(st.items)(new PericopeItem(pericope)))(insertAt(clampedIndex)(new PericopeItem(pericope))(st.items));
-          return discard8(put3(function() {
-            var $97 = {};
-            for (var $98 in st) {
-              if ({}.hasOwnProperty.call(st, $98)) {
-                $97[$98] = st[$98];
+          return discard14(put3(function() {
+            var $113 = {};
+            for (var $114 in st) {
+              if ({}.hasOwnProperty.call(st, $114)) {
+                $113[$114] = st[$114];
               }
               ;
             }
             ;
-            $97.items = items2;
-            $97.nextId = st.nextId + 1 | 0;
-            return $97;
+            $113.items = items2;
+            $113.nextId = st.nextId + 1 | 0;
+            return $113;
           }()))(function() {
             return syncSheet;
           });
@@ -13468,18 +13599,18 @@ var insertNoteAt = function(index4) {
       };
       var clampedIndex = max6(0)(min5(index4)(length(st.items)));
       var items2 = fromMaybe(snoc(st.items)(new NoteItem(note2)))(insertAt(clampedIndex)(new NoteItem(note2))(st.items));
-      return discard8(put3(function() {
-        var $100 = {};
-        for (var $101 in st) {
-          if ({}.hasOwnProperty.call(st, $101)) {
-            $100[$101] = st[$101];
+      return discard14(put3(function() {
+        var $116 = {};
+        for (var $117 in st) {
+          if ({}.hasOwnProperty.call(st, $117)) {
+            $116[$117] = st[$117];
           }
           ;
         }
         ;
-        $100.items = items2;
-        $100.nextId = st.nextId + 1 | 0;
-        return $100;
+        $116.items = items2;
+        $116.nextId = st.nextId + 1 | 0;
+        return $116;
       }()))(function() {
         return syncSheet;
       });
@@ -13505,8 +13636,81 @@ var initialState = function(v) {
     searchOpen: false,
     searchPerformed: false,
     searchLoading: false,
-    searchError: Nothing.value
+    searchError: Nothing.value,
+    savedSheets: [],
+    sheetListOpen: false
   };
+};
+var formatSavedAt = function(s) {
+  var datePart = take(10)(fromFoldable7(toCharArray(s)));
+  var $119 = length(datePart) === 10;
+  if ($119) {
+    return fromCharArray(datePart);
+  }
+  ;
+  return s;
+};
+var renderSheetEntry = function(currentSheetId) {
+  return function(entry) {
+    var label5 = function() {
+      var $120 = entry.title === "";
+      if ($120) {
+        return "untitled sheet";
+      }
+      ;
+      return entry.title;
+    }();
+    var isCurrent = entry.sheetId === currentSheetId;
+    var classes = "sheet-list-entry" + function() {
+      if (isCurrent) {
+        return " sheet-list-entry--current";
+      }
+      ;
+      return "";
+    }();
+    return div2([class_(classes)])([button([class_("sheet-list-title"), title2(entry.sheetId), onClick(function(v) {
+      return new RecallSheet(entry.sheetId);
+    })])([text5(label5)]), span4([class_("sheet-list-date")])([text5(formatSavedAt(entry.savedAt))]), function() {
+      if (isCurrent) {
+        return text5("");
+      }
+      ;
+      return button([class_("sheet-list-delete"), title2("remove from list"), onClick(function(v) {
+        return new DeleteSavedSheet(entry.sheetId);
+      })])([text5("\xD7")]);
+    }()]);
+  };
+};
+var renderSheetList = function(currentSheetId) {
+  return function(sheets) {
+    return div2([class_("sheet-list")])(function() {
+      var $123 = $$null(sheets);
+      if ($123) {
+        return [div2([class_("sheet-list-empty")])([text5("no saved sheets")])];
+      }
+      ;
+      return mapFlipped7(sheets)(renderSheetEntry(currentSheetId));
+    }());
+  };
+};
+var renderFooter = function(st) {
+  return div2([class_("app-footer-container")])(append15(function() {
+    if (st.sheetListOpen) {
+      return [renderSheetList(st.sheetId)(st.savedSheets)];
+    }
+    ;
+    return [];
+  }())([div2([class_("app-footer")])([button([class_("app-footer-action"), title2("saved sheets"), onClick(function(v) {
+    return ToggleSheetList.value;
+  })])([text5("sheets (" + (show5(length(st.savedSheets)) + ")"))]), button([class_("app-footer-action"), title2("download sheet as markdown"), onClick(function(v) {
+    return DownloadMarkdown.value;
+  })])([text5(sheetMarkdownFilename(st.title)(st.sheetId))]), a([href4("https://github.com/placek/deepbible"), attr2("target")("_blank"), attr2("rel")("noreferrer")])([text5("github")])])]));
+};
+var render3 = function(st) {
+  var items2 = concat(append15([[renderAddButtons(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
+  return div2([onClick(function(v) {
+    return HandleDocumentClick.value;
+  })])([renderHeader(st.title), renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter(st)]);
 };
 var findPericope = function(pid) {
   return function(items2) {
@@ -13548,7 +13752,7 @@ var fetchAndInsertPericopeAt = function(index4) {
           return insertPericopeAt(index4)(address2)(source2)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 400, column 3 - line 402, column 65): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 489, column 3 - line 491, column 65): " + [res.constructor.name]);
       });
     };
   };
@@ -13564,7 +13768,7 @@ var fetchAndInsertPericope = function(address2) {
         return insertPericope(address2)(source2)(res.value0);
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 389, column 3 - line 391, column 57): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 478, column 3 - line 480, column 57): " + [res.constructor.name]);
     });
   };
 };
@@ -13573,8 +13777,8 @@ var loadSeed = function(v) {
     return insertNoteAtEnd(v.content);
   }
   ;
-  var $116 = v.address !== "" && v.source !== "";
-  if ($116) {
+  var $138 = v.address !== "" && v.source !== "";
+  if ($138) {
     return fetchAndInsertPericope(v.address)(v.source);
   }
   ;
@@ -13585,7 +13789,7 @@ var cancelEditing = function(p2) {
   return void1(query2(pericopeSlot)(p2.id)(new CancelEditing(unit)));
 };
 var handleDocumentClick = /* @__PURE__ */ function() {
-  return discard8(handleAction(insertPericope)(CloseSearchResults.value))(function() {
+  return discard14(handleAction(insertPericope)(CloseSearchResults.value))(function() {
     return bind11(get7)(function(st) {
       return for_3(st.items)(function(item) {
         if (item instanceof PericopeItem) {
@@ -13610,7 +13814,7 @@ var handlePericopeOutput = function(pid) {
           return fetchAndInsertPericope(v1.value0.address)(v1.value0.source);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 307, column 5 - line 309, column 58): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 396, column 5 - line 398, column 58): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13652,7 +13856,7 @@ var handlePericopeOutput = function(pid) {
       return fetchAndInsertPericope(v.value0.address)(v.value0.source);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 304, column 28 - line 336, column 42): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 393, column 28 - line 425, column 42): " + [v.constructor.name]);
   };
 };
 var handleNoteOutput = function(nid) {
@@ -13668,7 +13872,7 @@ var handleNoteOutput = function(nid) {
           return insertNoteAt(v1.value0.index + 1 | 0)(v1.value0.note.content);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 345, column 5 - line 347, column 68): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 434, column 5 - line 436, column 68): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13698,93 +13902,96 @@ var handleNoteOutput = function(nid) {
       });
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 342, column 24 - line 365, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 431, column 24 - line 454, column 64): " + [v.constructor.name]);
   };
 };
 var handle3 = function(action2) {
   if (action2 instanceof Initialize2) {
     return bind11(liftEffect8(getOrCreateSheetId))(function(sheetId) {
-      return discard8(modify_6(function(st) {
-        var $153 = {};
-        for (var $154 in st) {
-          if ({}.hasOwnProperty.call(st, $154)) {
-            $153[$154] = st[$154];
-          }
-          ;
-        }
-        ;
-        $153.sheetId = sheetId;
-        $153.hydrating = true;
-        return $153;
-      }))(function() {
-        return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
-          var loaded = function() {
-            if (res instanceof Left) {
-              return {
-                title: "",
-                items: []
-              };
+      return bind11(liftEffect8(loadSheetList))(function(savedSheets) {
+        return discard14(modify_6(function(st) {
+          var $175 = {};
+          for (var $176 in st) {
+            if ({}.hasOwnProperty.call(st, $176)) {
+              $175[$176] = st[$176];
             }
             ;
-            if (res instanceof Right) {
-              if (res.value0 instanceof Nothing) {
+          }
+          ;
+          $175.sheetId = sheetId;
+          $175.hydrating = true;
+          $175.savedSheets = savedSheets;
+          return $175;
+        }))(function() {
+          return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
+            var loaded = function() {
+              if (res instanceof Left) {
                 return {
                   title: "",
                   items: []
                 };
               }
               ;
-              if (res.value0 instanceof Just) {
-                return decodeSheet(res.value0.value0);
-              }
-              ;
-              throw new Error("Failed pattern match at App.Main (line 225, column 30 - line 227, column 50): " + [res.value0.constructor.name]);
-            }
-            ;
-            throw new Error("Failed pattern match at App.Main (line 223, column 18 - line 227, column 50): " + [res.constructor.name]);
-          }();
-          var seeds = function() {
-            var $161 = $$null(loaded.items);
-            if ($161) {
-              return defaultSeeds;
-            }
-            ;
-            return loaded.items;
-          }();
-          return discard8(modify_6(function(st) {
-            var $162 = {};
-            for (var $163 in st) {
-              if ({}.hasOwnProperty.call(st, $163)) {
-                $162[$163] = st[$163];
-              }
-              ;
-            }
-            ;
-            $162.title = loaded.title;
-            return $162;
-          }))(function() {
-            return discard8(for_3(seeds)(loadSeed))(function() {
-              return discard8(modify_6(function(st) {
-                var $165 = {};
-                for (var $166 in st) {
-                  if ({}.hasOwnProperty.call(st, $166)) {
-                    $165[$166] = st[$166];
-                  }
-                  ;
+              if (res instanceof Right) {
+                if (res.value0 instanceof Nothing) {
+                  return {
+                    title: "",
+                    items: []
+                  };
                 }
                 ;
-                $165.hydrating = false;
-                return $165;
-              }))(function() {
-                return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
-                  var query1 = trim(rawQuery);
-                  var $168 = query1 === "";
-                  if ($168) {
-                    return pure20(unit);
+                if (res.value0 instanceof Just) {
+                  return decodeSheet(res.value0.value0);
+                }
+                ;
+                throw new Error("Failed pattern match at App.Main (line 303, column 30 - line 305, column 50): " + [res.value0.constructor.name]);
+              }
+              ;
+              throw new Error("Failed pattern match at App.Main (line 301, column 18 - line 305, column 50): " + [res.constructor.name]);
+            }();
+            var seeds = function() {
+              var $183 = $$null(loaded.items);
+              if ($183) {
+                return defaultSeeds;
+              }
+              ;
+              return loaded.items;
+            }();
+            return discard14(modify_6(function(st) {
+              var $184 = {};
+              for (var $185 in st) {
+                if ({}.hasOwnProperty.call(st, $185)) {
+                  $184[$185] = st[$185];
+                }
+                ;
+              }
+              ;
+              $184.title = loaded.title;
+              return $184;
+            }))(function() {
+              return discard14(for_3(seeds)(loadSeed))(function() {
+                return discard14(modify_6(function(st) {
+                  var $187 = {};
+                  for (var $188 in st) {
+                    if ({}.hasOwnProperty.call(st, $188)) {
+                      $187[$188] = st[$188];
+                    }
+                    ;
                   }
                   ;
-                  return discard8(handleAction(insertPericope)(new UpdateSearchInput(rawQuery)))(function() {
-                    return handleAction(insertPericope)(SubmitSearch.value);
+                  $187.hydrating = false;
+                  return $187;
+                }))(function() {
+                  return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
+                    var query1 = trim(rawQuery);
+                    var $190 = query1 === "";
+                    if ($190) {
+                      return pure20(unit);
+                    }
+                    ;
+                    return discard14(handleAction(insertPericope)(new UpdateSearchInput(rawQuery)))(function() {
+                      return handleAction(insertPericope)(SubmitSearch.value);
+                    });
                   });
                 });
               });
@@ -13813,7 +14020,7 @@ var handle3 = function(action2) {
   if (action2 instanceof DownloadMarkdown) {
     return bind11(get7)(function(st) {
       var markdown = renderSheetMarkdown(st.title)(st.items);
-      var filename = sheetMarkdownFilename(st.sheetId);
+      var filename = sheetMarkdownFilename(st.title)(st.sheetId);
       return liftEffect8(downloadMarkdownFile(filename)(markdown));
     });
   }
@@ -13822,22 +14029,60 @@ var handle3 = function(action2) {
     return handleAction(insertPericope)(action2.value0);
   }
   ;
+  if (action2 instanceof ToggleSheetList) {
+    return modify_6(function(st) {
+      var $197 = {};
+      for (var $198 in st) {
+        if ({}.hasOwnProperty.call(st, $198)) {
+          $197[$198] = st[$198];
+        }
+        ;
+      }
+      ;
+      $197.sheetListOpen = !st.sheetListOpen;
+      return $197;
+    });
+  }
+  ;
+  if (action2 instanceof RecallSheet) {
+    return liftEffect8(navigateToSheet(action2.value0));
+  }
+  ;
+  if (action2 instanceof DeleteSavedSheet) {
+    return discard14(liftEffect8(deleteSheetFromLocal(action2.value0)))(function() {
+      return bind11(liftEffect8(loadSheetList))(function(savedSheets) {
+        return modify_6(function(st) {
+          var $201 = {};
+          for (var $202 in st) {
+            if ({}.hasOwnProperty.call(st, $202)) {
+              $201[$202] = st[$202];
+            }
+            ;
+          }
+          ;
+          $201.savedSheets = savedSheets;
+          return $201;
+        });
+      });
+    });
+  }
+  ;
   if (action2 instanceof HandleDocumentClick) {
     return handleDocumentClick;
   }
   ;
   if (action2 instanceof UpdateTitle) {
-    return discard8(modify_6(function(st) {
-      var $175 = {};
-      for (var $176 in st) {
-        if ({}.hasOwnProperty.call(st, $176)) {
-          $175[$176] = st[$176];
+    return discard14(modify_6(function(st) {
+      var $205 = {};
+      for (var $206 in st) {
+        if ({}.hasOwnProperty.call(st, $206)) {
+          $205[$206] = st[$206];
         }
         ;
       }
       ;
-      $175.title = action2.value0;
-      return $175;
+      $205.title = action2.value0;
+      return $205;
     }))(function() {
       return syncSheet;
     });
@@ -13845,46 +14090,46 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof StartDrag) {
     return modify_6(function(st) {
-      var $179 = {};
-      for (var $180 in st) {
-        if ({}.hasOwnProperty.call(st, $180)) {
-          $179[$180] = st[$180];
+      var $209 = {};
+      for (var $210 in st) {
+        if ({}.hasOwnProperty.call(st, $210)) {
+          $209[$210] = st[$210];
         }
         ;
       }
       ;
-      $179.dragging = new Just(action2.value0);
-      return $179;
+      $209.dragging = new Just(action2.value0);
+      return $209;
     });
   }
   ;
   if (action2 instanceof OverDrag) {
     return modify_6(function(st) {
-      var $183 = {};
-      for (var $184 in st) {
-        if ({}.hasOwnProperty.call(st, $184)) {
-          $183[$184] = st[$184];
+      var $213 = {};
+      for (var $214 in st) {
+        if ({}.hasOwnProperty.call(st, $214)) {
+          $213[$214] = st[$214];
         }
         ;
       }
       ;
-      $183.droppingOver = new Just(action2.value0);
-      return $183;
+      $213.droppingOver = new Just(action2.value0);
+      return $213;
     });
   }
   ;
   if (action2 instanceof LeaveDrag) {
     return modify_6(function(st) {
-      var $187 = {};
-      for (var $188 in st) {
-        if ({}.hasOwnProperty.call(st, $188)) {
-          $187[$188] = st[$188];
+      var $217 = {};
+      for (var $218 in st) {
+        if ({}.hasOwnProperty.call(st, $218)) {
+          $217[$218] = st[$218];
         }
         ;
       }
       ;
-      $187.droppingOver = Nothing.value;
-      return $187;
+      $217.droppingOver = Nothing.value;
+      return $217;
     });
   }
   ;
@@ -13896,25 +14141,25 @@ var handle3 = function(action2) {
       ;
       if (st.dragging instanceof Just) {
         var items2 = reorder(st.dragging.value0)(action2.value0)(st.items);
-        return discard8(put3(function() {
-          var $192 = {};
-          for (var $193 in st) {
-            if ({}.hasOwnProperty.call(st, $193)) {
-              $192[$193] = st[$193];
+        return discard14(put3(function() {
+          var $222 = {};
+          for (var $223 in st) {
+            if ({}.hasOwnProperty.call(st, $223)) {
+              $222[$223] = st[$223];
             }
             ;
           }
           ;
-          $192.items = items2;
-          $192.dragging = Nothing.value;
-          $192.droppingOver = Nothing.value;
-          return $192;
+          $222.items = items2;
+          $222.dragging = Nothing.value;
+          $222.droppingOver = Nothing.value;
+          return $222;
         }()))(function() {
           return syncSheet;
         });
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 279, column 5 - line 284, column 18): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 368, column 5 - line 373, column 18): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -13927,10 +14172,10 @@ var handle3 = function(action2) {
       return handleNoteOutput(action2.value0.value0)(action2.value0.value1);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 286, column 19 - line 290, column 31): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 375, column 19 - line 379, column 31): " + [action2.value0.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 218, column 17 - line 290, column 31): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 295, column 17 - line 379, column 31): " + [action2.constructor.name]);
 };
 var component3 = /* @__PURE__ */ function() {
   return mkComponent({

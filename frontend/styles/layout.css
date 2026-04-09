@@ -1,5 +1,6 @@
 body {
   margin: 2em 0;
+  padding-bottom: 3em;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -466,13 +467,77 @@ h2 {
   text-align: center;
 }
 
+.app-footer-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .app-footer {
   width: 100%;
-  margin: 2em 0;
+  padding: 0.5em 0;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1em;
+}
+
+.sheet-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+.sheet-list-empty {
+  padding: 1em;
+  text-align: center;
+}
+
+.sheet-list-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.4em 1em;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.sheet-list-entry:last-child {
+  border-bottom: none;
+}
+
+.sheet-list-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sheet-list-date {
+  flex-shrink: 0;
+}
+
+.sheet-list-delete {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0 0.25em;
+  line-height: 1;
 }
 
 .vuhead,

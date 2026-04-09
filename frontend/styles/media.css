@@ -1,4 +1,17 @@
 @media (max-width: 570px) {
+  .sheet-list {
+    max-height: 40vh;
+  }
+
+  .sheet-list-entry {
+    padding: 0.4em 0.5em;
+  }
+
+  .app-footer {
+    gap: 0.5em;
+    font-size: small;
+  }
+
   .pericope, .note {
     flex-direction: column;
   }

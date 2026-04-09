@@ -193,6 +193,19 @@ n, s, m {
   opacity: 0.5;
 }
 
+.sheet-list-date {
+  font-size: small;
+}
+
+.sheet-list-empty {
+  font-size: small;
+  font-style: italic;
+}
+
+.sheet-list-delete {
+  font-size: large;
+}
+
 .app-footer {
   text-align: center;
 }

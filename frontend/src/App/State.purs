@@ -1,10 +1,11 @@
 module App.State where
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 
 import Domain.Bible.Types (VerseSearchResult)
 import Domain.Note.Types (Note)
 import Domain.Pericope.Types (Pericope)
+import Infrastructure.LocalStorage (SavedSheetEntry)
 
 data Item
   = PericopeItem Pericope
@@ -24,4 +25,6 @@ type AppState =
   , searchPerformed :: Boolean
   , searchLoading :: Boolean
   , searchError :: Maybe String
+  , savedSheets :: Array SavedSheetEntry
+  , sheetListOpen :: Boolean
   }
