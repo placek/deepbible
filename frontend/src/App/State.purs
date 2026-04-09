@@ -15,6 +15,7 @@ type AppState =
   , dragging :: Maybe Int
   , droppingOver :: Maybe Int
   , sheetId :: String
+  , title :: String
   , hydrating :: Boolean
   , nextId :: Int
   , searchInput :: String

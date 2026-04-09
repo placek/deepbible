@@ -24,7 +24,7 @@ import Type.Proxy (Proxy(..))
 
 import App.Markdown (downloadMarkdownFile, renderSheetMarkdown)
 import App.State (AppState, Item(..))
-import App.UrlState (ItemSeed(..), decodeSeeds, encodeSeeds, getOrCreateSheetId, getSearchQueryParam, itemsToSeeds)
+import App.UrlState (ItemSeed(..), decodeSheet, encodeSheet, getOrCreateSheetId, getSearchQueryParam, itemsToSeeds)
 import Domain.Bible.Types (Verse)
 import Domain.Note.Types (Note, NoteId)
 import Domain.Pericope.Types (Pericope, PericopeId)
@@ -77,6 +77,7 @@ data Action
   | DropOn Int
   | HandleSearch Search.Action
   | HandleDocumentClick
+  | UpdateTitle String
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -84,6 +85,7 @@ initialState _ =
   , dragging: Nothing
   , droppingOver: Nothing
   , sheetId: ""
+  , title: ""
   , hydrating: false
   , nextId: 1
   , searchInput: ""
@@ -122,9 +124,22 @@ render st =
   in
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
-    [ Search.renderSearchSection HandleSearch st
+    [ renderHeader st.title
+    , Search.renderSearchSection HandleSearch st
     , HH.div_ items
     , renderFooter st.sheetId
+    ]
+
+renderHeader :: String -> H.ComponentHTML Action ChildSlots Aff
+renderHeader title =
+  HH.div
+    [ HP.class_ (HH.ClassName "app-header") ]
+    [ HH.input
+        [ HP.class_ (HH.ClassName "app-title")
+        , HP.value title
+        , HP.placeholder "untitled sheet"
+        , HE.onValueInput UpdateTitle
+        ]
     ]
 
 renderItemWithAddButton
@@ -188,12 +203,13 @@ handle action = case action of
     sheetId <- H.liftEffect getOrCreateSheetId
     H.modify_ \st -> st { sheetId = sheetId, hydrating = true }
     res <- H.liftAff $ fetchSheet sheetId
-    let loadedSeeds = case res of
-          Left _ -> []
+    let loaded = case res of
+          Left _ -> { title: "", items: [] }
           Right maybeData -> case maybeData of
-            Nothing -> []
-            Just dataJson -> decodeSeeds dataJson
-        seeds = if A.null loadedSeeds then defaultSeeds else loadedSeeds
+            Nothing -> { title: "", items: [] }
+            Just dataJson -> decodeSheet dataJson
+        seeds = if A.null loaded.items then defaultSeeds else loaded.items
+    H.modify_ \st -> st { title = loaded.title }
     for_ seeds loadSeed
     H.modify_ \st -> st { hydrating = false }
     rawQuery <- H.liftEffect getSearchQueryParam
@@ -222,6 +238,10 @@ handle action = case action of
 
   HandleDocumentClick ->
     handleDocumentClick
+
+  UpdateTitle title -> do
+    H.modify_ \st -> st { title = title }
+    syncSheet
 
   StartDrag pid ->
     H.modify_ \st -> st { dragging = Just pid }
@@ -448,6 +468,6 @@ syncSheet = do
   if st.hydrating || st.sheetId == "" then
     pure unit
   else do
-    let payload = encodeSeeds (itemsToSeeds st.items)
+    let payload = encodeSheet st.title (itemsToSeeds st.items)
     H.liftEffect $ launchAff_ do
       void $ upsertSheet st.sheetId payload

@@ -177,6 +177,22 @@ n, s, m {
   font-size: xx-small;
 }
 
+.app-header {
+  text-align: center;
+}
+
+.app-title {
+  font-size: x-large;
+  font-weight: bold;
+  font-family: inherit;
+  color: inherit;
+}
+
+.app-title::placeholder {
+  font-weight: normal;
+  opacity: 0.5;
+}
+
 .app-footer {
   text-align: center;
 }

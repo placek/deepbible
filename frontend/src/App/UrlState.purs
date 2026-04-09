@@ -1,7 +1,8 @@
 module App.UrlState
   ( ItemSeed(..)
-  , decodeSeeds
-  , encodeSeeds
+  , SheetPayload
+  , decodeSheet
+  , encodeSheet
   , getSearchQueryParam
   , getOrCreateSheetId
   , itemsToSeeds
@@ -30,8 +31,14 @@ newtype ItemSeed =
 
 newtype SheetData =
   SheetData
-    { items :: Array ItemSeed
+    { title :: String
+    , items :: Array ItemSeed
     }
+
+type SheetPayload =
+  { title :: String
+  , items :: Array ItemSeed
+  }
 
 instance encodeItemSeed :: EncodeJson ItemSeed where
   encodeJson (ItemSeed seed) =
@@ -52,13 +59,16 @@ instance decodeItemSeed :: DecodeJson ItemSeed where
 
 instance encodeSheetData :: EncodeJson SheetData where
   encodeJson (SheetData sheet) =
-    ("items" := sheet.items) ~> jsonEmptyObject
+    ("title" := sheet.title)
+      ~> ("items" := sheet.items)
+      ~> jsonEmptyObject
 
 instance decodeSheetData :: DecodeJson SheetData where
   decodeJson j = do
     obj <- decodeJson j
+    title <- fromMaybe "" <$> obj .:? "title"
     items <- obj .: "items"
-    pure $ SheetData { items }
+    pure $ SheetData { title, items }
 
 itemsToSeeds :: Array Item -> Array ItemSeed
 itemsToSeeds ps = ps <#> case _ of
@@ -99,15 +109,16 @@ sanitizeSeed (ItemSeed seed) = case seed.kind of
 sanitizeSeeds :: Array ItemSeed -> Array ItemSeed
 sanitizeSeeds = A.mapMaybe sanitizeSeed
 
-decodeSeeds :: Json -> Array ItemSeed
-decodeSeeds json = case decodeJson json of
-  Right (SheetData { items }) -> sanitizeSeeds items
+decodeSheet :: Json -> SheetPayload
+decodeSheet json = case decodeJson json of
+  Right (SheetData { title, items }) -> { title, items: sanitizeSeeds items }
   Left _ -> case (decodeJson json :: Either _ (Array ItemSeed)) of
-    Right items -> sanitizeSeeds items
-    Left _ -> []
+    Right items -> { title: "", items: sanitizeSeeds items }
+    Left _ -> { title: "", items: [] }
 
-encodeSeeds :: Array ItemSeed -> Json
-encodeSeeds seeds = encodeJson (SheetData { items: sanitizeSeeds seeds })
+encodeSheet :: String -> Array ItemSeed -> Json
+encodeSheet title seeds =
+  encodeJson (SheetData { title, items: sanitizeSeeds seeds })
 
 foreign import getOrCreateSheetId :: Effect String
 foreign import getSearchQueryParam :: Effect String

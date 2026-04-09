@@ -442,6 +442,23 @@ h2 {
   margin-left: 0.4em;
 }
 
+.app-header {
+  width: 100%;
+  margin: 2em 0 1em 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-title {
+  width: 100%;
+  max-width: 40em;
+  background: none;
+  border: none;
+  outline: none;
+  text-align: center;
+}
+
 .app-footer {
   width: 100%;
   margin: 2em 0;
