@@ -252,7 +252,7 @@ handle action = case action of
     st <- H.get
     let
       filename = sheetMarkdownFilename st.sheetId
-      markdown = renderSheetMarkdown st.items
+      markdown = renderSheetMarkdown st.title st.items
     H.liftEffect $ downloadMarkdownFile filename markdown
 
   HandleSearch searchAction ->

@@ -14,9 +14,13 @@ foreign import htmlToText :: String -> String
 foreign import stripSmTags :: String -> String
 foreign import downloadMarkdownFile :: String -> String -> Effect Unit
 
-renderSheetMarkdown :: Array Item -> String
-renderSheetMarkdown items =
-  joinWith "\n\n" (renderItem <$> items)
+renderSheetMarkdown :: String -> Array Item -> String
+renderSheetMarkdown title items =
+  let
+    titleBlock = if title == "" then [] else ["# " <> title]
+    body = renderItem <$> items
+  in
+    joinWith "\n\n" (titleBlock <> body)
 
 renderItem :: Item -> String
 renderItem = case _ of

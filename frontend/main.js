@@ -1990,12 +1990,13 @@ var joinWith = function(s) {
 var show2 = /* @__PURE__ */ show(showInt);
 var mapFlipped2 = /* @__PURE__ */ mapFlipped(functorArray);
 var map6 = /* @__PURE__ */ map(functorArray);
+var append1 = /* @__PURE__ */ append(semigroupArray);
 var renderVerseLine = function(v) {
   var verseNumber = "<sup>" + (show2(v.verse) + "</sup>");
   var cleanText = htmlToText(stripSmTags(v.text));
   var line = function() {
-    var $8 = cleanText === "";
-    if ($8) {
+    var $9 = cleanText === "";
+    if ($9) {
       return verseNumber;
     }
     ;
@@ -2017,10 +2018,21 @@ var renderItem = function(v) {
     return renderPericope(v.value0);
   }
   ;
-  throw new Error("Failed pattern match at App.Markdown (line 22, column 14 - line 24, column 51): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Markdown (line 26, column 14 - line 28, column 51): " + [v.constructor.name]);
 };
-var renderSheetMarkdown = function(items2) {
-  return joinWith("\n\n")(map6(renderItem)(items2));
+var renderSheetMarkdown = function(title4) {
+  return function(items2) {
+    var titleBlock = function() {
+      var $13 = title4 === "";
+      if ($13) {
+        return [];
+      }
+      ;
+      return ["# " + title4];
+    }();
+    var body2 = map6(renderItem)(items2);
+    return joinWith("\n\n")(append1(titleBlock)(body2));
+  };
 };
 
 // output/App.UrlState/foreign.js
@@ -2328,13 +2340,13 @@ var functorWithIndexObject = {
 };
 var fold2 = /* @__PURE__ */ _foldM(applyFlipped);
 var foldMap2 = function(dictMonoid) {
-  var append15 = append(dictMonoid.Semigroup0());
+  var append16 = append(dictMonoid.Semigroup0());
   var mempty2 = mempty(dictMonoid);
   return function(f) {
     return fold2(function(acc) {
       return function(k) {
         return function(v) {
-          return append15(acc)(f(k)(v));
+          return append16(acc)(f(k)(v));
         };
       };
     })(mempty2);
@@ -2756,16 +2768,16 @@ var semigroupList = {
     };
   }
 };
-var append1 = /* @__PURE__ */ append(semigroupList);
+var append12 = /* @__PURE__ */ append(semigroupList);
 var semigroupNonEmptyList = {
   append: function(v) {
     return function(as$prime) {
-      return new NonEmpty(v.value0, append1(v.value1)(toList(as$prime)));
+      return new NonEmpty(v.value0, append12(v.value1)(toList(as$prime)));
     };
   }
 };
 var altList = {
-  alt: append1,
+  alt: append12,
   Functor0: function() {
     return functorList;
   }
@@ -3494,7 +3506,7 @@ var foldableMap = {
   },
   foldMap: function(dictMonoid) {
     var mempty2 = mempty(dictMonoid);
-    var append15 = append(dictMonoid.Semigroup0());
+    var append16 = append(dictMonoid.Semigroup0());
     return function(f) {
       var go2 = function(v) {
         if (v instanceof Leaf) {
@@ -3502,7 +3514,7 @@ var foldableMap = {
         }
         ;
         if (v instanceof Node) {
-          return append15(go2(v.value4))(append15(f(v.value3))(go2(v.value5)));
+          return append16(go2(v.value4))(append16(f(v.value3))(go2(v.value5)));
         }
         ;
         throw new Error("Failed pattern match at Data.Map.Internal (line 181, column 10 - line 184, column 28): " + [v.constructor.name]);
@@ -3556,7 +3568,7 @@ var foldableWithIndexMap = {
   },
   foldMapWithIndex: function(dictMonoid) {
     var mempty2 = mempty(dictMonoid);
-    var append15 = append(dictMonoid.Semigroup0());
+    var append16 = append(dictMonoid.Semigroup0());
     return function(f) {
       var go2 = function(v) {
         if (v instanceof Leaf) {
@@ -3564,7 +3576,7 @@ var foldableWithIndexMap = {
         }
         ;
         if (v instanceof Node) {
-          return append15(go2(v.value4))(append15(f(v.value2)(v.value3))(go2(v.value5)));
+          return append16(go2(v.value4))(append16(f(v.value2)(v.value3))(go2(v.value5)));
         }
         ;
         throw new Error("Failed pattern match at Data.Map.Internal (line 201, column 10 - line 204, column 30): " + [v.constructor.name]);
@@ -11068,7 +11080,7 @@ var unwrap6 = /* @__PURE__ */ unwrap();
 var comparing2 = /* @__PURE__ */ comparing(ordString);
 var fromFoldable6 = /* @__PURE__ */ fromFoldable3(foldableArray)(ordString);
 var sort2 = /* @__PURE__ */ sort(ordString);
-var append12 = /* @__PURE__ */ append(semigroupArray);
+var append13 = /* @__PURE__ */ append(semigroupArray);
 var value15 = /* @__PURE__ */ value12(isPropString);
 var prop4 = /* @__PURE__ */ prop2(isPropString);
 var SetData = /* @__PURE__ */ function() {
@@ -12441,7 +12453,7 @@ var render2 = function(st) {
         ;
         throw new Error("Failed pattern match at Pericope.Component (line 151, column 24 - line 205, column 20): " + [st.sources.constructor.name]);
       }();
-      return div2([class_("source editing"), onClick(SwallowDidascaliaClick.create)])(append12([input2([value15(st.pericope.source), onValueInput(SetSource.create), autofocus6(true), onKeyDown(function(ke) {
+      return div2([class_("source editing"), onClick(SwallowDidascaliaClick.create)])(append13([input2([value15(st.pericope.source), onValueInput(SetSource.create), autofocus6(true), onKeyDown(function(ke) {
         var v = key(ke);
         if (v === "Enter") {
           return SubmitSource.value;
@@ -12495,7 +12507,7 @@ var render2 = function(st) {
       }
       ;
       return "";
-    }())])(append12([button([class_("dictionary-word"), onClick(function(ev) {
+    }())])(append13([button([class_("dictionary-word"), onClick(function(ev) {
       return new ToggleDictionaryTopic(ev, v.topic);
     })])([text5(v.word)])])(tooltip));
   };
@@ -12556,7 +12568,7 @@ var render2 = function(st) {
         ;
         return [div2([class_("commentaries")])(map30(renderCommentary)(st.crossRefs.value0.commentaries))];
       }();
-      return append12(storyNodes)(append12(crossReferenceNodes)(commentaryNodes));
+      return append13(storyNodes)(append13(crossReferenceNodes)(commentaryNodes));
     }
     ;
     throw new Error("Failed pattern match at Pericope.Component (line 290, column 23 - line 324, column 63): " + [st.crossRefs.constructor.name]);
@@ -12596,7 +12608,7 @@ var render2 = function(st) {
     }()), attr2("data-chapter")(show4(v.chapter)), attr2("data-verse")(show4(v.verse)), prop4("innerHTML")(v.text), onClick(function(v2) {
       return new ToggleSelect(v.verse_id);
     })])([]);
-  })), div2([class_("margin")])(append12(renderSelectedAddress)(append12(renderCrossRefs)(renderDictionary)))]);
+  })), div2([class_("margin")])(append13(renderSelectedAddress)(append13(renderCrossRefs)(renderDictionary)))]);
 };
 var component2 = function(dictMonadAff) {
   return mkComponent({
@@ -12656,7 +12668,7 @@ var toMaybeColor = function(segment) {
 // output/Search.Component/index.js
 var unwrap7 = /* @__PURE__ */ unwrap();
 var mapFlipped6 = /* @__PURE__ */ mapFlipped(functorArray);
-var append13 = /* @__PURE__ */ append(semigroupArray);
+var append14 = /* @__PURE__ */ append(semigroupArray);
 var value16 = /* @__PURE__ */ value12(isPropString);
 var modify_5 = /* @__PURE__ */ modify_2(monadStateHalogenM);
 var bind10 = /* @__PURE__ */ bind(bindHalogenM);
@@ -12846,7 +12858,7 @@ var renderSearchFeedback = function(st) {
 };
 var renderSearchSection = function(toParentAction) {
   return function(st) {
-    return div2([class_("search-section")])(append13([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. @NVUL ~J 3,10- Deus"), value16(st.searchInput), onValueInput(function($89) {
+    return div2([class_("search-section")])(append14([div2([class_("search-input-group")])([div2([class_("search-input-wrapper")])([div2([class_("search-input-highlight"), attr2("aria-hidden")("true")])(renderSearchInputHighlights(st.searchInput)), input2([class_("search-input"), attr2("type")("text"), placeholder3("search verses, e.g. @NVUL ~J 3,10- Deus"), value16(st.searchInput), onValueInput(function($89) {
       return toParentAction(UpdateSearchInput.create($89));
     }), onFocus(function(v) {
       return toParentAction(FocusSearchInput.value);
@@ -12854,7 +12866,7 @@ var renderSearchSection = function(toParentAction) {
       return toParentAction(SearchInputClick.create($90));
     }), onKeyDown(function($91) {
       return toParentAction(HandleSearchKey.create($91));
-    })])])])])(append13(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
+    })])])])])(append14(renderSearchFeedback(st))(renderSearchResults(toParentAction)(st))));
   };
 };
 var handleAction = function(insertPericope2) {
@@ -13068,7 +13080,7 @@ var slot22 = /* @__PURE__ */ slot2({
   }
 })(ordInt);
 var component22 = /* @__PURE__ */ component(monadAffAff);
-var append14 = /* @__PURE__ */ append(semigroupArray);
+var append15 = /* @__PURE__ */ append(semigroupArray);
 var max6 = /* @__PURE__ */ max(ordInt);
 var min5 = /* @__PURE__ */ min(ordInt);
 var put3 = /* @__PURE__ */ put(monadStateHalogenM);
@@ -13359,7 +13371,7 @@ var renderItemWithAddButton = function(index4) {
   };
 };
 var render3 = function(st) {
-  var items2 = concat(append14([[renderAddButtons(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
+  var items2 = concat(append15([[renderAddButtons(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
   return div2([onClick(function(v) {
     return HandleDocumentClick.value;
   })])([renderHeader(st.title), renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter(st.sheetId)]);
@@ -13800,7 +13812,7 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof DownloadMarkdown) {
     return bind11(get7)(function(st) {
-      var markdown = renderSheetMarkdown(st.items);
+      var markdown = renderSheetMarkdown(st.title)(st.items);
       var filename = sheetMarkdownFilename(st.sheetId);
       return liftEffect8(downloadMarkdownFile(filename)(markdown));
     });
