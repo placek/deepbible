@@ -95,26 +95,28 @@ AS $$
   FROM deepbible.search_verses(search_phrase);
 $$;
 
+DROP FUNCTION IF EXISTS api.upsert_sheet(uuid, jsonb);
 CREATE OR REPLACE FUNCTION api.upsert_sheet(p_id uuid, p_data jsonb DEFAULT '{}'::jsonb)
   RETURNS SETOF deepbible._sheets
   LANGUAGE sql
   SECURITY DEFINER
   SET search_path = deepbible, public
 AS $$
-  INSERT INTO deepbible._sheets (id, data)
-  VALUES (COALESCE(p_id, gen_random_uuid()), p_data)
+  INSERT INTO deepbible._sheets (id, data, created_at)
+  VALUES (COALESCE(p_id, gen_random_uuid()), p_data, now())
   ON CONFLICT (id) DO UPDATE
   SET data = EXCLUDED.data
   RETURNING *;
 $$;
 
+DROP FUNCTION IF EXISTS api.fetch_sheet(uuid);
 CREATE OR REPLACE FUNCTION api.fetch_sheet(p_id uuid)
   RETURNS SETOF deepbible._sheets
   LANGUAGE sql
   SECURITY DEFINER
   SET search_path = deepbible, public
 AS $$
-  SELECT id, data FROM deepbible._sheets WHERE id = p_id;
+  SELECT id, data, created_at FROM deepbible._sheets WHERE id = p_id;
 $$;
 
 GRANT USAGE ON SCHEMA api TO web_anon;

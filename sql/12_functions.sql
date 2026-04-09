@@ -2,6 +2,24 @@ CREATE SCHEMA IF NOT EXISTS deepbible;
 
 -- HELPER SQL FUNCTIONS
 
+-- removes sheets older than a week that have no title
+DROP FUNCTION IF EXISTS deepbible.cleanup_stale_sheets();
+CREATE OR REPLACE FUNCTION deepbible.cleanup_stale_sheets()
+  RETURNS integer
+  LANGUAGE 'sql'
+AS $BODY$
+  WITH deleted AS (
+    DELETE FROM deepbible._sheets
+    WHERE created_at < now() - interval '7 days'
+      AND (
+        data ->> 'title' IS NULL
+        OR btrim(data ->> 'title') = ''
+      )
+    RETURNING id
+  )
+  SELECT count(*)::integer FROM deleted;
+$BODY$;
+
 -- removes basic XML formatting tags from text
 DROP FUNCTION IF EXISTS deepbible.text_without_format(text);
 CREATE OR REPLACE FUNCTION deepbible.text_without_format(input text)
