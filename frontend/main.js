@@ -13516,7 +13516,7 @@ var itemId = function(v) {
     return v.value0.id;
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 515, column 10 - line 517, column 21): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 513, column 10 - line 515, column 21): " + [v.constructor.name]);
 };
 var removeItemById = function(rid) {
   return updateItemsAndSync(filter(function(item) {
@@ -13670,22 +13670,16 @@ var renderSheetEntry = function(currentSheetId) {
     }();
     return div2([class_(classes)])([button([class_("sheet-list-title"), title2(entry.sheetId), onClick(function(v) {
       return new RecallSheet(entry.sheetId);
-    })])([text5(label5)]), span4([class_("sheet-list-date")])([text5(formatSavedAt(entry.savedAt))]), function() {
-      if (isCurrent) {
-        return text5("");
-      }
-      ;
-      return button([class_("sheet-list-delete"), title2("remove from list"), onClick(function(v) {
-        return new DeleteSavedSheet(entry.sheetId);
-      })])([text5("\xD7")]);
-    }()]);
+    })])([text5(label5)]), span4([class_("sheet-list-date")])([text5(formatSavedAt(entry.savedAt))]), button([class_("sheet-list-delete"), title2("remove from list"), onClick(function(v) {
+      return new DeleteSavedSheet(entry.sheetId);
+    })])([text5("\xD7")])]);
   };
 };
 var renderSheetList = function(currentSheetId) {
   return function(sheets) {
     return div2([class_("sheet-list")])(function() {
-      var $123 = $$null(sheets);
-      if ($123) {
+      var $122 = $$null(sheets);
+      if ($122) {
         return [div2([class_("sheet-list-empty")])([text5("no saved sheets")])];
       }
       ;
@@ -13752,7 +13746,7 @@ var fetchAndInsertPericopeAt = function(index4) {
           return insertPericopeAt(index4)(address2)(source2)(res.value0);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 489, column 3 - line 491, column 65): " + [res.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 487, column 3 - line 489, column 65): " + [res.constructor.name]);
       });
     };
   };
@@ -13768,7 +13762,7 @@ var fetchAndInsertPericope = function(address2) {
         return insertPericope(address2)(source2)(res.value0);
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 478, column 3 - line 480, column 57): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 476, column 3 - line 478, column 57): " + [res.constructor.name]);
     });
   };
 };
@@ -13777,8 +13771,8 @@ var loadSeed = function(v) {
     return insertNoteAtEnd(v.content);
   }
   ;
-  var $138 = v.address !== "" && v.source !== "";
-  if ($138) {
+  var $137 = v.address !== "" && v.source !== "";
+  if ($137) {
     return fetchAndInsertPericope(v.address)(v.source);
   }
   ;
@@ -13814,7 +13808,7 @@ var handlePericopeOutput = function(pid) {
           return fetchAndInsertPericope(v1.value0.address)(v1.value0.source);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 396, column 5 - line 398, column 58): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 394, column 5 - line 396, column 58): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13856,7 +13850,7 @@ var handlePericopeOutput = function(pid) {
       return fetchAndInsertPericope(v.value0.address)(v.value0.source);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 393, column 28 - line 425, column 42): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 391, column 28 - line 423, column 42): " + [v.constructor.name]);
   };
 };
 var handleNoteOutput = function(nid) {
@@ -13872,7 +13866,7 @@ var handleNoteOutput = function(nid) {
           return insertNoteAt(v1.value0.index + 1 | 0)(v1.value0.note.content);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 434, column 5 - line 436, column 68): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 432, column 5 - line 434, column 68): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13902,7 +13896,7 @@ var handleNoteOutput = function(nid) {
       });
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 431, column 24 - line 454, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 429, column 24 - line 452, column 64): " + [v.constructor.name]);
   };
 };
 var handle3 = function(action2) {
@@ -13910,18 +13904,18 @@ var handle3 = function(action2) {
     return bind11(liftEffect8(getOrCreateSheetId))(function(sheetId) {
       return bind11(liftEffect8(loadSheetList))(function(savedSheets) {
         return discard14(modify_6(function(st) {
-          var $175 = {};
-          for (var $176 in st) {
-            if ({}.hasOwnProperty.call(st, $176)) {
-              $175[$176] = st[$176];
+          var $174 = {};
+          for (var $175 in st) {
+            if ({}.hasOwnProperty.call(st, $175)) {
+              $174[$175] = st[$175];
             }
             ;
           }
           ;
-          $175.sheetId = sheetId;
-          $175.hydrating = true;
-          $175.savedSheets = savedSheets;
-          return $175;
+          $174.sheetId = sheetId;
+          $174.hydrating = true;
+          $174.savedSheets = savedSheets;
+          return $174;
         }))(function() {
           return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
             var loaded = function() {
@@ -13944,48 +13938,48 @@ var handle3 = function(action2) {
                   return decodeSheet(res.value0.value0);
                 }
                 ;
-                throw new Error("Failed pattern match at App.Main (line 303, column 30 - line 305, column 50): " + [res.value0.constructor.name]);
+                throw new Error("Failed pattern match at App.Main (line 301, column 30 - line 303, column 50): " + [res.value0.constructor.name]);
               }
               ;
-              throw new Error("Failed pattern match at App.Main (line 301, column 18 - line 305, column 50): " + [res.constructor.name]);
+              throw new Error("Failed pattern match at App.Main (line 299, column 18 - line 303, column 50): " + [res.constructor.name]);
             }();
             var seeds = function() {
-              var $183 = $$null(loaded.items);
-              if ($183) {
+              var $182 = $$null(loaded.items);
+              if ($182) {
                 return defaultSeeds;
               }
               ;
               return loaded.items;
             }();
             return discard14(modify_6(function(st) {
-              var $184 = {};
-              for (var $185 in st) {
-                if ({}.hasOwnProperty.call(st, $185)) {
-                  $184[$185] = st[$185];
+              var $183 = {};
+              for (var $184 in st) {
+                if ({}.hasOwnProperty.call(st, $184)) {
+                  $183[$184] = st[$184];
                 }
                 ;
               }
               ;
-              $184.title = loaded.title;
-              return $184;
+              $183.title = loaded.title;
+              return $183;
             }))(function() {
               return discard14(for_3(seeds)(loadSeed))(function() {
                 return discard14(modify_6(function(st) {
-                  var $187 = {};
-                  for (var $188 in st) {
-                    if ({}.hasOwnProperty.call(st, $188)) {
-                      $187[$188] = st[$188];
+                  var $186 = {};
+                  for (var $187 in st) {
+                    if ({}.hasOwnProperty.call(st, $187)) {
+                      $186[$187] = st[$187];
                     }
                     ;
                   }
                   ;
-                  $187.hydrating = false;
-                  return $187;
+                  $186.hydrating = false;
+                  return $186;
                 }))(function() {
                   return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
                     var query1 = trim(rawQuery);
-                    var $190 = query1 === "";
-                    if ($190) {
+                    var $189 = query1 === "";
+                    if ($189) {
                       return pure20(unit);
                     }
                     ;
@@ -14031,16 +14025,16 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof ToggleSheetList) {
     return modify_6(function(st) {
-      var $197 = {};
-      for (var $198 in st) {
-        if ({}.hasOwnProperty.call(st, $198)) {
-          $197[$198] = st[$198];
+      var $196 = {};
+      for (var $197 in st) {
+        if ({}.hasOwnProperty.call(st, $197)) {
+          $196[$197] = st[$197];
         }
         ;
       }
       ;
-      $197.sheetListOpen = !st.sheetListOpen;
-      return $197;
+      $196.sheetListOpen = !st.sheetListOpen;
+      return $196;
     });
   }
   ;
@@ -14052,16 +14046,16 @@ var handle3 = function(action2) {
     return discard14(liftEffect8(deleteSheetFromLocal(action2.value0)))(function() {
       return bind11(liftEffect8(loadSheetList))(function(savedSheets) {
         return modify_6(function(st) {
-          var $201 = {};
-          for (var $202 in st) {
-            if ({}.hasOwnProperty.call(st, $202)) {
-              $201[$202] = st[$202];
+          var $200 = {};
+          for (var $201 in st) {
+            if ({}.hasOwnProperty.call(st, $201)) {
+              $200[$201] = st[$201];
             }
             ;
           }
           ;
-          $201.savedSheets = savedSheets;
-          return $201;
+          $200.savedSheets = savedSheets;
+          return $200;
         });
       });
     });
@@ -14073,16 +14067,16 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof UpdateTitle) {
     return discard14(modify_6(function(st) {
-      var $205 = {};
-      for (var $206 in st) {
-        if ({}.hasOwnProperty.call(st, $206)) {
-          $205[$206] = st[$206];
+      var $204 = {};
+      for (var $205 in st) {
+        if ({}.hasOwnProperty.call(st, $205)) {
+          $204[$205] = st[$205];
         }
         ;
       }
       ;
-      $205.title = action2.value0;
-      return $205;
+      $204.title = action2.value0;
+      return $204;
     }))(function() {
       return syncSheet;
     });
@@ -14090,46 +14084,46 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof StartDrag) {
     return modify_6(function(st) {
-      var $209 = {};
-      for (var $210 in st) {
-        if ({}.hasOwnProperty.call(st, $210)) {
-          $209[$210] = st[$210];
+      var $208 = {};
+      for (var $209 in st) {
+        if ({}.hasOwnProperty.call(st, $209)) {
+          $208[$209] = st[$209];
         }
         ;
       }
       ;
-      $209.dragging = new Just(action2.value0);
-      return $209;
+      $208.dragging = new Just(action2.value0);
+      return $208;
     });
   }
   ;
   if (action2 instanceof OverDrag) {
     return modify_6(function(st) {
-      var $213 = {};
-      for (var $214 in st) {
-        if ({}.hasOwnProperty.call(st, $214)) {
-          $213[$214] = st[$214];
+      var $212 = {};
+      for (var $213 in st) {
+        if ({}.hasOwnProperty.call(st, $213)) {
+          $212[$213] = st[$213];
         }
         ;
       }
       ;
-      $213.droppingOver = new Just(action2.value0);
-      return $213;
+      $212.droppingOver = new Just(action2.value0);
+      return $212;
     });
   }
   ;
   if (action2 instanceof LeaveDrag) {
     return modify_6(function(st) {
-      var $217 = {};
-      for (var $218 in st) {
-        if ({}.hasOwnProperty.call(st, $218)) {
-          $217[$218] = st[$218];
+      var $216 = {};
+      for (var $217 in st) {
+        if ({}.hasOwnProperty.call(st, $217)) {
+          $216[$217] = st[$217];
         }
         ;
       }
       ;
-      $217.droppingOver = Nothing.value;
-      return $217;
+      $216.droppingOver = Nothing.value;
+      return $216;
     });
   }
   ;
@@ -14142,24 +14136,24 @@ var handle3 = function(action2) {
       if (st.dragging instanceof Just) {
         var items2 = reorder(st.dragging.value0)(action2.value0)(st.items);
         return discard14(put3(function() {
-          var $222 = {};
-          for (var $223 in st) {
-            if ({}.hasOwnProperty.call(st, $223)) {
-              $222[$223] = st[$223];
+          var $221 = {};
+          for (var $222 in st) {
+            if ({}.hasOwnProperty.call(st, $222)) {
+              $221[$222] = st[$222];
             }
             ;
           }
           ;
-          $222.items = items2;
-          $222.dragging = Nothing.value;
-          $222.droppingOver = Nothing.value;
-          return $222;
+          $221.items = items2;
+          $221.dragging = Nothing.value;
+          $221.droppingOver = Nothing.value;
+          return $221;
         }()))(function() {
           return syncSheet;
         });
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 368, column 5 - line 373, column 18): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 366, column 5 - line 371, column 18): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -14172,10 +14166,10 @@ var handle3 = function(action2) {
       return handleNoteOutput(action2.value0.value0)(action2.value0.value1);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 375, column 19 - line 379, column 31): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 373, column 19 - line 377, column 31): " + [action2.value0.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 295, column 17 - line 379, column 31): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 293, column 17 - line 377, column 31): " + [action2.constructor.name]);
 };
 var component3 = /* @__PURE__ */ function() {
   return mkComponent({

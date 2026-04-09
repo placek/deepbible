@@ -274,14 +274,12 @@ renderSheetEntry currentSheetId entry =
     , HH.span
         [ HP.class_ (HH.ClassName "sheet-list-date") ]
         [ HH.text (formatSavedAt entry.savedAt) ]
-    , if isCurrent then HH.text ""
-      else
-        HH.button
-          [ HP.class_ (HH.ClassName "sheet-list-delete")
-          , HP.title "remove from list"
-          , HE.onClick \_ -> DeleteSavedSheet entry.sheetId
-          ]
-          [ HH.text "\x00d7" ]
+    , HH.button
+        [ HP.class_ (HH.ClassName "sheet-list-delete")
+        , HP.title "remove from list"
+        , HE.onClick \_ -> DeleteSavedSheet entry.sheetId
+        ]
+        [ HH.text "\x00d7" ]
     ]
 
 formatSavedAt :: String -> String
