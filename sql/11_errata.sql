@@ -253,3 +253,20 @@ WHERE text ~ '[.,;!?][A-ZĄĆĘŁŃÓŚŹŻ]';
 UPDATE la._all_verses
 SET text = REGEXP_REPLACE(text, '([.,:;!?])([A-Za-z])', '\1 \2', 'g')
 WHERE text ~ '[.,:;!?][A-Zaz]';
+
+-- replace hanging '>' (not part of an XML tag) with U+203A (›)
+-- strategy: temporarily wrap well-formed tags with private-use markers
+-- (U+E000/U+E001) so the '>' inside them is hidden, replace any
+-- remaining '>' with '›', then restore the tags.
+UPDATE pl._all_verses
+SET text = REGEXP_REPLACE(
+  REPLACE(
+    REGEXP_REPLACE(text, '<([^<>]*)>', E'\uE000\\1\uE001', 'g'),
+    '>',
+    U&'\203A'
+  ),
+  E'\uE000([^\uE001]*)\uE001',
+  E'<\\1>',
+  'g'
+)
+WHERE text LIKE '%>%';
