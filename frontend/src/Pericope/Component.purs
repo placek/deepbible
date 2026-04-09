@@ -514,7 +514,8 @@ handle = case _ of
           sel0 = st.pericope.selected
           sel1 =
             if Set.member vid sel0 then Set.delete vid sel0 else Set.insert vid sel0
-          nextCrossRefState = if Set.size sel1 == 1 then CrossRefsLoading else CrossRefsIdle
+          hasSelection = Set.size sel1 >= 1
+          nextCrossRefState = if hasSelection then CrossRefsLoading else CrossRefsIdle
           nextDictionaryState = if Set.size sel1 == 1 then DictionaryLoading else DictionaryIdle
         in
         st
@@ -525,21 +526,39 @@ handle = case _ of
           }
       st <- H.get
       H.raise (DidUpdate st.pericope)
-      let selectedIds :: Array VerseId
-          selectedIds = Set.toUnfoldable st.pericope.selected
+      let
+        selectedIds :: Array VerseId
+        selectedIds = Set.toUnfoldable st.pericope.selected
+        selectionStillMatches = do
+          st' <- H.get
+          pure (st'.pericope.selected == st.pericope.selected)
+        addressText = selectedAddressText st.pericope
+
+      -- fetch cross-references for any non-empty selection
+      when (addressText /= "") do
+        refsRes <- H.liftAff $ fetchCrossReferences addressText st.pericope.source
+        stillValid <- selectionStillMatches
+        when stillValid do
+          let refs = case refsRes of
+                Left _ -> []
+                Right fetchedRefs -> fetchedRefs
+          H.modify_ \s -> s
+            { crossRefs = case s.crossRefs of
+                CrossRefsLoaded payload -> CrossRefsLoaded (payload { references = refs })
+                _ -> CrossRefsLoaded { references: refs, commentaries: [], stories: [] }
+            }
+
+      -- fetch dictionary, commentaries, stories only for single-verse selection
       case selectedIds of
         [only] -> do
           let
             selectedVerse = A.find (\(Verse v) -> v.verse_id == only) st.pericope.verses
-            stillSelected verse = do
-              st' <- H.get
-              pure (Set.size st'.pericope.selected == 1 && Set.member verse st'.pericope.selected)
           case selectedVerse of
             Nothing -> pure unit
             Just (Verse v) -> do
               dictionaryRes <- H.liftAff $ fetchVerseDictionary only
-              stillAfterDictionary <- stillSelected only
-              when stillAfterDictionary do
+              stillValid <- selectionStillMatches
+              when stillValid do
                 let dictionaryEntries = case dictionaryRes of
                       Left _ -> []
                       Right entries -> entries
@@ -547,28 +566,24 @@ handle = case _ of
                   { dictionary = DictionaryLoaded dictionaryEntries
                   , activeDictionaryTopic = Nothing
                   }
-              refsRes <- H.liftAff $ fetchCrossReferences only
-              stillAfterRefs <- stillSelected only
-              when stillAfterRefs do
-                commRes <- H.liftAff $ fetchCommentaries only
-                stillAfterCommentaries <- stillSelected only
-                when stillAfterCommentaries do
-                  storiesRes <- H.liftAff $ fetchRenderedStories v.source v.address
-                  stillAfterStories <- stillSelected only
-                  when stillAfterStories do
-                    let
-                      refs = case refsRes of
-                        Left _ -> []
-                        Right fetchedRefs -> fetchedRefs
-                      commentaries = case commRes of
-                        Left _ -> []
-                        Right fetchedCommentaries -> annotateCommentary v.source <$> fetchedCommentaries
-                      stories = case storiesRes of
-                        Left _ -> []
-                        Right fetchedStories -> fetchedStories
-                    H.modify_ _
-                      { crossRefs = CrossRefsLoaded { references: refs, commentaries, stories }
-                      }
+              commRes <- H.liftAff $ fetchCommentaries only
+              stillValid2 <- selectionStillMatches
+              when stillValid2 do
+                storiesRes <- H.liftAff $ fetchRenderedStories v.source v.address
+                stillValid3 <- selectionStillMatches
+                when stillValid3 do
+                  let
+                    commentaries = case commRes of
+                      Left _ -> []
+                      Right fetchedCommentaries -> annotateCommentary v.source <$> fetchedCommentaries
+                    stories = case storiesRes of
+                      Left _ -> []
+                      Right fetchedStories -> fetchedStories
+                  H.modify_ \s -> s
+                    { crossRefs = case s.crossRefs of
+                        CrossRefsLoaded payload -> CrossRefsLoaded (payload { commentaries = commentaries, stories = stories })
+                        _ -> CrossRefsLoaded { references: [], commentaries, stories }
+                    }
         _ -> pure unit
 
   Remove -> do

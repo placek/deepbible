@@ -531,14 +531,12 @@ BEGIN
 
   RETURN QUERY
   WITH main_book AS (
-    -- base verse book (same as your original CTE)
     SELECT ab.book_number, ab.short_name
     FROM deepbible._all_books AS ab
     WHERE ab.source_number = v_source_number
       AND ab.language      = v_language
   ),
   ref_books AS (
-    -- all books for this language, but collapse to 1 row per book_number
     SELECT DISTINCT ON (ab.book_number, ab.language)
            ab.book_number,
            ab.language,
@@ -552,19 +550,16 @@ BEGIN
       (COALESCE(b.short_name, '') || ' ' || cr.chapter || ',' || cr.verse) AS address,
       TRIM(BOTH FROM
         CASE
-          -- same book & chapter and have b2,c2,v2 -> Book C.V1-V2
           WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
                AND cr.b1 = cr.b2 AND cr.c1 = cr.c2
           THEN
             COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1 || '-' || cr.v2
 
-          -- different book and/or chapter with b2,c2,v2 -> Book1 C1.V1-Book2 C2.V2
           WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
           THEN
             COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1 || '-' ||
             COALESCE(b2.short_name, '') || ' ' || cr.c2 || ',' || cr.v2
 
-          -- only from reference -> Book1 C1.V1
           ELSE
             COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1
         END
@@ -585,6 +580,84 @@ BEGIN
   ORDER BY cr.rate DESC, cr.book_number, cr.chapter, cr.verse;
 
 END;
+$BODY$;
+
+-- retrieves aggregated cross-references for all verses in a parsed address range
+DROP FUNCTION IF EXISTS deepbible.fetch_cross_references_by_address(text, text);
+CREATE OR REPLACE FUNCTION deepbible.fetch_cross_references_by_address(
+  p_address text,
+  p_source text DEFAULT NULL::text
+)
+  RETURNS TABLE(address text, reference text, rate bigint)
+  LANGUAGE 'sql'
+  COST 100
+  STABLE PARALLEL SAFE
+  ROWS 1000
+AS $BODY$
+  WITH src AS (
+    SELECT s.language, s.source_number
+    FROM deepbible._all_sources s
+    WHERE s.name = p_source
+    LIMIT 1
+  ),
+  verses AS (
+    SELECT DISTINCT
+      b.book_number,
+      a.chapter,
+      a.verse
+    FROM deepbible.parse_address(p_address) a
+    JOIN deepbible._all_books b
+      ON a.book = b.short_name
+    WHERE a.chapter IS NOT NULL
+      AND a.verse IS NOT NULL
+  ),
+  books AS (
+    SELECT DISTINCT ON (ab.book_number)
+      ab.book_number,
+      ab.short_name
+    FROM deepbible._all_books ab
+    JOIN src ON src.language = ab.language
+    ORDER BY ab.book_number, ab.source_number
+  ),
+  raw_refs AS (
+    SELECT
+      COALESCE(sb.short_name, '') || ' ' || cr.chapter || ',' || cr.verse AS address,
+      TRIM(BOTH FROM
+        CASE
+          WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
+               AND cr.b1 = cr.b2 AND cr.c1 = cr.c2
+          THEN
+            COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1 || '-' || cr.v2
+
+          WHEN cr.b2 IS NOT NULL AND cr.c2 IS NOT NULL AND cr.v2 IS NOT NULL
+          THEN
+            COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1 || '-' ||
+            COALESCE(b2.short_name, '') || ' ' || cr.c2 || ',' || cr.v2
+
+          ELSE
+            COALESCE(b1.short_name, '') || ' ' || cr.c1 || ',' || cr.v1
+        END
+      ) AS reference,
+      cr.rate
+    FROM verses v
+    JOIN deepbible._cross_references cr
+      ON cr.book_number = v.book_number
+     AND cr.chapter     = v.chapter
+     AND cr.verse       = v.verse
+    LEFT JOIN books sb
+           ON cr.book_number = sb.book_number
+    LEFT JOIN books b1
+           ON cr.b1 = b1.book_number
+    LEFT JOIN books b2
+           ON cr.b2 = b2.book_number
+  )
+  SELECT
+    r.address,
+    r.reference,
+    SUM(r.rate) AS rate
+  FROM raw_refs r
+  GROUP BY r.address, r.reference
+  ORDER BY rate DESC, r.reference;
 $BODY$;
 
 -- convert greek text to beta code

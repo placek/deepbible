@@ -45,6 +45,16 @@ AS $$
   FROM deepbible.fetch_cross_references(p_verse_id);
 $$;
 
+CREATE OR REPLACE FUNCTION api.fetch_cross_references_by_address(p_address text, p_source text DEFAULT NULL::text)
+  RETURNS TABLE(address text, reference text, rate bigint)
+  LANGUAGE sql
+  SECURITY DEFINER
+  SET search_path = deepbible, public
+AS $$
+  SELECT *
+  FROM deepbible.fetch_cross_references_by_address(p_address, p_source);
+$$;
+
 CREATE OR REPLACE FUNCTION api.fetch_commentaries(p_verse_id text)
   RETURNS TABLE(marker text, text text)
   LANGUAGE sql
@@ -111,6 +121,7 @@ GRANT USAGE ON SCHEMA api TO web_anon;
 GRANT EXECUTE ON FUNCTION api._all_sources() TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_verses_by_address(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_cross_references(text) TO web_anon;
+GRANT EXECUTE ON FUNCTION api.fetch_cross_references_by_address(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_commentaries(text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.fetch_rendered_stories(text, text) TO web_anon;
 GRANT EXECUTE ON FUNCTION api.verse_dictionary(text) TO web_anon;

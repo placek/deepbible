@@ -104,16 +104,16 @@ fetchSources = do
       Left _ -> pure $ Left "Failed to fetch sources"
       Right sources -> pure $ Right sources
 
-fetchCrossReferences :: VerseId -> Aff (Either String (Array CrossReference))
-fetchCrossReferences verseId = do
+fetchCrossReferences :: Address -> Source -> Aff (Either String (Array CrossReference))
+fetchCrossReferences address source = do
   let
-    url = baseUrl <> "/rpc/fetch_cross_references"
-    payload = ("p_verse_id" := fromString verseId) ~> jsonEmptyObject
+    url = baseUrl <> "/rpc/fetch_cross_references_by_address"
+    payload = ("p_address" := fromString address) ~> ("p_source" := fromString source) ~> jsonEmptyObject
   res <- postgrestPost url payload
   case res of
     Left err -> pure $ Left ("HTTP error: " <> AX.printError err)
     Right json -> case decodeJson json.body of
-      Left _ -> pure $ Left $ "Failed to fetch cross references: " <> verseId
+      Left _ -> pure $ Left $ "Failed to fetch cross references: " <> address
       Right refs -> pure $ Right refs
 
 fetchCommentaries :: VerseId -> Aff (Either String (Array Commentary))

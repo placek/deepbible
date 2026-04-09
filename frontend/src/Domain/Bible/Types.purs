@@ -30,8 +30,7 @@ derive instance newtypeSourceInfo :: Newtype SourceInfo _
 
 newtype CrossReference =
   CrossReference
-    { id :: String
-    , address :: Address
+    { address :: Address
     , reference :: String
     , rate :: Int
     }
@@ -128,11 +127,10 @@ instance decodeSourceInfo :: DecodeJson SourceInfo where
 instance decodeCrossReference :: DecodeJson CrossReference where
   decodeJson j = do
     obj <- decodeJson j
-    id <- obj .: "id"
     address <- obj .: "address"
     reference <- obj .: "reference"
     rate <- obj .: "rate"
-    pure $ CrossReference { id, address, reference, rate }
+    pure $ CrossReference { address, reference, rate }
 
 instance decodeCommentary :: DecodeJson Commentary where
   decodeJson j = do
