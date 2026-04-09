@@ -24,9 +24,13 @@
     right: auto;
   }
 
-  .note-add {
+  .note-add,
+  .pericope-add {
     width: 1.5em;
     height: 1.5em;
+  }
+
+  .add-buttons {
     margin: -1em auto 0 auto;
   }
 

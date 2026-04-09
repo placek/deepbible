@@ -110,6 +110,9 @@ var _deleteAt = function(just, nothing, i2, l) {
   l1.splice(i2, 1);
   return just(l1);
 };
+var reverse = function(l) {
+  return l.slice().reverse();
+};
 var concat = function(xss) {
   if (xss.length <= 1e4) {
     return Array.prototype.concat.apply([], xss);
@@ -171,6 +174,9 @@ var sortByImpl = /* @__PURE__ */ function() {
     return out;
   };
 }();
+var sliceImpl = function(s, e, l) {
+  return l.slice(s, e);
+};
 var unsafeIndexImpl = function(xs, n) {
   return xs[n];
 };
@@ -1887,6 +1893,17 @@ var sort = function(dictOrd) {
 var snoc = function(xs) {
   return function(x) {
     return withArray(push(x))(xs)();
+  };
+};
+var slice = /* @__PURE__ */ runFn3(sliceImpl);
+var take = function(n) {
+  return function(xs) {
+    var $152 = n < 1;
+    if ($152) {
+      return [];
+    }
+    ;
+    return slice(0)(n)(xs);
   };
 };
 var singleton2 = function(a2) {
@@ -12784,9 +12801,9 @@ var slot22 = /* @__PURE__ */ slot2({
 })(ordInt);
 var component22 = /* @__PURE__ */ component(monadAffAff);
 var append14 = /* @__PURE__ */ append(semigroupArray);
-var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var max6 = /* @__PURE__ */ max(ordInt);
 var min5 = /* @__PURE__ */ min(ordInt);
+var put3 = /* @__PURE__ */ put(monadStateHalogenM);
 var bind16 = /* @__PURE__ */ bind(bindMaybe);
 var liftAff3 = /* @__PURE__ */ liftAff(/* @__PURE__ */ monadAffHalogenM(monadAffAff));
 var void1 = /* @__PURE__ */ $$void(functorHalogenM);
@@ -12851,6 +12868,16 @@ var AddNoteAt = /* @__PURE__ */ function() {
     return new AddNoteAt2(value0);
   };
   return AddNoteAt2;
+}();
+var AddPericopeAt = /* @__PURE__ */ function() {
+  function AddPericopeAt2(value0) {
+    this.value0 = value0;
+  }
+  ;
+  AddPericopeAt2.create = function(value0) {
+    return new AddPericopeAt2(value0);
+  };
+  return AddPericopeAt2;
 }();
 var DownloadMarkdown = /* @__PURE__ */ function() {
   function DownloadMarkdown2() {
@@ -12955,8 +12982,8 @@ var updateNote = function(updated) {
   };
 };
 var syncSheet = /* @__PURE__ */ bind11(get7)(function(st) {
-  var $74 = st.hydrating || st.sheetId === "";
-  if ($74) {
+  var $76 = st.hydrating || st.sheetId === "";
+  if ($76) {
     return pure20(unit);
   }
   ;
@@ -12965,23 +12992,36 @@ var syncSheet = /* @__PURE__ */ bind11(get7)(function(st) {
 });
 var updateItemsAndSync = function(updateItems) {
   return discard8(modify_6(function(st) {
-    var $75 = {};
-    for (var $76 in st) {
-      if ({}.hasOwnProperty.call(st, $76)) {
-        $75[$76] = st[$76];
+    var $77 = {};
+    for (var $78 in st) {
+      if ({}.hasOwnProperty.call(st, $78)) {
+        $77[$78] = st[$78];
       }
       ;
     }
     ;
-    $75.items = updateItems(st.items);
-    return $75;
+    $77.items = updateItems(st.items);
+    return $77;
   }))(function() {
     return syncSheet;
   });
 };
+var sourceAbove = function(index4) {
+  return function(items2) {
+    var before = take(index4)(items2);
+    var lastP = findMap(function(v) {
+      if (v instanceof PericopeItem) {
+        return new Just(v.value0.source);
+      }
+      ;
+      return Nothing.value;
+    })(reverse(before));
+    return fromMaybe("NVUL")(lastP);
+  };
+};
 var sheetMarkdownFilename = function(sheetId) {
-  var $78 = sheetId === "";
-  if ($78) {
+  var $82 = sheetId === "";
+  if ($82) {
     return "deepbible-sheet.md";
   }
   ;
@@ -12995,10 +13035,18 @@ var renderFooter = function(sheetId) {
     return DownloadMarkdown.value;
   })])([text5(sheetMarkdownFilename(sheetId))]), a([href4("https://github.com/placek/deepbible"), attr2("target")("_blank"), attr2("rel")("noreferrer")])([text5("github")])]);
 };
+var renderAddPericopeButton = function(index4) {
+  return button([class_("pericope-add"), onClick(function(v) {
+    return new AddPericopeAt(index4);
+  })])([text5("+")]);
+};
 var renderAddNoteButton = function(index4) {
   return button([class_("note-add"), onClick(function(v) {
     return new AddNoteAt(index4);
   })])([text5("+")]);
+};
+var renderAddButtons = function(index4) {
+  return div2([class_("add-buttons")])([renderAddNoteButton(index4), renderAddPericopeButton(index4)]);
 };
 var pericopeSlot = /* @__PURE__ */ function() {
   return $$Proxy.value;
@@ -13035,15 +13083,15 @@ var renderItem2 = function(item) {
     return renderNote(item.value0);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 155, column 19 - line 157, column 35): " + [item.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 172, column 19 - line 174, column 35): " + [item.constructor.name]);
 };
 var renderItemWithAddButton = function(index4) {
   return function(item) {
-    return [renderItem2(item), renderAddNoteButton(index4 + 1 | 0)];
+    return [renderItem2(item), renderAddButtons(index4 + 1 | 0)];
   };
 };
 var render3 = function(st) {
-  var items2 = concat(append14([[renderAddNoteButton(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
+  var items2 = concat(append14([[renderAddButtons(0)]])(mapWithIndex2(renderItemWithAddButton)(st.items)));
   return div2([onClick(function(v) {
     return HandleDocumentClick.value;
   })])([renderHeader(st.title), renderSearchSection(HandleSearch.create)(st), div_(items2), renderFooter(st.sheetId)]);
@@ -13057,7 +13105,7 @@ var itemId = function(v) {
     return v.value0.id;
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 384, column 10 - line 386, column 21): " + [v.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 426, column 10 - line 428, column 21): " + [v.constructor.name]);
 };
 var removeItemById = function(rid) {
   return updateItemsAndSync(filter(function(item) {
@@ -13088,32 +13136,45 @@ var reorder = function(fromId) {
     };
   };
 };
+var insertPericopeAt = function(index4) {
+  return function(address2) {
+    return function(source2) {
+      return function(verses) {
+        return bind11(get7)(function(st) {
+          var pericope = {
+            id: st.nextId,
+            address: address2,
+            source: source2,
+            verses,
+            selected: empty4
+          };
+          var clampedIndex = max6(0)(min5(index4)(length(st.items)));
+          var items2 = fromMaybe(snoc(st.items)(new PericopeItem(pericope)))(insertAt(clampedIndex)(new PericopeItem(pericope))(st.items));
+          return discard8(put3(function() {
+            var $97 = {};
+            for (var $98 in st) {
+              if ({}.hasOwnProperty.call(st, $98)) {
+                $97[$98] = st[$98];
+              }
+              ;
+            }
+            ;
+            $97.items = items2;
+            $97.nextId = st.nextId + 1 | 0;
+            return $97;
+          }()))(function() {
+            return syncSheet;
+          });
+        });
+      };
+    };
+  };
+};
 var insertPericope = function(address2) {
   return function(source2) {
     return function(verses) {
       return bind11(get7)(function(st) {
-        var pericope = {
-          id: st.nextId,
-          address: address2,
-          source: source2,
-          verses,
-          selected: empty4
-        };
-        return discard8(put3(function() {
-          var $93 = {};
-          for (var $94 in st) {
-            if ({}.hasOwnProperty.call(st, $94)) {
-              $93[$94] = st[$94];
-            }
-            ;
-          }
-          ;
-          $93.items = snoc(st.items)(new PericopeItem(pericope));
-          $93.nextId = st.nextId + 1 | 0;
-          return $93;
-        }()))(function() {
-          return syncSheet;
-        });
+        return insertPericopeAt(length(st.items))(address2)(source2)(verses);
       });
     };
   };
@@ -13128,17 +13189,17 @@ var insertNoteAt = function(index4) {
       var clampedIndex = max6(0)(min5(index4)(length(st.items)));
       var items2 = fromMaybe(snoc(st.items)(new NoteItem(note2)))(insertAt(clampedIndex)(new NoteItem(note2))(st.items));
       return discard8(put3(function() {
-        var $96 = {};
-        for (var $97 in st) {
-          if ({}.hasOwnProperty.call(st, $97)) {
-            $96[$97] = st[$97];
+        var $100 = {};
+        for (var $101 in st) {
+          if ({}.hasOwnProperty.call(st, $101)) {
+            $100[$101] = st[$101];
           }
           ;
         }
         ;
-        $96.items = items2;
-        $96.nextId = st.nextId + 1 | 0;
-        return $96;
+        $100.items = items2;
+        $100.nextId = st.nextId + 1 | 0;
+        return $100;
       }()))(function() {
         return syncSheet;
       });
@@ -13195,6 +13256,23 @@ var findNote = function(nid) {
     });
   };
 };
+var fetchAndInsertPericopeAt = function(index4) {
+  return function(address2) {
+    return function(source2) {
+      return bind11(liftAff3(fetchVerses(address2)(source2)))(function(res) {
+        if (res instanceof Left) {
+          return pure20(unit);
+        }
+        ;
+        if (res instanceof Right) {
+          return insertPericopeAt(index4)(address2)(source2)(res.value0);
+        }
+        ;
+        throw new Error("Failed pattern match at App.Main (line 400, column 3 - line 402, column 65): " + [res.constructor.name]);
+      });
+    };
+  };
+};
 var fetchAndInsertPericope = function(address2) {
   return function(source2) {
     return bind11(liftAff3(fetchVerses(address2)(source2)))(function(res) {
@@ -13206,7 +13284,7 @@ var fetchAndInsertPericope = function(address2) {
         return insertPericope(address2)(source2)(res.value0);
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 367, column 3 - line 369, column 57): " + [res.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 389, column 3 - line 391, column 57): " + [res.constructor.name]);
     });
   };
 };
@@ -13215,8 +13293,8 @@ var loadSeed = function(v) {
     return insertNoteAtEnd(v.content);
   }
   ;
-  var $109 = v.address !== "" && v.source !== "";
-  if ($109) {
+  var $116 = v.address !== "" && v.source !== "";
+  if ($116) {
     return fetchAndInsertPericope(v.address)(v.source);
   }
   ;
@@ -13252,7 +13330,7 @@ var handlePericopeOutput = function(pid) {
           return fetchAndInsertPericope(v1.value0.address)(v1.value0.source);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 285, column 5 - line 287, column 58): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 307, column 5 - line 309, column 58): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13294,7 +13372,7 @@ var handlePericopeOutput = function(pid) {
       return fetchAndInsertPericope(v.value0.address)(v.value0.source);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 282, column 28 - line 314, column 42): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 304, column 28 - line 336, column 42): " + [v.constructor.name]);
   };
 };
 var handleNoteOutput = function(nid) {
@@ -13310,7 +13388,7 @@ var handleNoteOutput = function(nid) {
           return insertNoteAt(v1.value0.index + 1 | 0)(v1.value0.note.content);
         }
         ;
-        throw new Error("Failed pattern match at App.Main (line 323, column 5 - line 325, column 68): " + [v1.constructor.name]);
+        throw new Error("Failed pattern match at App.Main (line 345, column 5 - line 347, column 68): " + [v1.constructor.name]);
       });
     }
     ;
@@ -13340,24 +13418,24 @@ var handleNoteOutput = function(nid) {
       });
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 320, column 24 - line 343, column 64): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 342, column 24 - line 365, column 64): " + [v.constructor.name]);
   };
 };
 var handle3 = function(action2) {
   if (action2 instanceof Initialize2) {
     return bind11(liftEffect8(getOrCreateSheetId))(function(sheetId) {
       return discard8(modify_6(function(st) {
-        var $146 = {};
-        for (var $147 in st) {
-          if ({}.hasOwnProperty.call(st, $147)) {
-            $146[$147] = st[$147];
+        var $153 = {};
+        for (var $154 in st) {
+          if ({}.hasOwnProperty.call(st, $154)) {
+            $153[$154] = st[$154];
           }
           ;
         }
         ;
-        $146.sheetId = sheetId;
-        $146.hydrating = true;
-        return $146;
+        $153.sheetId = sheetId;
+        $153.hydrating = true;
+        return $153;
       }))(function() {
         return bind11(liftAff3(fetchSheet(sheetId)))(function(res) {
           var loaded = function() {
@@ -13380,48 +13458,48 @@ var handle3 = function(action2) {
                 return decodeSheet(res.value0.value0);
               }
               ;
-              throw new Error("Failed pattern match at App.Main (line 208, column 30 - line 210, column 50): " + [res.value0.constructor.name]);
+              throw new Error("Failed pattern match at App.Main (line 225, column 30 - line 227, column 50): " + [res.value0.constructor.name]);
             }
             ;
-            throw new Error("Failed pattern match at App.Main (line 206, column 18 - line 210, column 50): " + [res.constructor.name]);
+            throw new Error("Failed pattern match at App.Main (line 223, column 18 - line 227, column 50): " + [res.constructor.name]);
           }();
           var seeds = function() {
-            var $154 = $$null(loaded.items);
-            if ($154) {
+            var $161 = $$null(loaded.items);
+            if ($161) {
               return defaultSeeds;
             }
             ;
             return loaded.items;
           }();
           return discard8(modify_6(function(st) {
-            var $155 = {};
-            for (var $156 in st) {
-              if ({}.hasOwnProperty.call(st, $156)) {
-                $155[$156] = st[$156];
+            var $162 = {};
+            for (var $163 in st) {
+              if ({}.hasOwnProperty.call(st, $163)) {
+                $162[$163] = st[$163];
               }
               ;
             }
             ;
-            $155.title = loaded.title;
-            return $155;
+            $162.title = loaded.title;
+            return $162;
           }))(function() {
             return discard8(for_3(seeds)(loadSeed))(function() {
               return discard8(modify_6(function(st) {
-                var $158 = {};
-                for (var $159 in st) {
-                  if ({}.hasOwnProperty.call(st, $159)) {
-                    $158[$159] = st[$159];
+                var $165 = {};
+                for (var $166 in st) {
+                  if ({}.hasOwnProperty.call(st, $166)) {
+                    $165[$166] = st[$166];
                   }
                   ;
                 }
                 ;
-                $158.hydrating = false;
-                return $158;
+                $165.hydrating = false;
+                return $165;
               }))(function() {
                 return bind11(liftEffect8(getSearchQueryParam))(function(rawQuery) {
                   var query1 = trim(rawQuery);
-                  var $161 = query1 === "";
-                  if ($161) {
+                  var $168 = query1 === "";
+                  if ($168) {
                     return pure20(unit);
                   }
                   ;
@@ -13445,6 +13523,13 @@ var handle3 = function(action2) {
     return insertNoteAt(action2.value0)("");
   }
   ;
+  if (action2 instanceof AddPericopeAt) {
+    return bind11(get7)(function(st) {
+      var source2 = sourceAbove(action2.value0)(st.items);
+      return fetchAndInsertPericopeAt(action2.value0)("2Tm 3,16")(source2);
+    });
+  }
+  ;
   if (action2 instanceof DownloadMarkdown) {
     return bind11(get7)(function(st) {
       var markdown = renderSheetMarkdown(st.items);
@@ -13463,38 +13548,6 @@ var handle3 = function(action2) {
   ;
   if (action2 instanceof UpdateTitle) {
     return discard8(modify_6(function(st) {
-      var $167 = {};
-      for (var $168 in st) {
-        if ({}.hasOwnProperty.call(st, $168)) {
-          $167[$168] = st[$168];
-        }
-        ;
-      }
-      ;
-      $167.title = action2.value0;
-      return $167;
-    }))(function() {
-      return syncSheet;
-    });
-  }
-  ;
-  if (action2 instanceof StartDrag) {
-    return modify_6(function(st) {
-      var $171 = {};
-      for (var $172 in st) {
-        if ({}.hasOwnProperty.call(st, $172)) {
-          $171[$172] = st[$172];
-        }
-        ;
-      }
-      ;
-      $171.dragging = new Just(action2.value0);
-      return $171;
-    });
-  }
-  ;
-  if (action2 instanceof OverDrag) {
-    return modify_6(function(st) {
       var $175 = {};
       for (var $176 in st) {
         if ({}.hasOwnProperty.call(st, $176)) {
@@ -13503,12 +13556,14 @@ var handle3 = function(action2) {
         ;
       }
       ;
-      $175.droppingOver = new Just(action2.value0);
+      $175.title = action2.value0;
       return $175;
+    }))(function() {
+      return syncSheet;
     });
   }
   ;
-  if (action2 instanceof LeaveDrag) {
+  if (action2 instanceof StartDrag) {
     return modify_6(function(st) {
       var $179 = {};
       for (var $180 in st) {
@@ -13518,8 +13573,38 @@ var handle3 = function(action2) {
         ;
       }
       ;
-      $179.droppingOver = Nothing.value;
+      $179.dragging = new Just(action2.value0);
       return $179;
+    });
+  }
+  ;
+  if (action2 instanceof OverDrag) {
+    return modify_6(function(st) {
+      var $183 = {};
+      for (var $184 in st) {
+        if ({}.hasOwnProperty.call(st, $184)) {
+          $183[$184] = st[$184];
+        }
+        ;
+      }
+      ;
+      $183.droppingOver = new Just(action2.value0);
+      return $183;
+    });
+  }
+  ;
+  if (action2 instanceof LeaveDrag) {
+    return modify_6(function(st) {
+      var $187 = {};
+      for (var $188 in st) {
+        if ({}.hasOwnProperty.call(st, $188)) {
+          $187[$188] = st[$188];
+        }
+        ;
+      }
+      ;
+      $187.droppingOver = Nothing.value;
+      return $187;
     });
   }
   ;
@@ -13532,24 +13617,24 @@ var handle3 = function(action2) {
       if (st.dragging instanceof Just) {
         var items2 = reorder(st.dragging.value0)(action2.value0)(st.items);
         return discard8(put3(function() {
-          var $184 = {};
-          for (var $185 in st) {
-            if ({}.hasOwnProperty.call(st, $185)) {
-              $184[$185] = st[$185];
+          var $192 = {};
+          for (var $193 in st) {
+            if ({}.hasOwnProperty.call(st, $193)) {
+              $192[$193] = st[$193];
             }
             ;
           }
           ;
-          $184.items = items2;
-          $184.dragging = Nothing.value;
-          $184.droppingOver = Nothing.value;
-          return $184;
+          $192.items = items2;
+          $192.dragging = Nothing.value;
+          $192.droppingOver = Nothing.value;
+          return $192;
         }()))(function() {
           return syncSheet;
         });
       }
       ;
-      throw new Error("Failed pattern match at App.Main (line 257, column 5 - line 262, column 18): " + [st.dragging.constructor.name]);
+      throw new Error("Failed pattern match at App.Main (line 279, column 5 - line 284, column 18): " + [st.dragging.constructor.name]);
     });
   }
   ;
@@ -13562,10 +13647,10 @@ var handle3 = function(action2) {
       return handleNoteOutput(action2.value0.value0)(action2.value0.value1);
     }
     ;
-    throw new Error("Failed pattern match at App.Main (line 264, column 19 - line 268, column 31): " + [action2.value0.constructor.name]);
+    throw new Error("Failed pattern match at App.Main (line 286, column 19 - line 290, column 31): " + [action2.value0.constructor.name]);
   }
   ;
-  throw new Error("Failed pattern match at App.Main (line 201, column 17 - line 268, column 31): " + [action2.constructor.name]);
+  throw new Error("Failed pattern match at App.Main (line 218, column 17 - line 290, column 31): " + [action2.constructor.name]);
 };
 var component3 = /* @__PURE__ */ function() {
   return mkComponent({

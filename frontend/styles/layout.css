@@ -243,9 +243,18 @@ h2 {
   width: 100%;
 }
 
-.note-add {
-  align-self: center;
+.add-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
   margin: -1em auto;
+  position: relative;
+  z-index: 1;
+}
+
+.note-add,
+.pericope-add {
   user-select: none;
   border: none;
   border-radius: 50%;
@@ -253,8 +262,6 @@ h2 {
   height: 2em;
   cursor: pointer;
   display: block;
-  position: relative;
-  z-index: 1;
 }
 
 .didascalia-remove,

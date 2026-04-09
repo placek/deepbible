@@ -69,6 +69,7 @@ data Action
   = Initialize
   | AddPericope String String (Array Verse)
   | AddNoteAt Int
+  | AddPericopeAt Int
   | DownloadMarkdown
   | ChildMsg ChildMessage
   | StartDrag Int
@@ -118,7 +119,7 @@ render st =
   let
     items =
       A.concat
-        ( [ [ renderAddNoteButton 0 ] ]
+        ( [ [ renderAddButtons 0 ] ]
             <> A.mapWithIndex renderItemWithAddButton st.items
         )
   in
@@ -148,8 +149,24 @@ renderItemWithAddButton
   -> Array (H.ComponentHTML Action ChildSlots Aff)
 renderItemWithAddButton index item =
   [ renderItem item
-  , renderAddNoteButton (index + 1)
+  , renderAddButtons (index + 1)
   ]
+
+renderAddButtons :: Int -> H.ComponentHTML Action ChildSlots Aff
+renderAddButtons index =
+  HH.div
+    [ HP.class_ (HH.ClassName "add-buttons") ]
+    [ renderAddNoteButton index
+    , renderAddPericopeButton index
+    ]
+
+renderAddPericopeButton :: Int -> H.ComponentHTML Action ChildSlots Aff
+renderAddPericopeButton index =
+  HH.button
+    [ HP.class_ (HH.ClassName "pericope-add")
+    , HE.onClick \_ -> AddPericopeAt index
+    ]
+    [ HH.text "+" ]
 
 renderItem :: Item -> H.ComponentHTML Action ChildSlots Aff
 renderItem item = case item of
@@ -225,6 +242,11 @@ handle action = case action of
 
   AddNoteAt index ->
     insertNoteAt index ""
+
+  AddPericopeAt index -> do
+    st <- H.get
+    let source = sourceAbove index st.items
+    fetchAndInsertPericopeAt index "2Tm 3,16" source
 
   DownloadMarkdown -> do
     st <- H.get
@@ -368,6 +390,26 @@ fetchAndInsertPericope address source = do
     Left _ -> pure unit
     Right verses -> insertPericope address source verses
 
+fetchAndInsertPericopeAt
+  :: Int
+  -> String
+  -> String
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+fetchAndInsertPericopeAt index address source = do
+  res <- H.liftAff $ fetchVerses address source
+  case res of
+    Left _ -> pure unit
+    Right verses -> insertPericopeAt index address source verses
+
+sourceAbove :: Int -> Array Item -> String
+sourceAbove index items =
+  let
+    before = A.take index items
+    lastP = A.findMap (case _ of
+      PericopeItem p -> Just p.source
+      _ -> Nothing) (A.reverse before)
+  in fromMaybe "NVUL" lastP
+
 updateItemsAndSync
   :: (Array Item -> Array Item)
   -> H.HalogenM AppState Action ChildSlots Void Aff Unit
@@ -436,6 +478,16 @@ insertPericope
   -> H.HalogenM AppState Action ChildSlots Void Aff Unit
 insertPericope address source verses = do
   st <- H.get
+  insertPericopeAt (A.length st.items) address source verses
+
+insertPericopeAt
+  :: Int
+  -> String
+  -> String
+  -> Array Verse
+  -> H.HalogenM AppState Action ChildSlots Void Aff Unit
+insertPericopeAt index address source verses = do
+  st <- H.get
   let pid = st.nextId
       pericope =
         { id: pid
@@ -444,10 +496,10 @@ insertPericope address source verses = do
         , verses
         , selected: Set.empty
         }
-  H.put st
-    { items = A.snoc st.items (PericopeItem pericope)
-    , nextId = st.nextId + 1
-    }
+      clampedIndex = max 0 (min index (A.length st.items))
+      items = fromMaybe (A.snoc st.items (PericopeItem pericope))
+        (A.insertAt clampedIndex (PericopeItem pericope) st.items)
+  H.put st { items = items, nextId = st.nextId + 1 }
   syncSheet
 
 findPericope :: PericopeId -> Array Item -> Maybe Pericope

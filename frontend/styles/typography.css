@@ -256,7 +256,8 @@ n, s, m {
   text-align: left;
 }
 
-.note-add {
+.note-add,
+.pericope-add {
   font-size: larger;
 }
 
@@ -266,7 +267,8 @@ n, s, m {
     text-wrap-mode: nowrap;
   }
 
-  .note-add {
+  .note-add,
+  .pericope-add {
     font-size: medium;
   }
 }

@@ -192,7 +192,8 @@ input {
   color: var(--text-primary);
 }
 
-.note-add {
+.note-add,
+.pericope-add {
   background-color: var(--page-background);
   color: var(--text-muted);
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
