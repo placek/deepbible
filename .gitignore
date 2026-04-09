@@ -3,6 +3,7 @@
 *.SQLite3
 __pycache__
 *.txt
+.claude/
 data/
 helpers/
 bower_components/
