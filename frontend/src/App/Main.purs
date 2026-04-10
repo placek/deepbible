@@ -9,7 +9,8 @@ import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Set as Set
 import Data.String.CodeUnits (fromCharArray, toCharArray)
-import Data.String.Common (trim)
+import Data.String.Common (split, trim)
+import Data.String.Pattern (Pattern(..))
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Halogen as H
@@ -23,6 +24,10 @@ import Infrastructure.LocalStorage (SavedSheetEntry, saveSheetToLocal, loadSheet
 import Pericope.Component as P
 import Search.Component as Search
 import Type.Proxy (Proxy(..))
+
+import Web.Event.Event (stopPropagation)
+import Web.UIEvent.KeyboardEvent (key)
+import Web.UIEvent.MouseEvent (MouseEvent, toEvent)
 
 import App.Markdown (downloadMarkdownFile, renderSheetMarkdown, slugify)
 import App.State (AppState, Item(..))
@@ -84,6 +89,11 @@ data Action
   | ToggleSheetList
   | RecallSheet String
   | DeleteSavedSheet String
+  | ShowBatchInput MouseEvent Int
+  | UpdateBatchInput String
+  | SubmitBatchInput
+  | CancelBatchInput
+  | StopClick MouseEvent
 
 initialState :: Unit -> AppState
 initialState _ =
@@ -102,6 +112,7 @@ initialState _ =
   , searchError: Nothing
   , savedSheets: []
   , sheetListOpen: false
+  , batchInput: Nothing
   }
 
 defaultSeeds :: Array ItemSeed
@@ -126,14 +137,14 @@ render st =
   let
     items =
       A.concat
-        ( [ [ renderAddButtons 0 ] ]
-            <> A.mapWithIndex renderItemWithAddButton st.items
+        ( [ [ renderAddButtons st.batchInput 0 ] ]
+            <> A.mapWithIndex (renderItemWithAddButton st.batchInput) st.items
         )
   in
   HH.div
     [ HE.onClick \_ -> HandleDocumentClick ]
-    [ renderHeader st.title
-    , Search.renderSearchSection HandleSearch st
+    [ Search.renderSearchSection HandleSearch st
+    , renderHeader st.title
     , HH.div_ items
     , renderFooter st
     ]
@@ -151,27 +162,47 @@ renderHeader title =
     ]
 
 renderItemWithAddButton
-  :: Int
+  :: Maybe { index :: Int, value :: String }
+  -> Int
   -> Item
   -> Array (H.ComponentHTML Action ChildSlots Aff)
-renderItemWithAddButton index item =
+renderItemWithAddButton batchInput index item =
   [ renderItem item
-  , renderAddButtons (index + 1)
+  , renderAddButtons batchInput (index + 1)
   ]
 
-renderAddButtons :: Int -> H.ComponentHTML Action ChildSlots Aff
-renderAddButtons index =
-  HH.div
-    [ HP.class_ (HH.ClassName "add-buttons") ]
-    [ renderAddNoteButton index
-    , renderAddPericopeButton index
-    ]
+renderAddButtons :: Maybe { index :: Int, value :: String } -> Int -> H.ComponentHTML Action ChildSlots Aff
+renderAddButtons batchInput index =
+  case batchInput of
+    Just bi | bi.index == index ->
+      HH.div
+        [ HP.class_ (HH.ClassName "add-buttons batch-input-row")
+        , HE.onClick \ev -> StopClick ev
+        ]
+        [ HH.input
+            [ HP.class_ (HH.ClassName "batch-input")
+            , HP.value bi.value
+            , HP.placeholder "Rdz 1,1-5; Ps 23; J 3,16-17"
+            , HP.autofocus true
+            , HE.onValueInput UpdateBatchInput
+            , HE.onKeyDown \ev -> case key ev of
+                "Enter" -> SubmitBatchInput
+                "Escape" -> CancelBatchInput
+                _ -> UpdateBatchInput bi.value
+            ]
+        ]
+    _ ->
+      HH.div
+        [ HP.class_ (HH.ClassName "add-buttons") ]
+        [ renderAddNoteButton index
+        , renderAddPericopeButton index
+        ]
 
 renderAddPericopeButton :: Int -> H.ComponentHTML Action ChildSlots Aff
 renderAddPericopeButton index =
   HH.button
     [ HP.class_ (HH.ClassName "pericope-add")
-    , HE.onClick \_ -> AddPericopeAt index
+    , HE.onClick \ev -> ShowBatchInput ev index
     ]
     [ HH.text "+" ]
 
@@ -324,6 +355,32 @@ handle action = case action of
     let source = sourceAbove index st.items
     fetchAndInsertPericopeAt index "2Tm 3,16" source
 
+  ShowBatchInput ev index -> do
+    H.liftEffect $ stopPropagation (toEvent ev)
+    H.modify_ \st -> st { batchInput = Just { index, value: "" } }
+
+  UpdateBatchInput value ->
+    H.modify_ \st -> case st.batchInput of
+      Just bi -> st { batchInput = Just (bi { value = value }) }
+      Nothing -> st
+
+  SubmitBatchInput -> do
+    st <- H.get
+    case st.batchInput of
+      Nothing -> pure unit
+      Just bi -> do
+        let addresses = A.filter (_ /= "") (map trim (split (Pattern ";") bi.value))
+            source = sourceAbove bi.index st.items
+        H.modify_ \s -> s { batchInput = Nothing }
+        for_ (A.mapWithIndex (\i addr -> { i, addr }) addresses) \{ i, addr } ->
+          fetchAndInsertPericopeAt (bi.index + i) addr source
+
+  CancelBatchInput ->
+    H.modify_ \st -> st { batchInput = Nothing }
+
+  StopClick ev ->
+    H.liftEffect $ stopPropagation (toEvent ev)
+
   DownloadMarkdown -> do
     st <- H.get
     let
@@ -379,6 +436,7 @@ handle action = case action of
 handleDocumentClick :: H.HalogenM AppState Action ChildSlots Void Aff Unit
 handleDocumentClick = do
   Search.handleAction insertPericope Search.CloseSearchResults
+  H.modify_ \st -> st { batchInput = Nothing }
   st <- H.get
   for_ st.items \item -> case item of
     PericopeItem p -> cancelEditing p
@@ -496,6 +554,7 @@ sourceAbove index items =
       PericopeItem p -> Just p.source
       _ -> Nothing) (A.reverse before)
   in fromMaybe "NVUL" lastP
+
 
 updateItemsAndSync
   :: (Array Item -> Array Item)

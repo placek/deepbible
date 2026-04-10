@@ -197,10 +197,20 @@ input {
   color: var(--text-primary);
 }
 
-.note-add,
-.pericope-add {
+.batch-input {
+  color: var(--address-color);
+  border-color: var(--text-muted);
+}
+
+.note-add {
   background-color: var(--page-background);
   color: var(--text-muted);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.pericope-add {
+  background-color: var(--page-background);
+  color: var(--address-color);
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 }
 

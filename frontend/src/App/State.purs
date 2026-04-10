@@ -27,4 +27,5 @@ type AppState =
   , searchError :: Maybe String
   , savedSheets :: Array SavedSheetEntry
   , sheetListOpen :: Boolean
+  , batchInput :: Maybe { index :: Int, value :: String }
   }
