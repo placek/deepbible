@@ -225,7 +225,7 @@ END;
 $BODY$;
 
 -- fetches embedding vector for a given text using Ollama API
-CREATE OR REPLACE FUNCTION deepbible.generate_embedding(input_text text, model_name text DEFAULT 'bge-m3'::text)
+CREATE OR REPLACE FUNCTION deepbible.generate_embedding(input_text text, model_name text DEFAULT 'snowflake-arctic-embed2'::text)
   RETURNS vector
   LANGUAGE 'plpgsql'
   COST 100
@@ -234,20 +234,41 @@ AS $BODY$
 DECLARE
   http_resp http_response;
   payload jsonb;
+  embedding_json jsonb;
   vector_text text;
 BEGIN
   IF input_text IS NULL OR trim(input_text) = '' THEN
     RETURN NULL;
   END IF;
-  payload := jsonb_build_object('model', model_name, 'prompt', input_text);
-  SELECT * INTO http_resp FROM http(('POST', 'http://127.0.0.1:11434/api/embeddings', ARRAY[]::http_header[], 'application/json', payload::text)::http_request);
+
+  payload := jsonb_build_object('model', model_name, 'input', input_text);
+
+  SELECT * INTO http_resp FROM http((
+    'POST',
+    'http://127.0.0.1:11434/api/embed',
+    ARRAY[]::http_header[],
+    'application/json',
+    payload::text
+  )::http_request);
+
   IF http_resp.status != 200 THEN
+    RAISE NOTICE 'generate_embedding FAILED: status=%, length=%, first_200_chars=%, last_200_chars=%, full_text=%',
+      http_resp.status,
+      length(input_text),
+      left(input_text, 200),
+      right(input_text, 200),
+      input_text;
     RAISE EXCEPTION 'generate_embedding: error from ollama service: status %, response %', http_resp.status, http_resp.content;
   END IF;
-  vector_text := http_resp.content::jsonb ->> 'embedding';
-  IF vector_text IS NULL OR vector_text = '[]' THEN
+
+  embedding_json := http_resp.content::jsonb -> 'embeddings' -> 0;
+
+  IF embedding_json IS NULL OR jsonb_array_length(embedding_json) = 0 THEN
     RAISE EXCEPTION 'generate_embedding: ollama returned no vector: verse "%", response %', left(input_text, 50), http_resp.content;
   END IF;
+
+  vector_text := embedding_json::text;
+
   RETURN vector_text::vector;
 END;
 $BODY$;

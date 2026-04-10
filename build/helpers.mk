@@ -151,4 +151,4 @@ embed-source:
 		exit 1; \
 	fi
 	@$(call say,embedding verses for source $(SOURCE))
-	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -c "INSERT INTO deepbible._embeddings (id, embedding) SELECT v.id, deepbible.generate_embedding(v.text) FROM deepbible._all_verses v WHERE v.source = '$(SOURCE)' ON CONFLICT (id) DO NOTHING;"
+	@psql "$(DATABASE_URL)" -v ON_ERROR_STOP=1 -c "INSERT INTO deepbible._embeddings (id, embedding) SELECT v.id, deepbible.generate_embedding(v.text) FROM deepbible._all_verses v WHERE v.source = '$(SOURCE)' AND v.text IS NOT NULL AND v.text ~ '[[:alnum:]]' ON CONFLICT (id) DO NOTHING;"
