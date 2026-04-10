@@ -43,6 +43,8 @@ h2 {
   width: 100%;
   align-items: center;
   margin: 1em auto;
+  padding: 0 7em;
+  box-sizing: border-box;
 }
 
 .search-input-group {
