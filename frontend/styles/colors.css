@@ -36,6 +36,11 @@ h2 {
   text-shadow: 1px 1px var(--cross-reference-color);
 }
 
+h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
 a {
   color: var(--text-muted);
 }
