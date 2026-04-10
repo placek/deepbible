@@ -6,7 +6,6 @@ let
   frontendShell = frontendFlake.devShells.${system}.default;
 in
 pkgs.mkShell {
-  # Pull in every tool declared for the frontend devShell so both root and frontend shells match.
   inputsFrom = [ frontendShell ];
 
   buildInputs = with pkgs; [
