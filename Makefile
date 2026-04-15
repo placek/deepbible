@@ -4,6 +4,7 @@ include build/merge.mk
 include build/upload.mk
 include build/helpers.mk
 include build/frontend.mk
+include build/typst.mk
 
 .PHONY: all clean info
 
