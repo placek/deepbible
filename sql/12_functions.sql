@@ -312,6 +312,10 @@ BEGIN
   INTO v_source, v_address, v_clean_phrase
   FROM deepbible.parse_search_phrase(search_phrase) p;
 
+  IF v_source IS NULL OR btrim(v_source) = '' THEN
+    v_source := 'PAU';
+  END IF;
+
   IF v_clean_phrase IS NULL THEN
     RETURN QUERY
       SELECT *
