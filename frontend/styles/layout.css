@@ -462,8 +462,16 @@ h2 {
   display: inline;
 }
 
+.textus.psalms .verse {
+  display: block;
+}
+
 .verse + .verse::before {
   margin-left: 0.4em;
+}
+
+.textus.psalms .verse + .verse::before {
+  margin-left: 0;
 }
 
 .app-header {

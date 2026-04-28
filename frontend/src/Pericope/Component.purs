@@ -2,7 +2,7 @@ module Pericope.Component (Query(..), Output(..), component, selectedAddressText
 
 import Prelude
 
-import Data.Array (catMaybes)
+import Data.Array (any, catMaybes)
 import Data.Array as A
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
@@ -385,7 +385,10 @@ render st =
         , sourceNode
         ]
 
-    , HH.div [ HP.class_ (HH.ClassName "textus") ]
+    , let isPsalms = any (\(Verse v) -> v.book_number == 230) st.pericope.verses
+          textusClass = "textus" <> if isPsalms then " psalms" else ""
+      in
+      HH.div [ HP.class_ (HH.ClassName textusClass) ]
         (st.pericope.verses <#> \(Verse v) ->
           let sel = Set.member v.verse_id st.pericope.selected in
           HH.div
